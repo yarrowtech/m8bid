@@ -29,7 +29,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage.jsx";
 
 import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboard from "./components/admin/adminDashboard";
+import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminUsers from "./components/admin/AdminUsers";
 import AdminCampaigns from "./components/admin/AdminCampaigns";
 import AdminTransactions from "./components/admin/AdminTransaction";
