@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     emailOrUsername: "",
     password: "",
+    preferredMode: "investor",
   });
 
   const [error, setError] = useState("");
@@ -53,6 +54,7 @@ export default function LoginPage() {
     const payload = {
       emailOrUsername: formData.emailOrUsername.trim(),
       password: formData.password,
+      preferredMode: formData.preferredMode,
     };
 
     const res = await loginUser(payload);
@@ -63,14 +65,25 @@ export default function LoginPage() {
 
     const hasInvestor = res.user?.access?.investor?.enabled;
     const hasFundraiser = res.user?.access?.fundraiser?.enabled;
+    const activeMode = res.user?.activeMode || formData.preferredMode;
 
     if (res.user?.role === "admin") {
       navigate("/admin/dashboard");
       return;
     }
 
-    if (hasInvestor && hasFundraiser) {
+    if (hasInvestor && hasFundraiser && !activeMode) {
       navigate("/select-account-mode");
+      return;
+    }
+
+    if (activeMode === "investor" && hasInvestor) {
+      navigate(getDashboardPath(res.user, "investor"));
+      return;
+    }
+
+    if (activeMode === "fundraiser" && hasFundraiser) {
+      navigate(getDashboardPath(res.user, "fundraiser"));
       return;
     }
 
@@ -122,6 +135,40 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleLogin} className="mt-8 space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Login as
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, preferredMode: "investor" }))
+                    }
+                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+                      formData.preferredMode === "investor"
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    Investor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, preferredMode: "fundraiser" }))
+                    }
+                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+                      formData.preferredMode === "fundraiser"
+                        ? "border-yellow-400 bg-yellow-300 text-slate-900"
+                        : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    Fundraiser
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Email or Username

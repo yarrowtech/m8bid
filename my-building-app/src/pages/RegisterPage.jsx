@@ -13,7 +13,6 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     accountMode: "investor",
-    profileType: "individual",
   });
 
   const [error, setError] = useState("");
@@ -59,7 +58,6 @@ export default function RegisterPage() {
         phone: formData.phone,
         password: formData.password,
         accountMode: formData.accountMode,
-        profileType: formData.profileType,
       };
 
       const res = await registerUser(payload);
@@ -89,7 +87,7 @@ export default function RegisterPage() {
               <span className="block text-yellow-300">Start securely.</span>
             </h1>
             <p className="mt-5 text-slate-300 leading-7">
-              Register once and continue through the correct login flow for your account type.
+              Register once and continue through the correct login flow for your account.
             </p>
           </div>
         </div>
@@ -97,7 +95,9 @@ export default function RegisterPage() {
         <div className="p-6 sm:p-10">
           <div className="max-w-md mx-auto">
             <h2 className="text-3xl font-bold text-slate-900">Create Account</h2>
-            <p className="mt-2 text-slate-600">Register to get started</p>
+            <p className="mt-2 text-slate-600">
+              Register to get started. Each email can be used for only one account.
+            </p>
 
             {error && (
               <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -142,40 +142,6 @@ export default function RegisterPage() {
                     }`}
                   >
                     Fundraiser
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Account type
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, profileType: "individual" }))
-                    }
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.profileType === "individual"
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    Individual
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, profileType: "company" }))
-                    }
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.profileType === "company"
-                        ? "border-yellow-400 bg-yellow-300 text-slate-900"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    Company
                   </button>
                 </div>
               </div>

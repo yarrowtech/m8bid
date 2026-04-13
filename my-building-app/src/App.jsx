@@ -47,7 +47,6 @@ import CauseBasedFunding from "./pages/CauseBasedFunding";
 import FundraisingIdeas from "./pages/FundraisingIdeas";
 
 import SelectAccountMode from "./pages/SelectAccountType.jsx";
-import InvestorDashboard from "./pages/investor/InvestorDashboard.jsx";
 import CompanyInvestorDashboard from "./pages/investor/CompanyInvestorDashboard";
 import FundraiserDashboard from "./pages/Fundraiser/FundraiserDashboard";
 import CompanyFundraiserDashboard from "./pages/Fundraiser/CompanyFundraiserDashboard";
@@ -59,8 +58,61 @@ import FundraiserProfile from "./pages/Fundraiser/FundraiserProfile.jsx";
 import FundraiserKYC from "./pages/Fundraiser/FundraiserKyc.jsx";
 import FundraiserBank from "./pages/Fundraiser/FundraiserBank.jsx";
 
+import InvestorDashboard from "./pages/investor/InvestorDashboard.jsx";
+import InvestorPortfolio from "./pages/investor/InvestorPortfolio.jsx";
+import InvestorAnalytics from "./pages/investor/InvestorAnalytics.jsx";
+import InvestorTransactions from "./pages/investor/InvestorTransactions.jsx";
+import InvestorProfile from "./pages/investor/InvestorProfile.jsx";
+import InvestorKyc from "./pages/investor/InvestorKyc.jsx";
+import InvestorBank from "./pages/investor/InvestorBank.jsx";
 // Context
 import { FundraiserProvider } from "./context/FundraiserContext.jsx";
+
+function RequireMode({ mode, children }) {
+  const rawUser = localStorage.getItem("user");
+  const rawToken = localStorage.getItem("token");
+  const user = rawUser ? JSON.parse(rawUser) : null;
+
+  if (!rawToken || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user?.access?.[mode]?.enabled) {
+    return (
+      <Navigate
+        to={mode === "investor" ? "/fundraiser/dashboard" : "/investor/dashboard"}
+        replace
+      />
+    );
+  }
+
+  if (user?.activeMode !== mode) {
+    return (
+      <Navigate
+        to={mode === "investor" ? "/investor/dashboard" : "/fundraiser/dashboard"}
+        replace
+      />
+    );
+  }
+
+  return children;
+}
+
+function RestrictPublicByMode({ blockedMode, children }) {
+  const rawUser = localStorage.getItem("user");
+  const user = rawUser ? JSON.parse(rawUser) : null;
+
+  if (user?.activeMode === blockedMode) {
+    return (
+      <Navigate
+        to={blockedMode === "investor" ? "/investor/dashboard" : "/fundraiser/dashboard"}
+        replace
+      />
+    );
+  }
+
+  return children;
+}
 
 function AppRoutes({ loggedInUser, setLoggedInUser }) {
   const location = useLocation();
@@ -78,6 +130,13 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
     "/fundraiser/company/dashboard",
     "/investor/dashboard",
     "/investor/company/dashboard",
+    "/investor/portfolio",
+    "/investor/analytics",
+    
+    "/investor/transactions",
+    "/investor/profile",
+    "/investor/profile/kyc",
+    "/investor/profile/bank",
   ];
 
   const shouldHideHeader =
@@ -132,55 +191,89 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/fundraising"
           element={
-            <>
-              <FundraisingPage />
-              <Footer />
-            </>
+            <RestrictPublicByMode blockedMode="investor">
+              <>
+                <FundraisingPage />
+                <Footer />
+              </>
+            </RestrictPublicByMode>
           }
         />
 
         <Route path="/select-account-mode" element={<SelectAccountMode />} />
 
-        {/* Investor + Fundraiser routes */}
-        <Route
-          path="/investor/dashboard"
-          element={<InvestorDashboard />}
-        />
+        
         <Route
           path="/investor/company/dashboard"
-          element={<CompanyInvestorDashboard />}
+          element={
+            <RequireMode mode="investor">
+              <CompanyInvestorDashboard />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/dashboard"
-          element={<FundraiserDashboard />}
+          element={
+            <RequireMode mode="fundraiser">
+              <FundraiserDashboard />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/company/dashboard"
-          element={<CompanyFundraiserDashboard />}
+          element={
+            <RequireMode mode="fundraiser">
+              <CompanyFundraiserDashboard />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/campaigns"
-          element={<FundraiserCampaigns />}
+          element={
+            <RequireMode mode="fundraiser">
+              <FundraiserCampaigns />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/analytics"
-          element={<FundraiserAnalytics />}
+          element={
+            <RequireMode mode="fundraiser">
+              <FundraiserAnalytics />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/withdrawals"
-          element={<FundraiserWithdrawals />}
+          element={
+            <RequireMode mode="fundraiser">
+              <FundraiserWithdrawals />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/profile"
-          element={<FundraiserProfile />}
+          element={
+            <RequireMode mode="fundraiser">
+              <FundraiserProfile />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/profile/kyc"
-          element={<FundraiserKYC />}
+          element={
+            <RequireMode mode="fundraiser">
+              <FundraiserKYC />
+            </RequireMode>
+          }
         />
         <Route
           path="/fundraiser/profile/bank"
-          element={<FundraiserBank />}
+          element={
+            <RequireMode mode="fundraiser">
+              <FundraiserBank />
+            </RequireMode>
+          }
         />
 
         <Route path="/supporter-space" element={<SupporterSpace />} />
@@ -193,9 +286,24 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route path="/cause-based-funding" element={<CauseBasedFunding />} />
         <Route path="/fundraising-ideas" element={<FundraisingIdeas />} />
 
-        <Route path="/start-fundraiser" element={<StartFundraiser />} />
+        <Route
+          path="/start-fundraiser"
+          element={
+            <RestrictPublicByMode blockedMode="investor">
+              <StartFundraiser />
+            </RestrictPublicByMode>
+          }
+        />
         <Route path="/payment" element={<PaymentPage />} />
 
+
+<Route path="/investor/dashboard" element={<RequireMode mode="investor"><InvestorDashboard /></RequireMode>} />
+<Route path="/investor/portfolio" element={<RequireMode mode="investor"><InvestorPortfolio /></RequireMode>} />
+<Route path="/investor/analytics" element={<RequireMode mode="investor"><InvestorAnalytics /></RequireMode>} />
+<Route path="/investor/transactions" element={<RequireMode mode="investor"><InvestorTransactions /></RequireMode>} />
+<Route path="/investor/profile" element={<RequireMode mode="investor"><InvestorProfile /></RequireMode>} />
+<Route path="/investor/profile/kyc" element={<RequireMode mode="investor"><InvestorKyc /></RequireMode>} />
+<Route path="/investor/profile/bank" element={<RequireMode mode="investor"><InvestorBank /></RequireMode>} />
 
         {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>

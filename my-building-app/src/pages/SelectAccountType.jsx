@@ -14,7 +14,7 @@ export default function SelectAccountMode() {
         navigate(
           res.user?.access?.investor?.type === "company"
             ? "/investor/company/dashboard"
-            : "/investor/individual/dashboard"
+            : "/investor/dashboard"
         );
       }
 
@@ -22,7 +22,7 @@ export default function SelectAccountMode() {
         navigate(
           res.user?.access?.fundraiser?.type === "company"
             ? "/fundraiser/company/dashboard"
-            : "/fundraiser/individual/dashboard"
+            : "/fundraiser/dashboard"
         );
       }
     } catch (error) {

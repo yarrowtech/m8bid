@@ -1,16 +1,17 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
   Phone,
   MapPin,
-  BadgeCheck,
   Landmark,
   FileText,
   ShieldCheck,
+  Eye,
 } from "lucide-react";
 import FundraiserSidebar from "./FundraiserSidebar";
+import { getFundraiserProfile } from "../../api/fundraiser.api";
 
 function SectionCard({ title, icon: Icon, children }) {
   return (
@@ -49,6 +50,8 @@ function Field({ label, value, icon: Icon }) {
   );
 }
 
+
+
 function StatusBadge({ value, type = "default" }) {
   let tone = "bg-slate-100 text-slate-700";
 
@@ -79,34 +82,83 @@ function StatusBadge({ value, type = "default" }) {
   );
 }
 
+const normalizeStatus = (value, fallbackPending = false) => {
+  const v = String(value || "").toUpperCase();
+
+  if (v === "VERIFIED") return "Verified";
+  if (v === "REJECTED") return "Rejected";
+  if (v === "PENDING") return "Pending Review";
+  if (v === "NONE") return fallbackPending ? "Pending Review" : "Not Linked";
+
+  return value || "—";
+};
+
 export default function FundraiserProfile() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const profileData = {
-    fullName: user?.name || "Raktim Maity",
-    email: user?.email || "raktim@example.com",
-    phone: user?.phone || "+91 9876543210",
-    address:
-      user?.addressLine
-        ? `${user.addressLine}${user.city ? `, ${user.city}` : ""}${
-            user.state ? `, ${user.state}` : ""
-          }${user.pincode ? ` - ${user.pincode}` : ""}`
-        : "Salt Lake, Kolkata, West Bengal, India",
-
-    kycStatus: user?.kycStatus || "Pending Review",
-    aadhaarNumber: user?.aadhaarNumber || "Not Added",
-    panNumber: user?.panNumber || "Not Added",
-    addressProofType: user?.addressProofType || "Not Added",
-
-    bankStatus: user?.bankDetails?.accountNumber ? "Linked" : "Not Linked",
-    bankName: user?.bankDetails?.bankName || "Not Added",
-    accountHolder: user?.bankDetails?.accountHolderName || "Not Added",
-    accountNumber: user?.bankDetails?.accountNumber
-      ? `XXXXXX${String(user.bankDetails.accountNumber).slice(-4)}`
-      : "Not Added",
-    ifsc: user?.bankDetails?.ifscCode || "Not Added",
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const res = await getFundraiserProfile();
+      setUser(res?.data || null);
+    } catch (err) {
+      console.error("Failed to fetch fundraiser profile:", err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const profileData = useMemo(() => {
+    const fullAddress = user?.profile?.addressLine
+      ? `${user.profile.addressLine}${
+          user?.profile?.city ? `, ${user.profile.city}` : ""
+        }${user?.profile?.state ? `, ${user.profile.state}` : ""}${
+          user?.profile?.pincode ? ` - ${user.profile.pincode}` : ""
+        }`
+      : "Not Added";
+
+    const kycStatusRaw = user?.access?.fundraiser?.kycStatus || "NONE";
+    const bankStatusRaw = user?.access?.fundraiser?.bankStatus || "NONE";
+
+    return {
+      fullName: user?.name || "—",
+      email: user?.email || "—",
+      phone: user?.profile?.phone || "—",
+      address: fullAddress,
+
+      kycStatus: normalizeStatus(kycStatusRaw, true),
+      aadhaarNumber:
+        user?.access?.fundraiser?.details?.aadhaarNumber || "Not Added",
+      panNumber: user?.access?.fundraiser?.details?.panNumber || "Not Added",
+      addressProofType:
+        user?.access?.fundraiser?.details?.addressProofType || "Not Added",
+
+      aadhaarFile: user?.access?.fundraiser?.documents?.kyc || "",
+      panFile: user?.access?.fundraiser?.documents?.pan || "",
+      addressProofFile: user?.access?.fundraiser?.documents?.addressProof || "",
+      bankProofFile: user?.access?.fundraiser?.documents?.bankProof || "",
+
+      bankStatus: user?.bankDetails?.accountNumber
+        ? "Linked"
+        : String(bankStatusRaw).toUpperCase() === "VERIFIED"
+        ? "Linked"
+        : normalizeStatus(bankStatusRaw, false),
+
+      bankName: user?.bankDetails?.bankName || "Not Added",
+      accountHolder: user?.bankDetails?.accountHolderName || "Not Added",
+      accountNumber: user?.bankDetails?.accountNumber
+        ? `XXXXXX${String(user.bankDetails.accountNumber).slice(-4)}`
+        : "Not Added",
+      ifsc: user?.bankDetails?.ifscCode || "Not Added",
+      branchName: user?.bankDetails?.branchName || "Not Added",
+    };
+  }, [user]);
 
   return (
     <div
@@ -149,95 +201,200 @@ export default function FundraiserProfile() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 xl:grid-cols-3">
-            <div className="space-y-4 xl:col-span-2">
-              <SectionCard title="Person Details" icon={User}>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Full Name" value={profileData.fullName} icon={User} />
-                  <Field label="Email Address" value={profileData.email} icon={Mail} />
-                  <Field label="Phone Number" value={profileData.phone} icon={Phone} />
-                  <Field label="Address" value={profileData.address} icon={MapPin} />
-                </div>
-              </SectionCard>
-
-              <SectionCard title="KYC Details" icon={ShieldCheck}>
-                <div className="mb-4 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm font-medium text-slate-600">KYC Status</span>
-                  <StatusBadge value={profileData.kycStatus} type="kyc" />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Aadhaar Number" value={profileData.aadhaarNumber} icon={FileText} />
-                  <Field label="PAN Number" value={profileData.panNumber} icon={FileText} />
-                  <Field
-                    label="Address Proof Type"
-                    value={profileData.addressProofType}
-                    icon={FileText}
-                  />
-                </div>
-              </SectionCard>
-
-              <SectionCard title="Bank Details" icon={Landmark}>
-                <div className="mb-4 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm font-medium text-slate-600">Bank Status</span>
-                  <StatusBadge value={profileData.bankStatus} type="bank" />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Bank Name" value={profileData.bankName} icon={Landmark} />
-                  <Field
-                    label="Account Holder Name"
-                    value={profileData.accountHolder}
-                    icon={User}
-                  />
-                  <Field
-                    label="Account Number"
-                    value={profileData.accountNumber}
-                    icon={Landmark}
-                  />
-                  <Field label="IFSC Code" value={profileData.ifsc} icon={FileText} />
-                </div>
-              </SectionCard>
+          {loading ? (
+            <div className="mt-6 rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
+              <p className="text-sm font-medium text-slate-500">
+                Loading profile details...
+              </p>
             </div>
+          ) : (
+            <div className="mt-6 grid gap-4 xl:grid-cols-3">
+              <div className="space-y-4 xl:col-span-2">
+                <SectionCard title="Person Details" icon={User}>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field
+                      label="Full Name"
+                      value={profileData.fullName}
+                      icon={User}
+                    />
+                    <Field
+                      label="Email Address"
+                      value={profileData.email}
+                      icon={Mail}
+                    />
+                    <Field
+                      label="Phone Number"
+                      value={profileData.phone}
+                      icon={Phone}
+                    />
+                    <Field
+                      label="Address"
+                      value={profileData.address}
+                      icon={MapPin}
+                    />
+                  </div>
+                </SectionCard>
 
-            <div className="space-y-4">
-              <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Quick Actions</h3>
+             <SectionCard title="KYC Details" icon={ShieldCheck}>
+  <div className="mb-4 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+    <span className="text-sm font-medium text-slate-600">
+      KYC Status
+    </span>
+    <StatusBadge value={profileData.kycStatus} type="kyc" />
+  </div>
 
-                <div className="mt-4 space-y-3">
-                  <button
-                    onClick={() => navigate("/fundraiser/profile/kyc")}
-                    className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                  >
-                    Edit KYC Details
-                  </button>
+  <div className="grid gap-4 md:grid-cols-2">
+    <Field
+      label="Aadhaar Number"
+      value={profileData.aadhaarNumber}
+      icon={FileText}
+    />
+    <Field
+      label="PAN Number"
+      value={profileData.panNumber}
+      icon={FileText}
+    />
+    <Field
+      label="Address Proof Type"
+      value={profileData.addressProofType}
+      icon={FileText}
+    />
+  </div>
+</SectionCard>
 
-                  <button
-                    onClick={() => navigate("/fundraiser/profile/bank")}
-                    className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                  >
-                    Edit Bank Details
-                  </button>
-                </div>
+               <SectionCard title="Bank Details" icon={Landmark}>
+  <div className="mb-4 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+    <span className="text-sm font-medium text-slate-600">
+      Bank Status
+    </span>
+    <StatusBadge value={profileData.bankStatus} type="bank" />
+  </div>
+
+  <div className="grid gap-4 md:grid-cols-2">
+    <Field
+      label="Bank Name"
+      value={profileData.bankName}
+      icon={Landmark}
+    />
+    <Field
+      label="Account Holder Name"
+      value={profileData.accountHolder}
+      icon={User}
+    />
+    <Field
+      label="Account Number"
+      value={profileData.accountNumber}
+      icon={Landmark}
+    />
+    <Field
+      label="IFSC Code"
+      value={profileData.ifsc}
+      icon={FileText}
+    />
+    <Field
+      label="Branch Name"
+      value={profileData.branchName}
+      icon={Landmark}
+    />
+  </div>
+
+    <div className="mt-6 space-y-4">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <h3 className="text-base font-semibold text-slate-900">
+          Uploaded Documents
+        </h3>
+
+        <div className="mt-4 space-y-3">
+          <Field
+            label="Aadhaar / ID Proof"
+            value={profileData.aadhaarFile ? "Uploaded" : "Not uploaded"}
+          />
+          {profileData.aadhaarFile ? (
+            <a
+              href={profileData.aadhaarFile}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+            >
+              <Eye size={14} />
+              View Aadhaar / ID Proof
+            </a>
+          ) : null}
+
+          <Field
+            label="PAN Document"
+            value={profileData.panFile ? "Uploaded" : "Not uploaded"}
+          />
+          {profileData.panFile ? (
+            <a
+              href={profileData.panFile}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+            >
+              <Eye size={14} />
+              View PAN Document
+            </a>
+          ) : null}
+
+          <Field
+            label="Address Proof"
+            value={profileData.addressProofFile ? "Uploaded" : "Not uploaded"}
+          />
+          {profileData.addressProofFile ? (
+            <a
+              href={profileData.addressProofFile}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+            >
+              <Eye size={14} />
+              View Address Proof
+            </a>
+          ) : null}
+
+          <Field
+            label="Bank Proof"
+            value={profileData.bankProofFile ? "Uploaded" : "Not uploaded"}
+          />
+          {profileData.bankProofFile ? (
+            <a
+              href={profileData.bankProofFile}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+            >
+              <Eye size={14} />
+              View Bank Proof
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  </SectionCard>
               </div>
 
-              <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Profile Status</h3>
+              <div className="space-y-4">
+                <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Profile Status
+                  </h3>
 
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                    <span className="text-sm text-slate-600">KYC</span>
-                    <StatusBadge value={profileData.kycStatus} type="kyc" />
-                  </div>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                      <span className="text-sm text-slate-600">KYC</span>
+                      <StatusBadge value={profileData.kycStatus} type="kyc" />
+                    </div>
 
-                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                    <span className="text-sm text-slate-600">Bank</span>
-                    <StatusBadge value={profileData.bankStatus} type="bank" />
+                    <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                      <span className="text-sm text-slate-600">Bank</span>
+                      <StatusBadge value={profileData.bankStatus} type="bank" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
     </div>

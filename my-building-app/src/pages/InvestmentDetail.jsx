@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { getCampaignById } from "../api/fundraiser.api";
 import sampleImg from "../assets/fundraising-example.jpg";
 
 const INR = (n) => {
@@ -158,18 +159,92 @@ const SectionCard = ({
 export default function InvestmentDetail() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const { id } = useParams();
 
   const [showVideo, setShowVideo] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [campaignData, setCampaignData] = useState(state?.campaign || null);
+  const [loadingCampaign, setLoadingCampaign] = useState(
+    !state?.campaign && Boolean(id)
+  );
+  const [campaignError, setCampaignError] = useState("");
 
-  if (!state?.campaign) {
+  useEffect(() => {
+    if (state?.campaign) {
+      setCampaignData(state.campaign);
+      setCampaignError("");
+      setLoadingCampaign(false);
+      return;
+    }
+
+    if (!id) {
+      setCampaignData(null);
+      setLoadingCampaign(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchCampaign = async () => {
+      try {
+        setLoadingCampaign(true);
+        setCampaignError("");
+
+        const res = await getCampaignById(id);
+        const fetchedCampaign = res?.data || res?.fundraiser || null;
+
+        if (!isMounted) return;
+
+        if (!fetchedCampaign) {
+          setCampaignError("Campaign details not found.");
+          setCampaignData(null);
+          return;
+        }
+
+        setCampaignData(fetchedCampaign);
+      } catch (err) {
+        if (!isMounted) return;
+        setCampaignError(
+          err?.message || "Failed to load campaign details from the backend."
+        );
+        setCampaignData(null);
+      } finally {
+        if (isMounted) {
+          setLoadingCampaign(false);
+        }
+      }
+    };
+
+    fetchCampaign();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, state?.campaign]);
+
+  if (loadingCampaign) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center px-4">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+          <h1 className="text-lg font-semibold text-slate-900">
+            Loading campaign details...
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Please wait while we fetch the latest campaign data.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!campaignData) {
     return (
       <div className="grid min-h-[60vh] place-items-center px-4">
         <div className="w-full max-w-md rounded-3xl border border-red-200 bg-red-50 p-6 shadow-lg">
           <h1 className="text-lg font-semibold text-red-700">
-            No campaign data found.
+            {campaignError || "No campaign data found."}
           </h1>
           <p className="mt-2 text-sm text-red-600">
             Please go back and open a campaign again.
@@ -185,7 +260,7 @@ export default function InvestmentDetail() {
     );
   }
 
-  const campaign = state.campaign;
+  const campaign = campaignData;
 
   const title = pickFirst(
     campaign?.projectTitle,

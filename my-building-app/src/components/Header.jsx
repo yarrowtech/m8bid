@@ -5,7 +5,6 @@ import {
   ChevronDown,
   LayoutDashboard,
   UserCircle2,
-  Settings,
   LogOut,
   Info,
   HandCoins,
@@ -53,6 +52,7 @@ function DropdownPanel({ title, subtitle, items, open, width = "w-[520px]" }) {
               <Link
                 key={item.label}
                 to={item.to}
+                onClick={item.onClick}
                 className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:bg-slate-50"
               >
                 <div className="text-sm font-semibold text-slate-900">
@@ -66,6 +66,7 @@ function DropdownPanel({ title, subtitle, items, open, width = "w-[520px]" }) {
               <button
                 key={item.label}
                 type="button"
+                onClick={item.onClick}
                 className="text-left rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:bg-slate-50"
               >
                 <div className="text-sm font-semibold text-slate-900">
@@ -243,6 +244,58 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
   );
 }
 
+function AccessModeModal({ open, onClose, onLogin, title, message, buttonLabel }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-md transition-all duration-300">
+      <div className="w-full max-w-lg rounded-[32px] border border-slate-200/80 bg-white/98 p-8 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md transform transition-all duration-500 ease-out scale-100 animate-in fade-in-0 zoom-in-95">
+        <div className="flex items-start gap-5">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/25">
+            <ShieldCheck className="h-8 w-8" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
+              Secure Access Required
+            </p>
+            <h3 className="mt-3 text-3xl font-bold text-slate-950 leading-tight">
+              {title}
+            </h3>
+            <p className="mt-4 text-base leading-relaxed text-slate-700">
+              {message}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
+            aria-label="Close notification"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-2xl border-2 border-slate-200 bg-slate-50 px-6 py-4 text-base font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-100 hover:shadow-lg"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onLogin}
+            className="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-4 text-base font-semibold text-white shadow-xl shadow-blue-500/30 transition-all hover:brightness-110 hover:shadow-2xl hover:scale-105"
+          >
+            {buttonLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* --------------------------- header --------------------------- */
 export default function Header() {
   const navigate = useNavigate();
@@ -255,18 +308,29 @@ export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerType, setDrawerType] = useState("about");
   const [loggedInUser, setLoggedInUser] = useState(null);
+  const [fundraiseBlockedOpen, setFundraiseBlockedOpen] = useState(false);
+  const [investBlockedOpen, setInvestBlockedOpen] = useState(false);
 
   const headerRef = useRef(null);
   const profileRef = useRef(null);
 
   useEffect(() => {
-    try {
-      const user = JSON.parse(localStorage.getItem("loggedInUser"));
-      if (user) setLoggedInUser(user);
-    } catch {
-      setLoggedInUser(null);
-    }
-  }, []);
+    const syncUser = () => {
+      try {
+        const rawUser =
+          localStorage.getItem("user") || localStorage.getItem("loggedInUser");
+        const user = rawUser ? JSON.parse(rawUser) : null;
+        setLoggedInUser(user);
+      } catch {
+        setLoggedInUser(null);
+      }
+    };
+
+    syncUser();
+    window.addEventListener("storage", syncUser);
+
+    return () => window.removeEventListener("storage", syncUser);
+  }, [location.pathname]);
 
   useEffect(() => {
     const closeOnOutside = (e) => {
@@ -286,6 +350,8 @@ export default function Header() {
         setProfileOpen(false);
         setMobileOpen(false);
         setDrawerOpen(false);
+        setFundraiseBlockedOpen(false);
+        setInvestBlockedOpen(false);
       }
     };
 
@@ -303,9 +369,12 @@ export default function Header() {
     setFundraiseOpen(false);
     setProfileOpen(false);
     setMobileOpen(false);
+    setFundraiseBlockedOpen(false);
+    setInvestBlockedOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
+    localStorage.removeItem("user");
     localStorage.removeItem("loggedInUser");
     localStorage.removeItem("token");
     setLoggedInUser(null);
@@ -332,26 +401,68 @@ export default function Header() {
     setMobileOpen(false);
   };
 
+  const activeMode = loggedInUser?.activeMode || "none";
+  const isInvestorMode = activeMode === "investor";
+  const isFundraiserMode = activeMode === "fundraiser";
+  const dashboardPath =
+    activeMode === "fundraiser"
+      ? loggedInUser?.access?.fundraiser?.type === "company"
+        ? "/fundraiser/company/dashboard"
+        : "/fundraiser/dashboard"
+      : loggedInUser?.access?.investor?.type === "company"
+      ? "/investor/company/dashboard"
+      : "/investor/dashboard";
+  const profilePath =
+    activeMode === "fundraiser" ? "/fundraiser/profile" : "/investor/profile";
+
+  const handleFundraiseRestrictedAccess = () => {
+    setInvestOpen(false);
+    setFundraiseOpen(false);
+    setMobileOpen(false);
+    setFundraiseBlockedOpen(true);
+  };
+
+  const handleInvestRestrictedAccess = () => {
+    setInvestOpen(false);
+    setFundraiseOpen(false);
+    setMobileOpen(false);
+    setInvestBlockedOpen(true);
+  };
+
+  const handleFundraiseLoginRedirect = () => {
+    setFundraiseBlockedOpen(false);
+    navigate("/login");
+  };
+
+  const handleInvestLoginRedirect = () => {
+    setInvestBlockedOpen(false);
+    navigate("/login");
+  };
+
 const investItems = [
   {
     label: "Browse Investors",
     desc: "Explore active opportunities and investor-focused campaigns.",
-    to: "/browse-investors",
+    to: isFundraiserMode ? null : "/browse-investors",
+    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
   },
   {
     label: "Supporter Space",
     desc: "Discover FAQs, updates, and how contributions work.",
-    to: "/supporter-space",
+    to: isFundraiserMode ? null : "/supporter-space",
+    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
   },
   {
     label: "Return Based Options",
     desc: "Explore structured participation with expected returns.",
-    to: "/return-based-options",
+    to: isFundraiserMode ? null : "/return-based-options",
+    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
   },
   {
     label: "Verified Opportunities",
     desc: "See campaigns reviewed through platform workflows.",
-    to: "/verified-opportunities",
+    to: isFundraiserMode ? null : "/verified-opportunities",
+    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
   },
 ];
 
@@ -359,22 +470,26 @@ const fundraiseItems = [
   {
     label: "Start a Fundraiser",
     desc: "Launch your fundraiser with a guided creation flow.",
-    to: "/fundraising",
+    to: isInvestorMode ? null : "/fundraising",
+    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
   },
   {
     label: "Business Campaigns",
     desc: "Raise support for business growth and new initiatives.",
-    to: "/business-campaigns",
+    to: isInvestorMode ? null : "/business-campaigns",
+    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
   },
   {
     label: "Cause-Based Funding",
     desc: "Create campaigns for support-oriented fundraising.",
-    to: "/cause-based-funding",
+    to: isInvestorMode ? null : "/cause-based-funding",
+    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
   },
   {
     label: "Fundraising Ideas",
     desc: "Get inspired with campaign direction and planning ideas.",
-    to: "/fundraising-ideas",
+    to: isInvestorMode ? null : "/fundraising-ideas",
+    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
   },
 ];
 
@@ -511,7 +626,7 @@ const fundraiseItems = [
 
                     <div className="p-3">
                       <button
-                        onClick={() => navigate("/dashboard")}
+                        onClick={() => navigate(dashboardPath)}
                         className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
                       >
                         <LayoutDashboard className="h-4 w-4" />
@@ -519,19 +634,11 @@ const fundraiseItems = [
                       </button>
 
                       <button
-                        onClick={() => navigate("/dashboard")}
+                        onClick={() => navigate(profilePath)}
                         className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
                       >
                         <UserCircle2 className="h-4 w-4" />
                         My Profile
-                      </button>
-
-                      <button
-                        onClick={() => navigate("/dashboard")}
-                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
-                      >
-                        <Settings className="h-4 w-4" />
-                        Profile Settings
                       </button>
 
                       <button
@@ -595,21 +702,43 @@ const fundraiseItems = [
                 How it Works
               </Link>
 
-              <Link
-                to="/browse-investors"
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-              >
-                <BadgeDollarSign className="h-4 w-4" />
-                Browse Investors
-              </Link>
+              {isFundraiserMode ? (
+                <button
+                  type="button"
+                  onClick={handleInvestRestrictedAccess}
+                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  <BadgeDollarSign className="h-4 w-4" />
+                  Browse Investors
+                </button>
+              ) : (
+                <Link
+                  to="/browse-investors"
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  <BadgeDollarSign className="h-4 w-4" />
+                  Browse Investors
+                </Link>
+              )}
 
-              <Link
-                to="/fundraising"
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-              >
-                <HandCoins className="h-4 w-4" />
-                Start a Fundraiser
-              </Link>
+              {isInvestorMode ? (
+                <button
+                  type="button"
+                  onClick={handleFundraiseRestrictedAccess}
+                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  <HandCoins className="h-4 w-4" />
+                  Start a Fundraiser
+                </button>
+              ) : (
+                <Link
+                  to="/fundraising"
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  <HandCoins className="h-4 w-4" />
+                  Start a Fundraiser
+                </Link>
+              )}
 
               <button
                 type="button"
@@ -646,6 +775,22 @@ const fundraiseItems = [
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         type={drawerType}
+      />
+      <AccessModeModal
+        open={fundraiseBlockedOpen}
+        onClose={() => setFundraiseBlockedOpen(false)}
+        onLogin={handleFundraiseLoginRedirect}
+        title="Fundraiser account needed"
+        message="You need to login or register account as a fundraiser to start a fundraising campaign."
+        buttonLabel="Go to Login"
+      />
+      <AccessModeModal
+        open={investBlockedOpen}
+        onClose={() => setInvestBlockedOpen(false)}
+        onLogin={handleInvestLoginRedirect}
+        title="Investor account needed"
+        message="You need to login or register account as an investor to invest in a campaign."
+        buttonLabel="Go to Login"
       />
     </>
   );

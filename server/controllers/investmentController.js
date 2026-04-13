@@ -453,3 +453,55 @@ exports.getMyInvestments = async (req, res) => {
     });
   }
 };
+
+// GET /api/investments/transactions/my
+exports.getMyTransactions = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. Please log in again.",
+      });
+    }
+
+    const transactions = await Transaction.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "campaign",
+        select: "projectTitle",
+      })
+      .populate({
+        path: "investment",
+        select: "amount paymentMethod",
+      });
+
+    // Format transactions for frontend
+    const formattedTransactions = transactions.map((txn) => ({
+      id: txn._id,
+      transactionId: txn.transactionId,
+      date: new Date(txn.createdAt).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+      campaign: txn.campaign?.projectTitle || "Unknown Campaign",
+      amount: `₹${Number(txn.amount || 0).toLocaleString("en-IN")}`,
+      method: txn.paymentMethod || "Unknown",
+      status: txn.status === "completed" ? "Completed" : txn.status === "failed" ? "Failed" : "Pending",
+      type: txn.type,
+      description: txn.description,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      count: formattedTransactions.length,
+      transactions: formattedTransactions,
+    });
+  } catch (err) {
+    console.error("getMyTransactions error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to fetch transactions",
+    });
+  }
+};

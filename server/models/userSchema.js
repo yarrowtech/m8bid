@@ -48,89 +48,95 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
-    profile: {
-      phone: { type: String, default: "" },
-      photo: { type: String, default: "" },
-    },
+profile: {
+  phone: { type: String, default: "" },
+  photo: { type: String, default: "" },
+  addressLine: { type: String, default: "" },
+  city: { type: String, default: "" },
+  state: { type: String, default: "" },
+  pincode: { type: String, default: "" },
+},
 
-    access: {
-      investor: {
-        enabled: { type: Boolean, default: false },
-        type: {
-          type: String,
-          enum: profileTypeEnum,
-          default: "individual",
-        },
-        kycStatus: {
-          type: String,
-          enum: documentStatusEnum,
-          default: "NONE",
-        },
-        panStatus: {
-          type: String,
-          enum: documentStatusEnum,
-          default: "NONE",
-        },
-        bankStatus: {
-          type: String,
-          enum: documentStatusEnum,
-          default: "NONE",
-        },
-        documents: {
-          pan: { type: String, default: "" },
-          kyc: { type: String, default: "" },
-          bankProof: { type: String, default: "" },
-          gst: { type: String, default: "" },
-          license: { type: String, default: "" },
-          incorporation: { type: String, default: "" },
-        },
-      },
+bankDetails: {
+  accountHolderName: { type: String, default: "" },
+  bankName: { type: String, default: "" },
+  accountNumber: { type: String, default: "" },
+  ifscCode: { type: String, default: "" },
+  branchName: { type: String, default: "" },
+},
 
-      fundraiser: {
-        enabled: { type: Boolean, default: false },
-        type: {
-          type: String,
-          enum: profileTypeEnum,
-          default: "individual",
-        },
-        kycStatus: {
-          type: String,
-          enum: documentStatusEnum,
-          default: "NONE",
-        },
-        panStatus: {
-          type: String,
-          enum: documentStatusEnum,
-          default: "NONE",
-        },
-        bankStatus: {
-          type: String,
-          enum: documentStatusEnum,
-          default: "NONE",
-        },
-        companyStatus: {
-          type: String,
-          enum: documentStatusEnum,
-          default: "NONE",
-        },
-        documents: {
-          pan: { type: String, default: "" },
-          kyc: { type: String, default: "" },
-          bankProof: { type: String, default: "" },
-          gst: { type: String, default: "" },
-          license: { type: String, default: "" },
-          incorporation: { type: String, default: "" },
-        },
-      },
-    },
-
-    activeMode: {
+access: {
+  investor: {
+    enabled: { type: Boolean, default: false },
+    type: {
       type: String,
-      enum: ["investor", "fundraiser", "none"],
-      default: "none",
+      enum: profileTypeEnum,
+      default: "individual",
+    },
+    kycStatus: {
+      type: String,
+      enum: documentStatusEnum,
+      default: "NONE",
+    },
+    bankStatus: {
+      type: String,
+      enum: documentStatusEnum,
+      default: "NONE",
     },
   },
-  { timestamps: true }
+  fundraiser: {
+    enabled: { type: Boolean, default: false },
+    type: {
+      type: String,
+      enum: profileTypeEnum,
+      default: "individual",
+    },
+    kycStatus: {
+      type: String,
+      enum: documentStatusEnum,
+      default: "NONE",
+    },
+    panStatus: {
+      type: String,
+      enum: documentStatusEnum,
+      default: "NONE",
+    },
+    bankStatus: {
+      type: String,
+      enum: documentStatusEnum,
+      default: "NONE",
+    },
+    companyStatus: {
+      type: String,
+      enum: documentStatusEnum,
+      default: "NONE",
+    },
+
+    details: {
+      aadhaarNumber: { type: String, default: "" },
+      panNumber: { type: String, default: "" },
+      addressProofType: { type: String, default: "" },
+    },
+
+    documents: {
+      pan: { type: String, default: "" },
+      kyc: { type: String, default: "" },
+      addressProof: { type: String, default: "" },
+      bankProof: { type: String, default: "" },
+      gst: { type: String, default: "" },
+      license: { type: String, default: "" },
+      incorporation: { type: String, default: "" },
+    },
+  },
+},
+
+activeMode: {
+  type: String,
+  enum: ["investor", "fundraiser", "none"],
+  default: "none",
+},
+},
+{ timestamps: true }
 );
 
 userSchema.pre("save", async function (next) {

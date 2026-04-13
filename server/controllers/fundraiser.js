@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 const Fundraiser = require("../models/Fundraiser");
 const { uploadToCloudinary } = require("../utils/cloudinary");
+const User = require("../models/userSchema");
 
 const ALLOWED_CATEGORIES = [
   "technology",
@@ -50,6 +51,14 @@ const uploadMany = async (files, field, folder) => {
     if (uploaded?.secure_url) uploadedUrls.push(uploaded.secure_url);
   }
   return uploadedUrls;
+};
+
+const uploadOptionalFile = async (files, field, folder, fallback = "") => {
+  const file = files?.[field]?.[0];
+  if (!file) return fallback;
+
+  const uploaded = await uploadToCloudinary(file, folder);
+  return uploaded?.secure_url || fallback;
 };
 
 const createFundRaiser = async (req, res) => {
@@ -350,10 +359,223 @@ const deleteFundraiserById = async (req, res) => {
   }
 };
 
+
+const updateFundraiserKYC = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const files = req.files || {};
+
+    const {
+      aadhaarNumber = "",
+      panNumber = "",
+      addressProofType = "",
+      addressLine = "",
+      city = "",
+      state = "",
+      pincode = "",
+    } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.access.fundraiser.kycStatus = "PENDING";
+    user.access.fundraiser.panStatus = panNumber ? "PENDING" : "NONE";
+
+    user.access.fundraiser.details = {
+      ...(user.access.fundraiser.details || {}),
+      aadhaarNumber,
+      panNumber,
+      addressProofType,
+    };
+
+    user.profile.addressLine = addressLine;
+    user.profile.city = city;
+    user.profile.state = state;
+    user.profile.pincode = pincode;
+
+    user.access.fundraiser.documents.kyc = await uploadOptionalFile(
+      files,
+      "identityProofFile",
+      "fundraiser/kyc",
+      user.access.fundraiser.documents.kyc || ""
+    );
+
+    user.access.fundraiser.documents.pan = await uploadOptionalFile(
+      files,
+      "panCardFile",
+      "fundraiser/pan",
+      user.access.fundraiser.documents.pan || ""
+    );
+
+    user.access.fundraiser.documents.addressProof = await uploadOptionalFile(
+      files,
+      "addressProofFile",
+      "fundraiser/address-proof",
+      user.access.fundraiser.documents.addressProof || ""
+    );
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "KYC updated successfully",
+      data: user,
+    });
+  } catch (err) {
+    console.error("KYC UPDATE ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to update KYC",
+    });
+  }
+};
+
+const updateFundraiserBank = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const files = req.files || {};
+
+    const {
+      accountHolderName = "",
+      bankName = "",
+      accountNumber = "",
+      ifscCode = "",
+      branchName = "",
+    } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.access.fundraiser.bankStatus = "PENDING";
+
+    user.bankDetails = {
+      accountHolderName,
+      bankName,
+      accountNumber,
+      ifscCode,
+      branchName,
+    };
+
+    user.access.fundraiser.documents.bankProof = await uploadOptionalFile(
+      files,
+      "bankProof",
+      "fundraiser/bank-proof",
+      user.access.fundraiser.documents.bankProof || ""
+    );
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Bank details updated successfully",
+      data: user,
+    });
+  } catch (err) {
+    console.error("BANK UPDATE ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to update bank details",
+    });
+  }
+};
+
+const getFundraiserProfile = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (err) {
+    console.error("PROFILE ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch profile",
+    });
+  }
+};
+
+const deleteFundraiserDocument = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { type } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const docs = user.access?.fundraiser?.documents;
+
+    if (!docs) {
+      return res.status(400).json({
+        success: false,
+        message: "No fundraiser document section found",
+      });
+    }
+
+    const allowedTypes = ["kyc", "pan", "addressProof", "bankProof"];
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid document type",
+      });
+    }
+
+    docs[type] = "";
+
+    if (type === "kyc") user.access.fundraiser.kycStatus = "NONE";
+    if (type === "pan") user.access.fundraiser.panStatus = "NONE";
+    if (type === "bankProof") user.access.fundraiser.bankStatus = "NONE";
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `${type} deleted successfully`,
+      data: user,
+    });
+  } catch (err) {
+    console.error("DELETE DOCUMENT ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to delete document",
+    });
+  }
+};
+
 module.exports = {
   createFundRaiser,
   getFundraisersByUser,
   getAllFundraisers,
   getFundraiserById,
   deleteFundraiserById,
+  getFundraiserProfile,
+  updateFundraiserKYC,
+  updateFundraiserBank,
+  deleteFundraiserDocument
 };

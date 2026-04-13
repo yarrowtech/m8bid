@@ -6,15 +6,12 @@ const { decodeToken, isAdmin } = require("./middleware/authmiddleware"); // Assu
 // Import Routes
 const authRoutes = require("./routes/userRouter");
 const fundRaiserRouter = require("./routes/fundraiserRoutes");
+const investorRouter = require("./routes/investorRoutes");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const CampaignRouter = require("./routes/campaignsRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const investmentRoutes = require("./routes/investment");
-const multer = require("multer");
-
-const storage = multer.diskStorage({});
-const upload = multer({ storage });
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -29,10 +26,10 @@ app.use(cookieParser()); // Parse cookies
 // Routes
 app.use("/api/auth", authRoutes); // Authentication Routes
 app.use("/api/fundraiser", fundRaiserRouter); // Correct endpoint for fundraisers
+app.use("/api/investor", investorRouter); // Investor Routes
 app.use("/api/campaigns", CampaignRouter); // Campaigns Routes
 app.use("/api/admin", decodeToken, isAdmin, adminRoutes); // Admin Routes
 app.use("/api/investments", investmentRoutes);
-console.log("upload.fields:", typeof upload.fields);
 
 
 

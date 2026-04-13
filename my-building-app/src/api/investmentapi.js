@@ -35,3 +35,15 @@ export const getMyInvestments = async () => {
     );
   }
 };
+
+export const getMyTransactions = async () => {
+  try {
+    const { data } = await api.get("/investments/transactions/my");
+    return data;
+  } catch (error) {
+    console.error("getMyTransactions error:", error);
+    throw new Error(
+      error?.response?.data?.message || "Failed to fetch transactions"
+    );
+  }
+};

@@ -6,34 +6,34 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import starterImg from "../assets/starter.jpg";
-import incomeImg from "../assets/income.jpg";
+import starterImg from "../assets/donation.jpg";
+import incomeImg from "../assets/invest.webp";
 import planIcon from "../assets/plan.png";
 
 const plans = [
   {
-    name: "Investment Without Return",
-    desc: "Designed for supporters who want to back meaningful projects without expecting financial returns. Best suited for community-driven, cause-led, or trust-based funding.",
+    name: "Donation-Based ",
+    desc: "Designed for users who want to support meaningful projects, social causes, or community-driven initiatives without expecting any financial return.",
     min: "₹500",
-    return: "No financial return",
-    fund: "Support-based contribution model",
+    return: "No return (support only)",
+    fund: "Contribution-based support model",
     image: starterImg,
     badge: "Support Plan",
     accent: "from-slate-900 to-slate-700",
     iconBg: "bg-slate-100",
-    tag: "Simple entry",
+    tag: "For supporters",
   },
   {
-    name: "Investment With Return",
-    desc: "Built for users who want structured participation with expected returns. Suitable for business-oriented campaigns with clearer funding goals and return visibility.",
+    name: "Investment ",
+    desc: "Built for users who want to invest in campaigns and participate in their growth. This focuses purely on investment contribution without mentioning any return structure.",
     min: "₹500",
-    return: "~6–7%",
-    fund: "Growth-focused contribution model",
+    return: "Participation based",
+    fund: "Investment contribution model",
     image: incomeImg,
-    badge: "Return Plan",
+    badge: "Investment Plan",
     accent: "from-blue-600 to-indigo-600",
     iconBg: "bg-blue-50",
-    tag: "Investor friendly",
+    tag: "For investors",
   },
 ];
 
@@ -94,7 +94,7 @@ export default function Plans() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
-              <div className="absolute left-4 top-4">
+              <div className="absolute left-4 top-1">
                 <span
                   className={cx(
                     "inline-flex items-center rounded-full bg-gradient-to-r px-3 py-1 text-[11px] font-semibold text-white shadow-lg",

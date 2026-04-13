@@ -19,7 +19,10 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 import FundraiserSidebar from "./FundraiserSidebar";
-import { getDashboardData } from "../../api/fundraiser.api";
+import {
+  getDashboardData,
+  getFundraiserProfile,
+} from "../../api/fundraiser.api";
 
 function TopIconButton({ children }) {
   return (
@@ -292,11 +295,31 @@ const calcProgress = (raised, target) => {
   return Math.min(100, Math.round((r / t) * 100));
 };
 
+const normalizeProfileStatus = (value, type = "default") => {
+  const v = String(value || "").toUpperCase();
+
+  if (type === "kyc") {
+    if (v === "VERIFIED" || v === "APPROVED") return "Verified";
+    if (v === "REJECTED") return "Rejected";
+    if (v === "PENDING") return "Pending Review";
+    if (v === "NONE") return "Pending Review";
+  }
+
+  if (type === "bank") {
+    if (v === "VERIFIED" || v === "APPROVED") return "Linked";
+    if (v === "REJECTED") return "Rejected";
+    if (v === "PENDING") return "Pending Review";
+    if (v === "NONE") return "Not Linked";
+  }
+
+  return value || "-";
+};
+
 export default function FundraiserDashboard() {
   const navigate = useNavigate();
   const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const [user] = useState(localUser || null);
+  const [user, setUser] = useState(localUser || null);
   const [fundraisers, setFundraisers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -314,8 +337,18 @@ export default function FundraiserDashboard() {
           return;
         }
 
-        const res = await getDashboardData(userId);
-        setFundraisers(Array.isArray(res?.data) ? res.data : []);
+        const [dashboardRes, profileRes] = await Promise.all([
+          getDashboardData(userId),
+          getFundraiserProfile(),
+        ]);
+
+        setFundraisers(Array.isArray(dashboardRes?.data) ? dashboardRes.data : []);
+
+        const liveUser = profileRes?.data || null;
+        if (liveUser) {
+          setUser(liveUser);
+          localStorage.setItem("user", JSON.stringify(liveUser));
+        }
       } catch (err) {
         setError(err?.message || err?.message || "Failed to load dashboard");
       } finally {
@@ -355,16 +388,29 @@ export default function FundraiserDashboard() {
     let score = 0;
     if (user?.name) score += 20;
     if (user?.email) score += 20;
-    if (user?.phone) score += 15;
+    if (user?.profile?.phone) score += 15;
     if (user?.avatar || user?.profileImage) score += 15;
-    if (user?.kycStatus) score += 15;
+    if (
+      ["VERIFIED", "APPROVED"].includes(
+        String(user?.access?.fundraiser?.kycStatus || "").toUpperCase()
+      )
+    ) {
+      score += 15;
+    }
     if (user?.bankDetails?.accountNumber) score += 15;
     return Math.min(score, 100);
   }, [user]);
 
-  const kycStatus = user?.kycStatus || "Pending";
+  const kycStatus = normalizeProfileStatus(
+    user?.access?.fundraiser?.kycStatus,
+    "kyc"
+  );
 
-  const bankLinked = Boolean(user?.bankDetails?.accountNumber);
+  const bankStatus = user?.bankDetails?.accountNumber
+    ? "Linked"
+    : normalizeProfileStatus(user?.access?.fundraiser?.bankStatus, "bank");
+
+  const bankLinked = bankStatus === "Linked";
 
   const stats = [
     {
@@ -597,7 +643,7 @@ export default function FundraiserDashboard() {
                 <RightMetricCard
                   title="Profile Completion"
                   value={`${profileCompletion}%`}
-                  sub="Based on available user details"
+                  sub="Based on live profile, KYC, and bank details"
                   icon={BadgeCheck}
                   tone="sky"
                 />
@@ -610,7 +656,7 @@ export default function FundraiserDashboard() {
                 <RightMetricCard
                   title="KYC Status"
                   value={String(kycStatus)}
-                  sub="Based on current account data"
+                  sub="Live status from your fundraiser profile"
                   icon={FileCheck}
                   tone={
                     String(kycStatus).toLowerCase().includes("approved") ||
@@ -629,10 +675,16 @@ export default function FundraiserDashboard() {
               >
                 <RightMetricCard
                   title="Bank Account"
-                  value={bankLinked ? "Linked" : "Not Linked"}
-                  sub="Based on account details"
+                  value={bankStatus}
+                  sub="Live status from your linked bank details"
                   icon={Landmark}
-                  tone={bankLinked ? "emerald" : "indigo"}
+                  tone={
+                    bankLinked
+                      ? "emerald"
+                      : String(bankStatus).toLowerCase().includes("rejected")
+                      ? "rose"
+                      : "indigo"
+                  }
                 />
               </div>
             </div>

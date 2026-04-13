@@ -6,6 +6,7 @@ const {
   createInvestment,
   confirmInvestment,
   getMyInvestments,
+  getMyTransactions,
 } = require("../controllers/investmentController");
 
 const { protect } = require("../middleware/authmiddleware");
@@ -37,6 +38,7 @@ router.post(
 );
 
 router.get("/my", protect, getMyInvestments);
+router.get("/transactions/my", protect, getMyTransactions);
 router.post("/:id/confirm", protect, confirmInvestment);
 
 module.exports = router;

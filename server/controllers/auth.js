@@ -27,7 +27,6 @@ const registerUser = async (req, res) => {
     phone,
     password,
     accountMode,
-    profileType,
   } = req.body;
 
   try {
@@ -47,7 +46,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "An account with this email already exists. Please login to continue.",
+          "This email is already in use. One email can only be used for one account, so please use a different email address.",
       });
     }
 
@@ -61,8 +60,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    const safeProfileType = profileType || "individual";
-
     await User.create({
       username: normalizedUsername,
       name: name.trim(),
@@ -74,11 +71,9 @@ const registerUser = async (req, res) => {
       access: {
         investor: {
           enabled: accountMode === "investor",
-          type: accountMode === "investor" ? safeProfileType : "individual",
         },
         fundraiser: {
           enabled: accountMode === "fundraiser",
-          type: accountMode === "fundraiser" ? safeProfileType : "individual",
         },
       },
       activeMode: "none",
@@ -134,12 +129,34 @@ const loginUser = async (req, res) => {
       });
     }
 
+    if (preferredMode) {
+      if (!["investor", "fundraiser"].includes(preferredMode)) {
+        return res.status(400).json({
+          success: false,
+          message: "Preferred mode must be investor or fundraiser",
+        });
+      }
+
+      if (!user.access?.[preferredMode]?.enabled) {
+        return res.status(403).json({
+          success: false,
+          message: `This account does not have ${preferredMode} access`,
+        });
+      }
+    }
+
     if (
       preferredMode &&
       ["investor", "fundraiser"].includes(preferredMode) &&
       user.access?.[preferredMode]?.enabled
     ) {
       user.activeMode = preferredMode;
+      await user.save();
+    } else if (user.access?.investor?.enabled && !user.access?.fundraiser?.enabled) {
+      user.activeMode = "investor";
+      await user.save();
+    } else if (user.access?.fundraiser?.enabled && !user.access?.investor?.enabled) {
+      user.activeMode = "fundraiser";
       await user.save();
     }
 

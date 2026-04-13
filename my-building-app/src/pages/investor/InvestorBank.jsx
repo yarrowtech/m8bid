@@ -11,12 +11,8 @@ import {
   Eye,
   Trash2,
 } from "lucide-react";
-import FundraiserSidebar from "./FundraiserSidebar";
-import {
-  updateBank,
-  getFundraiserProfile,
-  deleteFundraiserDocument,
-} from "../../api/fundraiser.api";
+import InvestorSidebar from "./InvestorSidebar";
+import { getInvestorProfile, updateInvestorBank, deleteInvestorDocument } from "../../api/investor.api";
 
 function Field({ label, icon: Icon, children }) {
   return (
@@ -45,7 +41,7 @@ function SummaryRow({ label, value }) {
   );
 }
 
-export default function FundraiserBank() {
+export default function InvestorBank() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -66,8 +62,8 @@ export default function FundraiserBank() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await getFundraiserProfile();
-      const user = res?.data?.data || res?.data || {};
+      const response = await getInvestorProfile();
+      const user = response?.data || {};
 
       setFormData((prev) => ({
         ...prev,
@@ -80,7 +76,7 @@ export default function FundraiserBank() {
       }));
 
       setExistingBankProof(
-        user?.access?.fundraiser?.documents?.bankProof || ""
+        user?.access?.investor?.documents?.bankProof || ""
       );
     } catch (error) {
       console.error("Failed to fetch bank profile:", error);
@@ -119,7 +115,7 @@ export default function FundraiserBank() {
         fd.append("bankProof", formData.bankProof);
       }
 
-      await updateBank(fd);
+      await updateInvestorBank(fd);
       await fetchProfile();
 
       setSaved(true);
@@ -133,7 +129,7 @@ export default function FundraiserBank() {
   const handleDeleteBankProof = async () => {
     try {
       setDeletingProof(true);
-      await deleteFundraiserDocument("bankProof");
+      await deleteInvestorDocument("bankProof");
       await fetchProfile();
     } catch (error) {
       console.error("Failed to delete bank proof:", error);
@@ -172,7 +168,7 @@ export default function FundraiserBank() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active="profile" />
+        <InvestorSidebar active="profile" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -181,7 +177,7 @@ export default function FundraiserBank() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <button
-                onClick={() => navigate("/fundraiser/profile")}
+                onClick={() => navigate("/investor/profile")}
                 className="mb-3 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 <ArrowLeft size={16} />
@@ -192,7 +188,7 @@ export default function FundraiserBank() {
                 Bank Account
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Add payout details for withdrawals and campaign fund transfers.
+                Add payout details for withdrawals and investment transfers.
               </p>
             </div>
 
@@ -369,14 +365,14 @@ export default function FundraiserBank() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/fundraiser/profile")}
+                    onClick={() => navigate("/investor/profile")}
                     className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     Back to Profile
                   </button>
 
                   <button
-                    onClick={() => navigate("/fundraiser/profile/kyc")}
+                    onClick={() => navigate("/investor/profile/kyc")}
                     className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                   >
                     Go to KYC Details
