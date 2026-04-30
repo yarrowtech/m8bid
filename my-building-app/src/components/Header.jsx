@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   Search,
   ChevronDown,
@@ -247,9 +248,9 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
 function AccessModeModal({ open, onClose, onLogin, title, message, buttonLabel }) {
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-md transition-all duration-300">
-      <div className="w-full max-w-lg rounded-[32px] border border-slate-200/80 bg-white/98 p-8 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md transform transition-all duration-500 ease-out scale-100 animate-in fade-in-0 zoom-in-95">
+  return createPortal(
+    <div className="app-popup-backdrop fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-md transition-all duration-300">
+      <div className="app-popup-panel w-full max-w-lg rounded-[32px] border border-slate-200/80 bg-white/98 p-8 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md transform transition-all duration-500 ease-out scale-100 animate-in fade-in-0 zoom-in-95">
         <div className="flex items-start gap-5">
           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/25">
             <ShieldCheck className="h-8 w-8" />
@@ -292,7 +293,8 @@ function AccessModeModal({ open, onClose, onLogin, title, message, buttonLabel }
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -402,6 +404,7 @@ export default function Header() {
   };
 
   const activeMode = loggedInUser?.activeMode || "none";
+  const hasSession = Boolean(loggedInUser && localStorage.getItem("token"));
   const isInvestorMode = activeMode === "investor";
   const isFundraiserMode = activeMode === "fundraiser";
   const dashboardPath =
@@ -439,30 +442,60 @@ export default function Header() {
     navigate("/login");
   };
 
+  const handleGuestInvestAccess = () => {
+    setInvestOpen(false);
+    setFundraiseOpen(false);
+    setMobileOpen(false);
+    setInvestBlockedOpen(true);
+  };
+
+  const handleGuestFundraiseAccess = () => {
+    setInvestOpen(false);
+    setFundraiseOpen(false);
+    setMobileOpen(false);
+    setFundraiseBlockedOpen(true);
+  };
+
 const investItems = [
   {
     label: "Browse Investors",
     desc: "Explore active opportunities and investor-focused campaigns.",
-    to: isFundraiserMode ? null : "/browse-investors",
-    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
+    to: !hasSession ? null : isFundraiserMode ? null : "/browse-investors",
+    onClick: !hasSession
+      ? handleGuestInvestAccess
+      : isFundraiserMode
+      ? handleInvestRestrictedAccess
+      : undefined,
   },
   {
     label: "Supporter Space",
     desc: "Discover FAQs, updates, and how contributions work.",
-    to: isFundraiserMode ? null : "/supporter-space",
-    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
+    to: !hasSession ? null : isFundraiserMode ? null : "/supporter-space",
+    onClick: !hasSession
+      ? handleGuestInvestAccess
+      : isFundraiserMode
+      ? handleInvestRestrictedAccess
+      : undefined,
   },
   {
     label: "Return Based Options",
     desc: "Explore structured participation with expected returns.",
-    to: isFundraiserMode ? null : "/return-based-options",
-    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
+    to: !hasSession ? null : isFundraiserMode ? null : "/return-based-options",
+    onClick: !hasSession
+      ? handleGuestInvestAccess
+      : isFundraiserMode
+      ? handleInvestRestrictedAccess
+      : undefined,
   },
   {
     label: "Verified Opportunities",
     desc: "See campaigns reviewed through platform workflows.",
-    to: isFundraiserMode ? null : "/verified-opportunities",
-    onClick: isFundraiserMode ? handleInvestRestrictedAccess : undefined,
+    to: !hasSession ? null : isFundraiserMode ? null : "/verified-opportunities",
+    onClick: !hasSession
+      ? handleGuestInvestAccess
+      : isFundraiserMode
+      ? handleInvestRestrictedAccess
+      : undefined,
   },
 ];
 
@@ -470,26 +503,42 @@ const fundraiseItems = [
   {
     label: "Start a Fundraiser",
     desc: "Launch your fundraiser with a guided creation flow.",
-    to: isInvestorMode ? null : "/fundraising",
-    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
+    to: !hasSession ? null : isInvestorMode ? null : "/fundraising",
+    onClick: !hasSession
+      ? handleGuestFundraiseAccess
+      : isInvestorMode
+      ? handleFundraiseRestrictedAccess
+      : undefined,
   },
   {
     label: "Business Campaigns",
     desc: "Raise support for business growth and new initiatives.",
-    to: isInvestorMode ? null : "/business-campaigns",
-    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
+    to: !hasSession ? null : isInvestorMode ? null : "/business-campaigns",
+    onClick: !hasSession
+      ? handleGuestFundraiseAccess
+      : isInvestorMode
+      ? handleFundraiseRestrictedAccess
+      : undefined,
   },
   {
     label: "Cause-Based Funding",
     desc: "Create campaigns for support-oriented fundraising.",
-    to: isInvestorMode ? null : "/cause-based-funding",
-    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
+    to: !hasSession ? null : isInvestorMode ? null : "/cause-based-funding",
+    onClick: !hasSession
+      ? handleGuestFundraiseAccess
+      : isInvestorMode
+      ? handleFundraiseRestrictedAccess
+      : undefined,
   },
   {
     label: "Fundraising Ideas",
     desc: "Get inspired with campaign direction and planning ideas.",
-    to: isInvestorMode ? null : "/fundraising-ideas",
-    onClick: isInvestorMode ? handleFundraiseRestrictedAccess : undefined,
+    to: !hasSession ? null : isInvestorMode ? null : "/fundraising-ideas",
+    onClick: !hasSession
+      ? handleGuestFundraiseAccess
+      : isInvestorMode
+      ? handleFundraiseRestrictedAccess
+      : undefined,
   },
 ];
 
@@ -529,7 +578,7 @@ const fundraiseItems = [
             </div>
             <div className="hidden sm:block">
               <div className="text-lg font-bold tracking-tight text-white">
-                M8-BID
+                M8BID
               </div>
               <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                 Fundraising Platform
@@ -702,7 +751,16 @@ const fundraiseItems = [
                 How it Works
               </Link>
 
-              {isFundraiserMode ? (
+              {!hasSession ? (
+                <button
+                  type="button"
+                  onClick={handleGuestInvestAccess}
+                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  <BadgeDollarSign className="h-4 w-4" />
+                  Browse Investors
+                </button>
+              ) : isFundraiserMode ? (
                 <button
                   type="button"
                   onClick={handleInvestRestrictedAccess}
@@ -721,7 +779,16 @@ const fundraiseItems = [
                 </Link>
               )}
 
-              {isInvestorMode ? (
+              {!hasSession ? (
+                <button
+                  type="button"
+                  onClick={handleGuestFundraiseAccess}
+                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  <HandCoins className="h-4 w-4" />
+                  Start a Fundraiser
+                </button>
+              ) : isInvestorMode ? (
                 <button
                   type="button"
                   onClick={handleFundraiseRestrictedAccess}

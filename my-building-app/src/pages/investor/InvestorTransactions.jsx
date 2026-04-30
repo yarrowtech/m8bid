@@ -72,7 +72,7 @@ export default function InvestorTransactions() {
 
           {loading ? (
             <div className="mt-6 flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#6f5cf2]" />
               <span className="ml-3 text-slate-600">Loading transactions...</span>
             </div>
           ) : error ? (

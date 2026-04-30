@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { FaBars, FaSearch, FaEye, FaUserCircle } from "react-icons/fa";
-import { getAdminUsers } from "../../api/admin";
+import { FaBars, FaSearch, FaEye, FaUserCircle, FaTrash } from "react-icons/fa";
+import { deleteAdminUser, getAdminUsers } from "../../api/admin";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
@@ -71,90 +71,61 @@ const normalizeMode = (value) => {
 
 const getProfilesFromUser = (user) => {
   const profiles = [];
-  const access = user?.access || {};
+  const investorAccess = user?.investorAccess || user?.access?.investor || {};
+  const fundraiserAccess = user?.fundraiserAccess || user?.access?.fundraiser || {};
 
-  const investorEnabled =
-    access?.investor?.enabled ||
-    user?.investorProfile?.enabled ||
-    String(user?.role || "").toLowerCase() === "investor";
-
-  const fundraiserEnabled =
-    access?.fundraiser?.enabled ||
-    user?.fundraiserProfile?.enabled ||
-    String(user?.role || "").toLowerCase() === "fundraiser";
-
-  const investorType =
-    access?.investor?.type ||
-    user?.investorProfile?.type ||
-    "individual";
-
-  const fundraiserType =
-    access?.fundraiser?.type ||
-    user?.fundraiserProfile?.type ||
-    "individual";
-
-  if (investorEnabled) {
-    profiles.push(
-      investorType === "company" ? "Investor Company" : "Investor Individual"
-    );
+  if (investorAccess?.enabled) {
+    profiles.push("Investor");
   }
 
-  if (fundraiserEnabled) {
-    profiles.push(
-      fundraiserType === "company"
-        ? "Fundraiser Company"
-        : "Fundraiser Individual"
-    );
+  if (fundraiserAccess?.enabled) {
+    profiles.push("Fundraiser");
   }
 
   return profiles;
 };
 
 const getVerificationSummary = (user) => {
-  const access = user?.access || {};
+  const investorAccess = user?.investorAccess || user?.access?.investor || {};
+  const fundraiserAccess = user?.fundraiserAccess || user?.access?.fundraiser || {};
 
   const items = [];
 
-  const investorEnabled =
-    access?.investor?.enabled ||
-    user?.investorProfile?.enabled ||
-    String(user?.role || "").toLowerCase() === "investor";
-
-  const fundraiserEnabled =
-    access?.fundraiser?.enabled ||
-    user?.fundraiserProfile?.enabled ||
-    String(user?.role || "").toLowerCase() === "fundraiser";
-
-  if (investorEnabled) {
+  if (investorAccess?.enabled) {
     items.push({
       label: "Investor KYC",
-      value:
-        access?.investor?.kycStatus ||
-        user?.investorProfile?.kycStatus ||
-        user?.kycStatus ||
-        "NONE",
+      value: investorAccess?.kycStatus || "NONE",
+      role: "investor",
+    });
+    items.push({
+      label: "Investor Bank",
+      value: investorAccess?.bankStatus || "NONE",
+      role: "investor",
     });
   }
 
-  if (fundraiserEnabled) {
+  if (fundraiserAccess?.enabled) {
     items.push({
       label: "Fundraiser KYC",
-      value:
-        access?.fundraiser?.kycStatus ||
-        user?.fundraiserProfile?.kycStatus ||
-        user?.kycStatus ||
-        "NONE",
+      value: fundraiserAccess?.kycStatus || "NONE",
+      role: "fundraiser",
+    });
+    items.push({
+      label: "Fundraiser PAN",
+      value: fundraiserAccess?.panStatus || "NONE",
+      role: "fundraiser",
+    });
+    items.push({
+      label: "Fundraiser Bank",
+      value: fundraiserAccess?.bankStatus || "NONE",
+      role: "fundraiser",
     });
 
-    if (
-      (access?.fundraiser?.type || user?.fundraiserProfile?.type) === "company"
-    ) {
+    if (fundraiserAccess?.type === "company") {
       items.push({
         label: "Company Docs",
-        value:
-          access?.fundraiser?.companyStatus ||
-          user?.fundraiserProfile?.companyStatus ||
-          "NONE",
+        value: fundraiserAccess?.companyStatus || "NONE",
+        role: "fundraiser",
       });
     }
   }
@@ -171,6 +142,7 @@ export default function AdminUsers() {
   const [profileFilter, setProfileFilter] = useState("all");
   const [verificationFilter, setVerificationFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [deletingUserId, setDeletingUserId] = useState("");
 
   useEffect(() => {
     const run = async () => {
@@ -230,12 +202,6 @@ export default function AdminUsers() {
         matchesProfile =
           profiles.some((p) => p.toLowerCase().includes("investor")) &&
           profiles.some((p) => p.toLowerCase().includes("fundraiser"));
-      } else if (profileFilter === "company") {
-        matchesProfile = profiles.some((p) => p.toLowerCase().includes("company"));
-      } else if (profileFilter === "individual") {
-        matchesProfile = profiles.some((p) =>
-          p.toLowerCase().includes("individual")
-        );
       }
 
       let matchesVerification = true;
@@ -249,6 +215,32 @@ export default function AdminUsers() {
       return matchesSearch && matchesProfile && matchesVerification;
     });
   }, [users, search, profileFilter, verificationFilter]);
+
+  const handleDeleteUser = async (userId) => {
+    if (!userId) return;
+    const shouldDelete = window.confirm(
+      "Are you sure you want to delete this user? This action cannot be undone."
+    );
+    if (!shouldDelete) return;
+
+    try {
+      setDeletingUserId(userId);
+      const res = await deleteAdminUser(userId);
+      if (!res?.success) {
+        throw new Error(res?.message || "Failed to delete user");
+      }
+      setUsers((prev) => prev.filter((user) => user?._id !== userId));
+    } catch (error) {
+      console.error("Delete user failed:", error);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Delete failed. Please try again.";
+      window.alert(message);
+    } finally {
+      setDeletingUserId("");
+    }
+  };
 
   return (
     <>
@@ -294,8 +286,6 @@ export default function AdminUsers() {
             <option value="investor">Investor</option>
             <option value="fundraiser">Fundraiser</option>
             <option value="both">Both</option>
-            <option value="company">Company</option>
-            <option value="individual">Individual</option>
           </select>
         </div>
 
@@ -348,6 +338,7 @@ export default function AdminUsers() {
                     const verification = getVerificationSummary(user);
                     const mode = normalizeMode(user?.activeMode);
                     const accountStatus = normalizeStatus(user?.status, user?.isActive);
+                    const isDeleting = deletingUserId === user?._id;
 
                     return (
                       <tr key={user?._id || i} className="align-top hover:bg-slate-50">
@@ -361,12 +352,23 @@ export default function AdminUsers() {
                               <p className="font-semibold text-slate-900">
                                 {user?.name || "—"}
                               </p>
-                              <p className="truncate text-sm text-slate-500">
+                              <p className="truncate text-sm text-slate-600 font-medium">
                                 {user?.email || "—"}
                               </p>
-                              <p className="mt-1 text-xs text-slate-400 break-all">
-                                ID: {user?._id || "—"}
-                              </p>
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                {user?.investorAccess?.enabled && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+                                    Investor
+                                  </span>
+                                )}
+                                {user?.fundraiserAccess?.enabled && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                                    Fundraiser
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -413,14 +415,22 @@ export default function AdminUsers() {
                           {verification.length > 0 ? (
                             <div className="space-y-1.5">
                               {verification.map((item, idx) => (
-                                <p key={`${item.label}-${idx}`} className="text-xs">
-                                  <span className="font-semibold text-slate-700">
-                                    {item.label}:
-                                  </span>{" "}
-                                  <span className={cn("font-medium uppercase", getVerificationTone(item.value))}>
+                                <div key={`${item.label}-${idx}`} className="text-xs">
+                                  <div className="inline-flex items-center gap-2">
+                                    <span
+                                      className={cn(
+                                        "inline-block h-2 w-2 rounded-full",
+                                        item.role === "investor" ? "bg-violet-500" : "bg-sky-500"
+                                      )}
+                                    />
+                                    <span className="font-semibold text-slate-700">
+                                      {item.label}:
+                                    </span>
+                                  </div>
+                                  <span className={cn("font-medium uppercase ml-4", getVerificationTone(item.value))}>
                                     {String(item.value || "NONE").replaceAll("_", " ")}
                                   </span>
-                                </p>
+                                </div>
                               ))}
                             </div>
                           ) : (
@@ -439,13 +449,29 @@ export default function AdminUsers() {
                         </td>
 
                         <td className="px-4 py-4 text-center">
-                          <button
-                            onClick={() => navigate(`/admin/users/${user?._id}`)}
-                            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800"
-                          >
-                            <FaEye />
-                            View Details
-                          </button>
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => navigate(`/admin/users/${user?._id}`)}
+                              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                            >
+                              <FaEye />
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user?._id)}
+                              disabled={isDeleting}
+                              className={cn(
+                                "inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition",
+                                isDeleting
+                                  ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+                                  : "bg-rose-600 text-white hover:bg-rose-700"
+                              )}
+                              title="Delete user from database"
+                            >
+                              <FaTrash />
+                              {isDeleting ? "Deleting..." : "Delete"}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

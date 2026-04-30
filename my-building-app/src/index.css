@@ -8,3 +8,260 @@
 body{
   background-color: rgba(255, 255, 255, 1);
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes pageFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.motion-target {
+  opacity: 0;
+  transform: translateY(20px) scale(0.996);
+  transition:
+    opacity 680ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--motion-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+.motion-target.motion-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@keyframes contentRiseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popupBackdropIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(6px);
+  }
+}
+
+@keyframes popupPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.app-popup-backdrop {
+  animation: popupBackdropIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-popup-panel {
+  animation: popupPanelIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.app-page-transition {
+  animation: pageFadeSlideIn 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.app-page-transition > * {
+  animation: contentRiseIn 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-page-transition > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.app-page-transition > *:nth-child(3) {
+  animation-delay: 110ms;
+}
+
+.app-page-transition > *:nth-child(4) {
+  animation-delay: 160ms;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 280ms ease,
+    color 280ms ease,
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    opacity 280ms ease;
+}
+
+button:hover,
+a:hover {
+  transform: translateY(-1px) scale(1.002);
+}
+
+button:active,
+a:active {
+  transform: translateY(0) scale(0.99);
+}
+
+*:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app-page-transition {
+    overflow-x: hidden;
+  }
+
+  [class*="min-w-"] {
+    min-width: 0 !important;
+  }
+
+  [class*="w-["],
+  [class*="max-w-["] {
+    max-width: 100% !important;
+  }
+
+  [class*="grid-cols-3"],
+  [class*="grid-cols-4"],
+  [class*="grid-cols-5"],
+  [class*="grid-cols-6"],
+  [class*="grid-cols-7"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  [class*="px-14"],
+  [class*="px-16"],
+  [class*="px-20"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  h1[class*="text-4xl"],
+  h1[class*="text-5xl"],
+  h1[class*="text-6xl"],
+  h2[class*="text-4xl"],
+  h2[class*="text-5xl"] {
+    line-height: 1.15 !important;
+    font-size: 1.75rem !important;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .card,
+  [class*="rounded-2xl"],
+  [class*="rounded-3xl"] {
+    border-radius: 0.875rem !important;
+    padding: 0.75rem !important;
+  }
+
+  [class*="shadow-"] {
+    box-shadow: 0 8px 20px -14px rgba(15, 23, 42, 0.28) !important;
+  }
+
+  .card h1,
+  .card h2,
+  .card h3,
+  [class*="rounded-2xl"] h1,
+  [class*="rounded-2xl"] h2,
+  [class*="rounded-2xl"] h3,
+  [class*="rounded-3xl"] h1,
+  [class*="rounded-3xl"] h2,
+  [class*="rounded-3xl"] h3 {
+    font-size: 1rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .card p,
+  .card span,
+  .card li,
+  [class*="rounded-2xl"] p,
+  [class*="rounded-2xl"] span,
+  [class*="rounded-2xl"] li,
+  [class*="rounded-3xl"] p,
+  [class*="rounded-3xl"] span,
+  [class*="rounded-3xl"] li {
+    font-size: 0.8125rem !important;
+    line-height: 1.35rem !important;
+  }
+
+  .card img,
+  [class*="rounded-2xl"] img,
+  [class*="rounded-3xl"] img {
+    max-height: 180px;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  /* Mobile content-lite cards: keep primary content, hide noisy micro-details */
+  .card [class*="text-[10px]"],
+  .card [class*="text-[11px]"],
+  .card [class*="text-xs"],
+  [class*="rounded-2xl"] [class*="text-[10px]"],
+  [class*="rounded-2xl"] [class*="text-[11px]"],
+  [class*="rounded-2xl"] [class*="text-xs"],
+  [class*="rounded-3xl"] [class*="text-[10px]"],
+  [class*="rounded-3xl"] [class*="text-[11px]"],
+  [class*="rounded-3xl"] [class*="text-xs"] {
+    display: none !important;
+  }
+
+  .card p,
+  [class*="rounded-2xl"] p,
+  [class*="rounded-3xl"] p {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card ul li:nth-child(n + 4),
+  [class*="rounded-2xl"] ul li:nth-child(n + 4),
+  [class*="rounded-3xl"] ul li:nth-child(n + 4) {
+    display: none !important;
+  }
+}

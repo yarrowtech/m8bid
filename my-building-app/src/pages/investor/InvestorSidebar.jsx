@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 import {
   LayoutDashboard,
   BriefcaseBusiness,
@@ -10,6 +11,7 @@ import {
   LogOut,
   Gavel,
 } from "lucide-react";
+import { logoutUser } from "../../api/user";
 
 function SidebarItem({ icon: Icon, label, active = false, onClick }) {
   return (
@@ -17,14 +19,14 @@ function SidebarItem({ icon: Icon, label, active = false, onClick }) {
       onClick={onClick}
       className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition ${
         active
-          ? "bg-sky-50 text-sky-700"
+          ? "bg-[#f1edff] text-[#6f5cf2]"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
       <span
         className={`flex h-9 w-9 items-center justify-center rounded-xl transition ${
           active
-            ? "bg-sky-600 text-white"
+            ? "bg-[#6f5cf2] text-white"
             : "bg-slate-100 text-slate-600 group-hover:bg-white"
         }`}
       >
@@ -44,7 +46,7 @@ export default function InvestorSidebar({ active = "dashboard" }) {
         onClick={() => navigate("/")}
         className="flex items-center gap-3 text-left"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-600 text-white shadow-sm">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#6f5cf2] text-white shadow-sm">
           <Gavel size={18} />
         </div>
         <div>
@@ -96,7 +98,11 @@ export default function InvestorSidebar({ active = "dashboard" }) {
 
       <div className="mt-auto pt-8">
         <button
-          onClick={() => navigate("/logout")}
+          onClick={() => {
+            Cookies.remove("token");
+            logoutUser();
+            navigate("/");
+          }}
           className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50">

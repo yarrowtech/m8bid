@@ -21,7 +21,7 @@ function SectionCard({ title, icon: Icon, children }) {
   return (
     <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+        <div className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1edff] text-[#6f5cf2]">
           <Icon size={18} />
         </div>
         <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
@@ -46,7 +46,7 @@ function InputField({
       <label className="mb-2 block text-sm font-medium text-slate-700">
         {label}
       </label>
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-sky-400">
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-[#8d7bff]">
         {Icon ? (
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-500">
             <Icon size={16} />
@@ -72,7 +72,7 @@ function SelectField({ label, value, onChange, name, options, icon: Icon }) {
       <label className="mb-2 block text-sm font-medium text-slate-700">
         {label}
       </label>
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-sky-400">
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-[#8d7bff]">
         {Icon ? (
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-500">
             <Icon size={16} />
@@ -103,6 +103,7 @@ function FileField({
   existingUrl,
   onDelete,
   deleting = false,
+  disableUpload = false,
 }) {
   return (
     <div>
@@ -111,15 +112,23 @@ function FileField({
       </label>
 
       <div className="space-y-3">
-        <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 transition hover:border-sky-400 hover:bg-sky-50">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-sky-700">
+        <label
+          className={`flex items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 transition ${
+            disableUpload ? "cursor-not-allowed opacity-80" : "cursor-pointer hover:border-[#8d7bff] hover:bg-[#f1edff]"
+          }`}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#6f5cf2]">
             <Upload size={18} />
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900">
               {fileName || "Upload file"}
             </p>
-            <p className="text-xs text-slate-500">JPG, PNG or PDF supported</p>
+            <p className="text-xs text-slate-500">
+              {disableUpload
+                ? "Delete the existing document to upload a new file."
+                : "JPG, PNG or PDF supported"}
+            </p>
           </div>
           <input
             type="file"
@@ -127,6 +136,7 @@ function FileField({
             onChange={onChange}
             className="hidden"
             accept=".jpg,.jpeg,.png,.pdf"
+            disabled={disableUpload}
           />
         </label>
 
@@ -136,7 +146,7 @@ function FileField({
               href={existingUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#f1edff] px-3 py-2 text-sm font-semibold text-[#6f5cf2] transition hover:bg-[#e7e0ff]"
             >
               <Eye size={15} />
               View uploaded file
@@ -210,8 +220,7 @@ export default function InvestorKyc() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await getInvestorProfile();
-      const user = response?.data || {};
+      const user = (await getInvestorProfile()) || {};
 
       setFormData((prev) => ({
         ...prev,
@@ -365,7 +374,7 @@ export default function InvestorKyc() {
             <button
               onClick={handleSave}
               disabled={saving || loading}
-              className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#6f5cf2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#5f4ae6] disabled:cursor-not-allowed disabled:opacity-70"
             >
               <Save size={16} />
               {saving ? "Saving..." : "Save KYC Details"}
@@ -477,6 +486,7 @@ export default function InvestorKyc() {
                     onChange={handleChange}
                     fileName={formData.identityProofFile?.name}
                     existingUrl={existingDocs.kyc}
+                    disableUpload={Boolean(existingDocs.kyc)}
                     onDelete={() => handleDeleteDoc("kyc")}
                     deleting={deletingType === "kyc"}
                   />
@@ -487,6 +497,7 @@ export default function InvestorKyc() {
                     onChange={handleChange}
                     fileName={formData.panCardFile?.name}
                     existingUrl={existingDocs.pan}
+                    disableUpload={Boolean(existingDocs.pan)}
                     onDelete={() => handleDeleteDoc("pan")}
                     deleting={deletingType === "pan"}
                   />
@@ -497,6 +508,7 @@ export default function InvestorKyc() {
                     onChange={handleChange}
                     fileName={formData.addressProofFile?.name}
                     existingUrl={existingDocs.addressProof}
+                    disableUpload={Boolean(existingDocs.addressProof)}
                     onDelete={() => handleDeleteDoc("addressProof")}
                     deleting={deletingType === "addressProof"}
                   />

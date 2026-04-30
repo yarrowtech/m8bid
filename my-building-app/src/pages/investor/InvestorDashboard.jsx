@@ -43,7 +43,7 @@ function PrimaryBlueButton({
   return (
     <button
       onClick={onClick}
-      className={`group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold tracking-wide text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 active:scale-[0.99] ${
+      className={`group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#6f5cf2] via-[#7b68f4] to-[#8d7bff] px-6 py-3 text-sm font-semibold tracking-wide text-white shadow-lg shadow-[#6f5cf2]/25 transition hover:brightness-110 active:scale-[0.99] ${
         fullWidth ? "w-full" : ""
       } ${className}`}
     >
@@ -89,7 +89,7 @@ function InvestmentCard({
   return (
     <div className="rounded-[20px] border border-slate-100 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
-        <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wide text-sky-700">
+        <span className="rounded-full bg-[#f1edff] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wide text-[#6f5cf2]">
           {tag}
         </span>
         <button className="rounded-full p-1 text-slate-400 hover:bg-slate-50">
@@ -108,7 +108,7 @@ function InvestmentCard({
 
       <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-500"
+          className="h-full rounded-full bg-gradient-to-r from-[#6f5cf2] to-[#8d7bff]"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -149,10 +149,10 @@ function InvestmentCard({
 
 function RightMetricCard({ title, value, sub, icon: Icon, tone = "sky" }) {
   const toneMap = {
-    sky: "bg-sky-100 text-sky-700",
+    sky: "bg-[#f1edff] text-[#6f5cf2]",
     emerald: "bg-emerald-100 text-emerald-700",
     amber: "bg-amber-100 text-amber-700",
-    indigo: "bg-indigo-100 text-indigo-700",
+    indigo: "bg-[#f3efff] text-[#7b68f4]",
   };
 
   return (
@@ -197,7 +197,7 @@ function ProfileDropdown({ user, navigate }) {
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-2 rounded-full px-1.5 py-1 transition hover:bg-white"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 to-indigo-200 text-[11px] font-semibold text-slate-800">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#ece6ff] to-[#f5f1ff] text-[11px] font-semibold text-slate-800">
           {user?.name?.charAt(0) || "I"}
         </div>
 
@@ -216,7 +216,7 @@ function ProfileDropdown({ user, navigate }) {
             onClick={() => navigate("/investor/profile/kyc")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f1edff] text-[#6f5cf2]">
               <FileCheck size={17} />
             </span>
             <div>
@@ -250,7 +250,7 @@ function ProfileDropdown({ user, navigate }) {
             onClick={() => navigate("/investor/profile")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f3efff] text-[#7b68f4]">
               <User size={17} />
             </span>
             <div>
@@ -457,7 +457,7 @@ export default function InvestorDashboard() {
         title: "Total Investments",
         value: formatINR(totalInvested),
         subtitle: "Amount invested from backend records",
-        iconWrapClass: "bg-sky-100",
+        iconWrapClass: "bg-[#f1edff]",
       },
       {
         icon: BriefcaseBusiness,
@@ -471,7 +471,7 @@ export default function InvestorDashboard() {
         title: "Estimated Returns",
         value: formatINR(estimatedReturns),
         subtitle: "Based on campaign return percentages",
-        iconWrapClass: "bg-indigo-100",
+        iconWrapClass: "bg-[#f3efff]",
       },
       {
         icon: Heart,
@@ -521,7 +521,7 @@ export default function InvestorDashboard() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search your investments..."
-                  className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:bg-white"
+                  className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-[#8d7bff] focus:bg-white"
                 />
               </div>
 
@@ -548,8 +548,8 @@ export default function InvestorDashboard() {
             </div>
 
             <div className="mt-4 flex items-start justify-between gap-4">
-              <div className="flex-1 rounded-[24px] bg-gradient-to-r from-sky-600 to-indigo-600 px-5 py-5 text-white shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-100">
+              <div className="flex-1 rounded-[24px] bg-gradient-to-r from-[#6f5cf2] via-[#7b68f4] to-[#8d7bff] px-5 py-5 text-white shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ebe6ff]">
                   Investor Dashboard
                 </p>
 
@@ -557,7 +557,7 @@ export default function InvestorDashboard() {
                   Track your real investments, portfolio value, returns and account readiness.
                 </h1>
 
-                <div className="mt-2 text-sm text-sky-100">
+                <div className="mt-2 text-sm text-[#ebe6ff]">
                   Hello {firstName}, your dashboard is now connected to backend investment data.
                 </div>
 
@@ -602,7 +602,7 @@ export default function InvestorDashboard() {
 
                 <button
                   onClick={() => navigate("/investor/portfolio")}
-                  className="text-sm font-semibold text-sky-700 hover:text-sky-800"
+                  className="text-sm font-semibold text-[#6f5cf2] hover:text-[#5f4ae6]"
                 >
                   See all
                 </button>
@@ -671,13 +671,13 @@ export default function InvestorDashboard() {
               onClick={() => navigate("/investor/profile")}
               className="mt-5 flex cursor-pointer flex-col items-center rounded-[24px] border border-slate-100 bg-[#fafcff] p-4 transition hover:bg-slate-50 hover:shadow-sm"
             >
-              <div className="relative flex h-[122px] w-[122px] items-center justify-center rounded-full border-[8px] border-sky-100">
-                <div className="absolute inset-0 rounded-full border-[8px] border-transparent border-r-sky-500 border-t-indigo-500 rotate-[28deg]" />
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 to-indigo-200 text-lg font-semibold text-slate-800">
+              <div className="relative flex h-[122px] w-[122px] items-center justify-center rounded-full border-[8px] border-[#f1edff]">
+                <div className="absolute inset-0 rounded-full border-[8px] border-transparent border-r-[#6f5cf2] border-t-[#8d7bff] rotate-[28deg]" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#ece6ff] to-[#f5f1ff] text-lg font-semibold text-slate-800">
                   {user?.name?.charAt(0) || "I"}
                 </div>
 
-                <div className="absolute right-0 top-4 rounded-full bg-blue-600 px-2 py-0.5 text-[9px] font-semibold text-white">
+                <div className="absolute right-0 top-4 rounded-full bg-[#6f5cf2] px-2 py-0.5 text-[9px] font-semibold text-white">
                   {profileCompletion}%
                 </div>
               </div>
@@ -688,7 +688,7 @@ export default function InvestorDashboard() {
               <p className="mt-1 max-w-[230px] text-center text-[11px] leading-5 text-slate-500">
                 Keep your investor profile complete to improve onboarding, trust and transaction readiness.
               </p>
-              <p className="mt-2 text-xs font-medium text-sky-700">
+              <p className="mt-2 text-xs font-medium text-[#6f5cf2]">
                 View Profile -
               </p>
             </div>
@@ -724,8 +724,8 @@ export default function InvestorDashboard() {
                     <div
                       className={`w-full rounded-t-xl ${
                         i === chartBars.length - 1 || i === chartBars.length - 2
-                          ? "bg-sky-500"
-                          : "bg-sky-200"
+                          ? "bg-[#6f5cf2]"
+                          : "bg-[#d9d0ff]"
                       }`}
                       style={{ height: `${h}px` }}
                     />
@@ -771,8 +771,8 @@ export default function InvestorDashboard() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between rounded-2xl bg-white px-3 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-100">
-                      <Eye size={15} className="text-sky-700" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#f1edff]">
+                      <Eye size={15} className="text-[#6f5cf2]" />
                     </div>
                     <div>
                       <p className="text-[12px] font-medium text-slate-900">

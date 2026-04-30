@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     emailOrUsername: "",
     password: "",
-    preferredMode: "investor",
+    preferredMode: "investor", // Default back to investor
   });
 
   const [error, setError] = useState("");
@@ -54,7 +54,7 @@ export default function LoginPage() {
     const payload = {
       emailOrUsername: formData.emailOrUsername.trim(),
       password: formData.password,
-      preferredMode: formData.preferredMode,
+      preferredMode: formData.preferredMode, // Always send preferredMode, backend handles admin detection
     };
 
     const res = await loginUser(payload);
@@ -167,6 +167,9 @@ export default function LoginPage() {
                     Fundraiser
                   </button>
                 </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Select your preferred role. Admin users can login by selecting either option.
+                </p>
               </div>
 
               <div>

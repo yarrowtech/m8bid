@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import heroImg from "../assets/investors-hero.jpg";
 import sampleImg from "../assets/fundraising-example.jpg";
 import { getAllCampaigns } from "../api/campaign";
+import AccessModeModal from "../components/AccessModeModal.jsx";
 
 const INR = (n) => {
   const num = Number(n || 0);
@@ -171,8 +172,24 @@ export default function BrowseInvestors() {
     y: 0,
     item: null,
   });
+  const [investAccessOpen, setInvestAccessOpen] = useState(false);
 
   const navigate = useNavigate();
+  const needsInvestorAccess = useMemo(() => {
+    try {
+      const rawUser =
+        localStorage.getItem("user") || localStorage.getItem("loggedInUser");
+      const rawToken =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+
+      if (!rawUser || !rawToken) return true;
+
+      const user = JSON.parse(rawUser);
+      return !user?.access?.investor?.enabled;
+    } catch {
+      return true;
+    }
+  }, []);
 
   const fetchAllCampaigns = async () => {
     try {
@@ -193,6 +210,12 @@ export default function BrowseInvestors() {
   useEffect(() => {
     fetchAllCampaigns();
   }, []);
+
+  useEffect(() => {
+    if (needsInvestorAccess) {
+      setInvestAccessOpen(true);
+    }
+  }, [needsInvestorAccess]);
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 60 * 1000);
@@ -869,6 +892,15 @@ export default function BrowseInvestors() {
           </div>
         </div>
       )}
+
+      <AccessModeModal
+        open={investAccessOpen}
+        onClose={() => setInvestAccessOpen(false)}
+        onLogin={() => navigate("/login")}
+        title="Investor account needed"
+        message="You need to login or create an investor account to invest in a campaign."
+        buttonLabel="Go to Login"
+      />
     </section>
   );
 }

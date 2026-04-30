@@ -1,5 +1,6 @@
 import api from "../lib/axiox";
 
+
 export const loginUser = async (payload) => {
   try {
     const response = await api.post("/auth/login", payload);
@@ -43,4 +44,12 @@ export const enableAccessMode = async (payload) => {
   } catch (error) {
     throw error.response?.data || new Error("Failed to enable access");
   }
+};
+
+export const logoutUser = () => {
+  // Clear all auth data from storage
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("loggedInUser");
+  return true;
 };

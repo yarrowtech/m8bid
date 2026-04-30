@@ -11,13 +11,18 @@ import {
 import Header from "../src/components/Header.jsx";
 import Hero from "../src/components/Hero.jsx";
 import HowItWorks from "../src/components/HowItWorks.jsx";
+import TrendingCampaigns from "../src/components/TrendingCampaigns.jsx";
 import Plan from "../src/components/Plan.jsx";
 import Footer from "../src/components/Footer.jsx";
 import FeaturedProperties from "./components/FeaturedProperties.jsx";
 import SecurityCompliance from "./components/SecurityCompliance.jsx";
 import MoneyGrowth from "./components/MoneyGrowth.jsx";
 import Testimonials from "./components/Testimonials.jsx";
+import FundraisingCauses from "./components/FundraisingCauses.jsx";
 import ProtectedRoute from "./pages/ProtectedRoutes.jsx";
+import PageTransition from "./components/PageTransition.jsx";
+import GlobalScrollMotion from "./components/GlobalScrollMotion.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 
 // Pages
 import BrowseInvestors from "./pages/BrowseInvestors.jsx";
@@ -45,6 +50,7 @@ import VerifiedOpportunities from "./pages/VerifiedOpportunities";
 import BusinessCampaigns from "./pages/BusinessCampaigns";
 import CauseBasedFunding from "./pages/CauseBasedFunding";
 import FundraisingIdeas from "./pages/FundraisingIdeas";
+import FundraisingCauseTopicPage from "./pages/FundraisingCauseTopicPage.jsx";
 
 import SelectAccountMode from "./pages/SelectAccountType.jsx";
 import CompanyInvestorDashboard from "./pages/investor/CompanyInvestorDashboard";
@@ -98,6 +104,18 @@ function RequireMode({ mode, children }) {
   return children;
 }
 
+function RequireLogin({ children }) {
+  const rawUser = localStorage.getItem("user");
+  const rawToken = localStorage.getItem("token");
+  const user = rawUser ? JSON.parse(rawUser) : null;
+
+  if (!rawToken || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 function RestrictPublicByMode({ blockedMode, children }) {
   const rawUser = localStorage.getItem("user");
   const user = rawUser ? JSON.parse(rawUser) : null;
@@ -145,6 +163,8 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
 
   return (
     <div className="font-sans text-gray-900">
+      <ScrollToTop />
+      <GlobalScrollMotion />
       {!shouldHideHeader && (
         <Header
           loggedInUser={loggedInUser}
@@ -152,6 +172,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         />
       )}
 
+      <PageTransition routeKey={`${location.pathname}${location.search}${location.hash}`}>
       <Routes>
         {/* Home */}
         <Route
@@ -159,7 +180,9 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
           element={
             <>
               <Hero />
+              <FundraisingCauses />
               <HowItWorks />
+              <TrendingCampaigns />
               <Plan />
               <Testimonials />
               <SecurityCompliance />
@@ -179,10 +202,12 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/browse-investors"
           element={
-            <>
-              <BrowseInvestors />
-              <Footer />
-            </>
+            <RequireLogin>
+              <>
+                <BrowseInvestors />
+                <Footer />
+              </>
+            </RequireLogin>
           }
         />
 
@@ -191,12 +216,14 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/fundraising"
           element={
-            <RestrictPublicByMode blockedMode="investor">
-              <>
-                <FundraisingPage />
-                <Footer />
-              </>
-            </RestrictPublicByMode>
+            <RequireLogin>
+              <RestrictPublicByMode blockedMode="investor">
+                <>
+                  <FundraisingPage />
+                  <Footer />
+                </>
+              </RestrictPublicByMode>
+            </RequireLogin>
           }
         />
 
@@ -285,6 +312,15 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route path="/business-campaigns" element={<BusinessCampaigns />} />
         <Route path="/cause-based-funding" element={<CauseBasedFunding />} />
         <Route path="/fundraising-ideas" element={<FundraisingIdeas />} />
+        <Route
+          path="/fundraising-causes/:causeSlug"
+          element={
+            <>
+              <FundraisingCauseTopicPage />
+              <Footer />
+            </>
+          }
+        />
 
         <Route
           path="/start-fundraiser"
@@ -324,6 +360,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
           <Route path="analytics" element={<AdminAnalytics />} />
         </Route>
       </Routes>
+      </PageTransition>
     </div>
   );
 }

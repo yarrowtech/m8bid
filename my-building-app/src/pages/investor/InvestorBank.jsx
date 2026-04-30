@@ -20,11 +20,84 @@ function Field({ label, icon: Icon, children }) {
       <label className="mb-2 block text-sm font-medium text-slate-700">
         {label}
       </label>
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-sky-400">
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-[#8d7bff]">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-500">
           <Icon size={16} />
         </div>
         {children}
+      </div>
+    </div>
+  );
+}
+
+function FileField({
+  label,
+  fileName,
+  onChange,
+  name,
+  existingUrl,
+  onDelete,
+  deleting = false,
+  disableUpload = false,
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-medium text-slate-700">
+        {label}
+      </label>
+
+      <div className="space-y-3">
+        <label
+          className={`flex items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 transition ${
+            disableUpload ? "cursor-not-allowed opacity-80" : "cursor-pointer hover:border-[#8d7bff] hover:bg-[#f1edff]"
+          }`}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#6f5cf2]">
+            <Upload size={18} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-slate-900">
+              {fileName || "Upload file"}
+            </p>
+            <p className="text-xs text-slate-500">
+              {disableUpload
+                ? "Delete the existing document to upload a new file."
+                : "JPG, PNG or PDF supported"}
+            </p>
+          </div>
+          <input
+            type="file"
+            name={name}
+            onChange={onChange}
+            className="hidden"
+            accept=".jpg,.jpeg,.png,.pdf"
+            disabled={disableUpload}
+          />
+        </label>
+
+        {existingUrl ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href={existingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#f1edff] px-3 py-2 text-sm font-semibold text-[#6f5cf2] transition hover:bg-[#e7e0ff]"
+            >
+              <Eye size={15} />
+              View uploaded file
+            </a>
+
+            <button
+              type="button"
+              onClick={onDelete}
+              disabled={deleting}
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Trash2 size={15} />
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -62,8 +135,7 @@ export default function InvestorBank() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await getInvestorProfile();
-      const user = response?.data || {};
+      const user = (await getInvestorProfile()) || {};
 
       setFormData((prev) => ({
         ...prev,
@@ -195,7 +267,7 @@ export default function InvestorBank() {
             <button
               onClick={handleSave}
               disabled={saving || loading}
-              className="rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-2xl bg-[#6f5cf2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#5f4ae6] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {saving ? "Saving..." : "Save Bank Details"}
             </button>
@@ -210,7 +282,7 @@ export default function InvestorBank() {
           <div className="mt-6 grid gap-6 xl:grid-cols-3">
             <div className="xl:col-span-2 rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1edff] text-[#6f5cf2]">
                   <Landmark size={18} />
                 </div>
                 <h2 className="text-xl font-semibold text-slate-900">
@@ -272,58 +344,16 @@ export default function InvestorBank() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Bank Proof
-                  </label>
-
-                  <div className="space-y-3">
-                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 transition hover:border-sky-400 hover:bg-sky-50">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-sky-700">
-                        <Upload size={18} />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-slate-900">
-                          {formData.bankProof?.name || "Upload bank proof"}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          JPG, PNG or PDF supported
-                        </p>
-                      </div>
-
-                      <input
-                        type="file"
-                        name="bankProof"
-                        onChange={handleChange}
-                        className="hidden"
-                        accept=".jpg,.jpeg,.png,.pdf"
-                      />
-                    </label>
-
-                    {existingBankProof ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <a
-                          href={existingBankProof}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
-                        >
-                          <Eye size={15} />
-                          View uploaded file
-                        </a>
-
-                        <button
-                          type="button"
-                          onClick={handleDeleteBankProof}
-                          disabled={deletingProof}
-                          className="inline-flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <Trash2 size={15} />
-                          {deletingProof ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
+                  <FileField
+                    label="Bank Proof"
+                    name="bankProof"
+                    onChange={handleChange}
+                    fileName={formData.bankProof?.name || "Upload bank proof"}
+                    existingUrl={existingBankProof}
+                    disableUpload={Boolean(existingBankProof)}
+                    onDelete={handleDeleteBankProof}
+                    deleting={deletingProof}
+                  />
                 </div>
               </div>
             </div>
@@ -359,7 +389,7 @@ export default function InvestorBank() {
                   <button
                     onClick={handleSave}
                     disabled={saving || loading}
-                    className="w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full rounded-2xl bg-[#6f5cf2] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#5f4ae6] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {saving ? "Saving..." : "Save Bank Details"}
                   </button>

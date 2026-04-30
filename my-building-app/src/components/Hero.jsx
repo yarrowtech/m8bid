@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -15,6 +15,7 @@ import img3 from "../assets/img3.jpg";
 import img4 from "../assets/img4.jpg";
 import img5 from "../assets/img5.jpg";
 import img6 from "../assets/img6.jpg";
+import AccessModeModal from "./AccessModeModal.jsx";
 
 /* ----------------------------- Circular Card ----------------------------- */
 function CircularProgressImage({
@@ -127,8 +128,46 @@ function StatChip({ icon: Icon, title, value }) {
 
 export default function Hero() {
   const navigate = useNavigate();
+  const [fundraiseBlockedOpen, setFundraiseBlockedOpen] = useState(false);
+  const [fundraiseBlockedMessage, setFundraiseBlockedMessage] = useState(
+    "You need to login or register account as a fundraiser to start a fundraising campaign."
+  );
+
+  const getSessionUser = () => {
+    try {
+      const rawUser =
+        localStorage.getItem("user") || localStorage.getItem("loggedInUser");
+      return rawUser ? JSON.parse(rawUser) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleStartFundraiserClick = () => {
+    const user = getSessionUser();
+    const hasSession = Boolean(user && localStorage.getItem("token"));
+
+    if (!hasSession) {
+      setFundraiseBlockedMessage(
+        "You need to login or register account as a fundraiser to start a fundraising campaign."
+      );
+      setFundraiseBlockedOpen(true);
+      return;
+    }
+
+    if (user?.activeMode === "investor") {
+      setFundraiseBlockedMessage(
+        "Warning: You are currently logged in as an investor. A fundraiser account is needed to access fundraising actions."
+      );
+      setFundraiseBlockedOpen(true);
+      return;
+    }
+
+    navigate("/fundraising");
+  };
 
   return (
+    <>
     <div
       style={{
         fontFamily:
@@ -213,9 +252,9 @@ export default function Hero() {
             </div>
 
             <h1 className="mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl">
-              Successful fundraisers
+              Start fundraising
               <span className="block bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                start here
+                journey here
               </span>
             </h1>
 
@@ -227,7 +266,7 @@ export default function Hero() {
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
-                onClick={() => navigate("/fundraising")}
+                onClick={handleStartFundraiserClick}
                 className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-4 text-base font-semibold tracking-wide text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 active:scale-[0.99]"
               >
                 Start A Fundraiser
@@ -324,5 +363,17 @@ export default function Hero() {
         </div>
       </section>
     </div>
+    <AccessModeModal
+      open={fundraiseBlockedOpen}
+      onClose={() => setFundraiseBlockedOpen(false)}
+      onLogin={() => {
+        setFundraiseBlockedOpen(false);
+        navigate("/login");
+      }}
+      title="Fundraiser account needed"
+      message={fundraiseBlockedMessage}
+      buttonLabel="Go to Login"
+    />
+    </>
   );
 }

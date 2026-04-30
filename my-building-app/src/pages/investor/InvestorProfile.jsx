@@ -11,6 +11,7 @@ import {
   Eye,
   Loader2,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import InvestorSidebar from "./InvestorSidebar";
 import { getInvestorProfile } from "../../api/investor.api";
@@ -19,7 +20,7 @@ function SectionCard({ title, icon: Icon, children }) {
   return (
     <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+        <div className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1edff] text-[#6f5cf2]">
           <Icon size={18} />
         </div>
         <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
@@ -98,14 +99,14 @@ export default function InvestorProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
       setError("");
-      const response = await getInvestorProfile();
-      const userData = response?.data || {};
-      setProfile(userData);
+      const userData = await getInvestorProfile();
+      setProfile(userData || {});
     } catch (err) {
       setError(err?.message || "Failed to load profile");
     } finally {
@@ -113,8 +114,26 @@ export default function InvestorProfile() {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const userData = await getInvestorProfile();
+      setProfile(userData || {});
+    } catch (err) {
+      setError(err?.message || "Failed to refresh profile");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
+    // Refetch whenever the page comes into focus
+    const handleFocus = () => {
+      fetchProfile();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   const profileData = useMemo(() => {
@@ -176,7 +195,7 @@ export default function InvestorProfile() {
           <InvestorSidebar active="profile" />
           <main className="flex-1 flex items-center justify-center">
             <div className="flex items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#6f5cf2]" />
               <span className="text-slate-600">Loading profile...</span>
             </div>
           </main>
@@ -239,8 +258,16 @@ export default function InvestorProfile() {
 
             <div className="flex flex-wrap gap-3">
               <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </button>
+              <button
                 onClick={() => navigate("/investor/profile/kyc")}
-                className="rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
+                className="rounded-2xl bg-[#6f5cf2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#5f4ae6]"
               >
                 Edit KYC Details
               </button>
@@ -359,7 +386,7 @@ export default function InvestorProfile() {
                           href={profileData.aadhaarFile}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#f1edff] px-4 py-3 text-sm font-semibold text-[#6f5cf2] transition hover:bg-[#e7e0ff]"
                         >
                           <Eye size={14} />
                           View Aadhaar / ID Proof
@@ -375,7 +402,7 @@ export default function InvestorProfile() {
                           href={profileData.panFile}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#f1edff] px-4 py-3 text-sm font-semibold text-[#6f5cf2] transition hover:bg-[#e7e0ff]"
                         >
                           <Eye size={14} />
                           View PAN Document
@@ -391,7 +418,7 @@ export default function InvestorProfile() {
                           href={profileData.addressProofFile}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#f1edff] px-4 py-3 text-sm font-semibold text-[#6f5cf2] transition hover:bg-[#e7e0ff]"
                         >
                           <Eye size={14} />
                           View Address Proof
@@ -407,7 +434,7 @@ export default function InvestorProfile() {
                           href={profileData.bankProofFile}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#f1edff] px-4 py-3 text-sm font-semibold text-[#6f5cf2] transition hover:bg-[#e7e0ff]"
                         >
                           <Eye size={14} />
                           View Bank Proof

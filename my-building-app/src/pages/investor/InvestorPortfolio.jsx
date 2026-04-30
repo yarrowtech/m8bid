@@ -46,9 +46,9 @@ const getInvestmentStatus = (investment) => {
 
 function PortfolioStat({ title, value, sub, icon: Icon, tone = 'sky' }) {
   const tones = {
-    sky: 'bg-sky-100 text-sky-700',
+    sky: 'bg-[#f1edff] text-[#6f5cf2]',
     emerald: 'bg-emerald-100 text-emerald-700',
-    indigo: 'bg-indigo-100 text-indigo-700',
+    indigo: 'bg-[#f3efff] text-[#7b68f4]',
     red: 'bg-red-100 text-red-700',
   };
 
@@ -89,7 +89,7 @@ function PortfolioRow({
       <div className='text-slate-900'>{currentValue}</div>
       <div className='font-semibold text-emerald-600'>{returnRate}</div>
       <div className='flex items-center justify-between'>
-        <span className='rounded-full bg-sky-100 px-3 py-1 text-[11px] font-semibold text-sky-700'>
+        <span className='rounded-full bg-[#f1edff] px-3 py-1 text-[11px] font-semibold text-[#6f5cf2]'>
           {status}
         </span>
         <button
@@ -191,7 +191,7 @@ export default function InvestorPortfolio() {
 
             <button
               onClick={() => navigate('/browse-investors')}
-              className='rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white hover:bg-sky-700'
+              className='rounded-2xl bg-[#6f5cf2] px-5 py-3 text-sm font-semibold text-white hover:bg-[#5f4ae6]'
             >
               Explore More Opportunities
             </button>
@@ -199,7 +199,7 @@ export default function InvestorPortfolio() {
 
           {loading ? (
             <div className='mt-6 flex items-center justify-center py-12'>
-              <Loader2 className='h-8 w-8 animate-spin text-sky-600' />
+              <Loader2 className='h-8 w-8 animate-spin text-[#6f5cf2]' />
               <span className='ml-3 text-slate-600'>Loading portfolio...</span>
             </div>
           ) : error ? (

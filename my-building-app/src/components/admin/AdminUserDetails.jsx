@@ -1,39 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
-  FaBars,
   FaArrowLeft,
-  FaUser,
-  FaFolderOpen,
-  FaMoneyBillWave,
-  FaReceipt,
-  FaFileAlt,
-  FaEnvelope,
-  FaPhone,
+  FaBars,
   FaCalendarAlt,
+  FaEnvelope,
+  FaEye,
+  FaFileAlt,
+  FaFolderOpen,
+  FaIdCard,
+  FaMapMarkerAlt,
+  FaMoneyBillWave,
+  FaPhone,
+  FaReceipt,
   FaShieldAlt,
-  FaPen,
-  FaSave,
-  FaTimes,
-  FaImage,
-  FaCheckCircle,
-  FaBuilding,
+  FaUniversity,
+  FaUser,
   FaUserTie,
-  FaExchangeAlt,
 } from "react-icons/fa";
 import {
-  getAdminUserDetails,
   approveCampaign,
-  rejectCampaign,
   deleteCampaign,
-  updateAdminUser,
+  getAdminUserDetails,
+  rejectCampaign,
+  updateUserDocumentStatus,
 } from "../../api/admin";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
-
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") ||
-  "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "http://localhost:5000";
+const STATUS_OPTIONS = ["NONE", "PENDING", "VERIFIED", "REJECTED"];
 
 const INR = (value) => {
   const num = Number(value || 0);
@@ -44,53 +39,23 @@ const INR = (value) => {
       maximumFractionDigits: 0,
     }).format(num);
   } catch {
-    return `₹${num}`;
+    return `Rs. ${num}`;
   }
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+const formatDate = (value) => {
+  if (!value) return "--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-const getStatusTone = (status = "") => {
-  const s = String(status).toLowerCase();
-
-  if (["approved", "active", "completed", "success", "verified"].includes(s)) {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  }
-  if (["pending", "review", "processing", "under_review", "under review"].includes(s)) {
-    return "bg-amber-50 text-amber-700 border-amber-200";
-  }
-  if (["rejected", "failed", "inactive", "blocked", "deleted"].includes(s)) {
-    return "bg-rose-50 text-rose-700 border-rose-200";
-  }
-  return "bg-slate-50 text-slate-700 border-slate-200";
-};
-
-const getProfileBadgeTone = (label = "") => {
-  const v = String(label).toLowerCase();
-
-  if (v.includes("investor")) {
-    return "bg-violet-50 text-violet-700 border-violet-200";
-  }
-  if (v.includes("fundraiser")) {
-    return "bg-sky-50 text-sky-700 border-sky-200";
-  }
-  return "bg-slate-50 text-slate-700 border-slate-200";
-};
-
-const isImageFile = (value = "") => {
-  const str = String(value).toLowerCase();
-  return [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"].some((ext) =>
-    str.includes(ext)
-  );
+const tone = (status = "") => {
+  const v = String(status).toLowerCase();
+  if (["approved", "verified", "active", "success"].includes(v)) return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (["pending", "review", "processing", "under_review", "under review"].includes(v)) return "border-amber-200 bg-amber-50 text-amber-700";
+  if (["rejected", "failed", "inactive", "blocked", "deleted"].includes(v)) return "border-rose-200 bg-rose-50 text-rose-700";
+  return "border-slate-200 bg-slate-50 text-slate-700";
 };
 
 const normalizeUrl = (value) => {
@@ -102,136 +67,47 @@ const normalizeUrl = (value) => {
   return `${API_BASE}/${raw}`;
 };
 
-const getMediaItems = (input) => {
-  if (!input) return [];
-  const arr = Array.isArray(input) ? input : [input];
+const isImageFile = (value = "") => [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"].some((ext) => String(value).toLowerCase().includes(ext));
+const pretty = (value = "") => String(value).replace(/([A-Z])/g, " $1").replace(/[_-]/g, " ").trim().replace(/\b\w/g, (c) => c.toUpperCase());
 
-  return arr
-    .map((item, index) => {
-      if (!item) return null;
-
-      if (typeof item === "string") {
-        const url = normalizeUrl(item);
-        return {
-          id: `${url}-${index}`,
-          name: `File ${index + 1}`,
-          url,
-          isImage: isImageFile(url),
-        };
-      }
-
-      const url = normalizeUrl(
-        item.url ||
-          item.secure_url ||
-          item.path ||
-          item.file ||
-          item.src ||
-          item.location
-      );
-
-      if (!url) return null;
-
-      const name =
-        item.name ||
-        item.title ||
-        item.originalname ||
-        item.filename ||
-        item.type ||
-        `File ${index + 1}`;
-
-      return {
-        id: `${url}-${index}`,
-        name,
-        url,
-        isImage:
-          item.isImage ||
-          isImageFile(url) ||
-          String(item.mimetype || item.type || "")
-            .toLowerCase()
-            .startsWith("image"),
-      };
-    })
-    .filter(Boolean);
-};
-
-const getUserPhoto = (details) => {
-  const raw =
-    details?.profile?.photo ||
-    details?.photo ||
-    details?.profilePhoto ||
-    details?.avatar ||
-    details?.image ||
-    details?.profileImage;
-
-  return normalizeUrl(raw);
-};
-
-const getAccountStatus = (details) => {
-  return details?.status || (details?.isActive ? "active" : "inactive");
-};
-
-const getActiveMode = (details) => {
-  const mode = String(details?.activeMode || "none").toLowerCase();
-  return ["investor", "fundraiser", "none"].includes(mode) ? mode : "none";
-};
-
-const getAccessBlock = (details, type) => {
-  const fallback = details?.[`${type}Profile`] || {};
-  const directAccess = details?.access?.[type] || {};
-
-  const enabled =
-    directAccess?.enabled ??
-    fallback?.enabled ??
-    (String(details?.role || "").toLowerCase() === type);
-
+const accessFrom = (details) => {
+  const access = details?.fundraiserAccess || details?.access?.fundraiser || {};
   return {
-    enabled: Boolean(enabled),
-    type: directAccess?.type || fallback?.type || "individual",
-    kycStatus:
-      directAccess?.kycStatus || fallback?.kycStatus || details?.kycStatus || "NONE",
-    panStatus: directAccess?.panStatus || fallback?.panStatus || "NONE",
-    bankStatus: directAccess?.bankStatus || fallback?.bankStatus || "NONE",
-    companyStatus: directAccess?.companyStatus || fallback?.companyStatus || "NONE",
-    documents: directAccess?.documents || fallback?.documents || {},
+    enabled: Boolean(access.enabled),
+    type: access.type || "individual",
+    kycStatus: access.kycStatus || "NONE",
+    panStatus: access.panStatus || "NONE",
+    bankStatus: access.bankStatus || "NONE",
+    companyStatus: access.companyStatus || "NONE",
+    details: access.details || {},
+    documents: access.documents || {},
   };
 };
 
-const getProfileLabels = (details) => {
-  const investor = getAccessBlock(details, "investor");
-  const fundraiser = getAccessBlock(details, "fundraiser");
-  const labels = [];
-
-  if (investor.enabled) {
-    labels.push(
-      investor.type === "company" ? "Investor Company" : "Investor Individual"
-    );
-  }
-
-  if (fundraiser.enabled) {
-    labels.push(
-      fundraiser.type === "company"
-        ? "Fundraiser Company"
-        : "Fundraiser Individual"
-    );
-  }
-
-  return labels;
+const investorAccessFrom = (details) => {
+  const access = details?.investorAccess || details?.access?.investor || {};
+  return {
+    enabled: Boolean(access.enabled),
+    type: access.type || "individual",
+    kycStatus: access.kycStatus || "NONE",
+    bankStatus: access.bankStatus || "NONE",
+    details: access.details || {},
+    documents: access.documents || {},
+  };
 };
 
-const docsFromAccess = (details) => {
-  const investor = getAccessBlock(details, "investor");
-  const fundraiser = getAccessBlock(details, "fundraiser");
+const campaignDocs = (campaign) => [
+  { label: "License", url: campaign?.documents?.license },
+  { label: "GST Certificate", url: campaign?.documents?.gst },
+  { label: "Company Registration", url: campaign?.documents?.companyRegistration },
+  { label: "Legal Document", url: campaign?.documents?.legalDocument },
+  { label: "Project Video", url: campaign?.documents?.video },
+].filter((item) => item.url);
 
-  const investorDocuments = getMediaItems(
-    Object.values(investor.documents || {}).filter(Boolean)
-  );
-
-  const fundraiserDocuments = getMediaItems(
-    Object.values(fundraiser.documents || {}).filter(Boolean)
-  );
-
-  return { investorDocuments, fundraiserDocuments };
-};
+const campaignGallery = (campaign) => [
+  { label: "Cover Photo", url: campaign?.documents?.photo },
+  ...(campaign?.documents?.projectPhotos || []).map((url, index) => ({ label: `Project Photo ${index + 1}`, url })),
+].filter((item) => item.url);
 
 export default function AdminUserDetails() {
   const { setSidebarOpen } = useOutletContext();
@@ -242,63 +118,14 @@ export default function AdminUserDetails() {
   const [details, setDetails] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [expandedCampaign, setExpandedCampaign] = useState(null);
-
-  const [isEditingOverview, setIsEditingOverview] = useState(false);
-  const [savingOverview, setSavingOverview] = useState(false);
-
-  const [overviewForm, setOverviewForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "user",
-    status: "active",
-    activeMode: "none",
-
-    investorEnabled: false,
-    investorType: "individual",
-    investorKycStatus: "NONE",
-    investorPanStatus: "NONE",
-    investorBankStatus: "NONE",
-
-    fundraiserEnabled: false,
-    fundraiserType: "individual",
-    fundraiserKycStatus: "NONE",
-    fundraiserPanStatus: "NONE",
-    fundraiserBankStatus: "NONE",
-    fundraiserCompanyStatus: "NONE",
-  });
+  const [statusLoading, setStatusLoading] = useState({});
+  const [campaignLoading, setCampaignLoading] = useState({});
 
   const fetchDetails = async () => {
     try {
       setLoading(true);
       const res = await getAdminUserDetails(userId);
-      const data = res?.user || res?.data?.user || res?.data || res || {};
-      setDetails(data);
-
-      const investor = getAccessBlock(data, "investor");
-      const fundraiser = getAccessBlock(data, "fundraiser");
-
-      setOverviewForm({
-        name: data?.name || "",
-        email: data?.email || "",
-        phone: data?.profile?.phone || data?.phone || data?.mobile || "",
-        role: data?.role || "user",
-        status: getAccountStatus(data),
-        activeMode: getActiveMode(data),
-
-        investorEnabled: investor.enabled,
-        investorType: investor.type,
-        investorKycStatus: investor.kycStatus,
-        investorPanStatus: investor.panStatus,
-        investorBankStatus: investor.bankStatus,
-
-        fundraiserEnabled: fundraiser.enabled,
-        fundraiserType: fundraiser.type,
-        fundraiserKycStatus: fundraiser.kycStatus,
-        fundraiserPanStatus: fundraiser.panStatus,
-        fundraiserBankStatus: fundraiser.bankStatus,
-        fundraiserCompanyStatus: fundraiser.companyStatus,
-      });
+      setDetails(res?.user || res?.data?.user || res?.data || res || null);
     } catch (error) {
       console.error("Admin user details fetch error:", error);
       setDetails(null);
@@ -311,871 +138,585 @@ export default function AdminUserDetails() {
     fetchDetails();
   }, [userId]);
 
+  const fundraiserAccess = useMemo(() => accessFrom(details), [details]);
+  const investorAccess = useMemo(() => investorAccessFrom(details), [details]);
+  const profileMode = useMemo(() => {
+    const activeMode = String(details?.activeMode || "").toLowerCase();
+    if (activeMode === "investor" && investorAccess.enabled) return "investor";
+    if (activeMode === "fundraiser" && fundraiserAccess.enabled) return "fundraiser";
+    if (fundraiserAccess.enabled && !investorAccess.enabled) return "fundraiser";
+    if (investorAccess.enabled && !fundraiserAccess.enabled) return "investor";
+    if (fundraiserAccess.enabled) return "fundraiser";
+    if (investorAccess.enabled) return "investor";
+    return "fundraiser";
+  }, [details, fundraiserAccess.enabled, investorAccess.enabled]);
+  const isInvestorView = profileMode === "investor";
+
   const campaigns = details?.campaigns || [];
   const investments = details?.investments || [];
-  const transactions = details?.transactions || [];
-
-  const investorAccess = useMemo(
-    () => getAccessBlock(details || {}, "investor"),
-    [details]
-  );
-  const fundraiserAccess = useMemo(
-    () => getAccessBlock(details || {}, "fundraiser"),
-    [details]
-  );
-
-  const userPhoto = useMemo(() => getUserPhoto(details), [details]);
-  const profileLabels = useMemo(() => getProfileLabels(details || {}), [details]);
-  const { investorDocuments, fundraiserDocuments } = useMemo(
-    () => docsFromAccess(details || {}),
-    [details]
-  );
-
-  const totalCampaignAmount = useMemo(
-    () =>
-      campaigns.reduce(
-        (sum, c) =>
-          sum +
-          Number(
-            c?.moneyRaised ||
-              c?.currentFunding ||
-              c?.raisedAmount ||
-              0
-          ),
-        0
-      ),
-    [campaigns]
-  );
-
-  const totalInvestmentAmount = useMemo(
-    () =>
-      investments.reduce(
-        (sum, i) => sum + Number(i?.amount || i?.investmentAmount || 0),
-        0
-      ),
-    [investments]
-  );
-
-  const fundraiserCampaigns = useMemo(() => campaigns, [campaigns]);
-  const investorInvestments = useMemo(() => investments, [investments]);
-
-  const tabs = [
-    { key: "overview", label: "Overview", icon: FaUser },
-    { key: "profiles", label: "Profile Access", icon: FaUserTie },
-    { key: "fundraiser", label: "Fundraiser Activity", icon: FaFolderOpen },
-    { key: "investor", label: "Investor Activity", icon: FaMoneyBillWave },
-    { key: "transactions", label: "Transactions", icon: FaReceipt },
-    { key: "documents", label: "Documents", icon: FaFileAlt },
-  ];
-
-  const handleApproveCampaign = async (campaignId) => {
-    try {
-      await approveCampaign(campaignId);
-      fetchDetails();
-    } catch (e) {
-      console.error("Approve campaign error:", e);
-    }
+  const investorTransactions = details?.investorTransactions || [];
+  const fundraiserTransactions = details?.fundraiserTransactions || [];
+  const transactions = isInvestorView ? investorTransactions : fundraiserTransactions;
+  const totalRaised = campaigns.reduce((sum, c) => sum + Number(c?.moneyRaised || c?.currentFunding || 0), 0);
+  const totalGoal = campaigns.reduce((sum, c) => sum + Number(c?.fundingGoal || c?.moneyToRaise || 0), 0);
+  const transactionRaised = transactions.reduce((sum, txn) => sum + Number(txn?.amount || 0), 0);
+  const completedTransactions = transactions.filter((txn) => txn?.status === "completed").length;
+  const pendingTransactions = transactions.filter((txn) => ["created", "pending"].includes(String(txn?.status || "").toLowerCase())).length;
+  const failedTransactions = transactions.filter((txn) => ["failed", "cancelled", "refunded"].includes(String(txn?.status || "").toLowerCase())).length;
+  const totalInvested = investments.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
+  const estimatedCurrentValue = investments.reduce((sum, inv) => {
+    const amount = Number(inv?.amount || 0);
+    const profit = Number(inv?.campaign?.profitPercentage || 0);
+    return sum + amount + Math.round((amount * profit) / 100);
+  }, 0);
+  const activeInvestments = investments.filter((inv) => {
+    const paymentStatus = String(inv?.paymentStatus || "").toLowerCase();
+    const status = String(inv?.status || "").toLowerCase();
+    return paymentStatus === "completed" || status === "confirmed";
+  }).length;
+  const counts = {
+    approved: campaigns.filter((c) => c?.status === "approved").length,
+    pending: campaigns.filter((c) => c?.status === "pending").length,
+    rejected: campaigns.filter((c) => c?.status === "rejected").length,
   };
+  const completion = totalGoal > 0 ? Math.min((totalRaised / totalGoal) * 100, 100) : 0;
+  const address = [details?.profile?.addressLine, details?.profile?.city, details?.profile?.state, details?.profile?.pincode].filter(Boolean).join(", ");
 
-  const handleRejectCampaign = async (campaignId) => {
-    try {
-      await rejectCampaign(campaignId);
-      fetchDetails();
-    } catch (e) {
-      console.error("Reject campaign error:", e);
-    }
-  };
+  const userDocs = isInvestorView
+    ? [
+        { title: "KYC Document", url: investorAccess.documents?.kyc, status: investorAccess.kycStatus },
+        { title: "PAN Document", url: investorAccess.documents?.pan, status: investorAccess.kycStatus },
+        { title: "Address Proof", url: investorAccess.documents?.addressProof, status: investorAccess.kycStatus },
+        { title: "Bank Proof", url: investorAccess.documents?.bankProof, status: investorAccess.bankStatus },
+      ].filter((item) => item.url)
+    : [
+        { title: "KYC Document", url: fundraiserAccess.documents?.kyc, status: fundraiserAccess.kycStatus },
+        { title: "PAN Document", url: fundraiserAccess.documents?.pan, status: fundraiserAccess.panStatus },
+        { title: "Address Proof", url: fundraiserAccess.documents?.addressProof, status: fundraiserAccess.kycStatus },
+        { title: "Bank Proof", url: fundraiserAccess.documents?.bankProof, status: fundraiserAccess.bankStatus },
+        { title: "GST Certificate", url: fundraiserAccess.documents?.gst, status: fundraiserAccess.companyStatus },
+        { title: "Business License", url: fundraiserAccess.documents?.license, status: fundraiserAccess.companyStatus },
+        { title: "Incorporation Certificate", url: fundraiserAccess.documents?.incorporation, status: fundraiserAccess.companyStatus },
+      ].filter((item) => item.url);
 
-  const handleDeleteCampaign = async (campaignId) => {
-    try {
-      await deleteCampaign(campaignId);
-      fetchDetails();
-    } catch (e) {
-      console.error("Delete campaign error:", e);
-    }
-  };
+  const tabs = isInvestorView
+    ? [
+        ["overview", "Overview", FaUser],
+        ["access", "Profile Access", FaUserTie],
+        ["activity", "Investor Activity", FaFolderOpen],
+        ["campaigns", "Investor Campaigns", FaMoneyBillWave],
+        ["transactions", "Transactions", FaReceipt],
+        ["kyc", "KYC & Documents", FaShieldAlt],
+      ]
+    : [
+        ["overview", "Overview", FaUser],
+        ["access", "Profile Access", FaUserTie],
+        ["activity", "Fundraiser Activity", FaFolderOpen],
+        ["campaigns", "Campaigns Listed", FaMoneyBillWave],
+        ["transactions", "Transactions", FaReceipt],
+        ["kyc", "KYC & Documents", FaShieldAlt],
+      ];
 
-  const handleOverviewInput = (field, value) => {
-    setOverviewForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveOverview = async () => {
-    try {
-      setSavingOverview(true);
-
-      const payload = {
-        name: overviewForm.name,
-        email: overviewForm.email,
-        role: overviewForm.role,
-        status: overviewForm.status,
-        activeMode: overviewForm.activeMode,
-        profile: {
-          ...(details?.profile || {}),
-          phone: overviewForm.phone,
-        },
-        access: {
-          ...(details?.access || {}),
-          investor: {
-            ...(details?.access?.investor || {}),
-            enabled: overviewForm.investorEnabled,
-            type: overviewForm.investorType,
-            kycStatus: overviewForm.investorKycStatus,
-            panStatus: overviewForm.investorPanStatus,
-            bankStatus: overviewForm.investorBankStatus,
-          },
-          fundraiser: {
-            ...(details?.access?.fundraiser || {}),
-            enabled: overviewForm.fundraiserEnabled,
-            type: overviewForm.fundraiserType,
-            kycStatus: overviewForm.fundraiserKycStatus,
-            panStatus: overviewForm.fundraiserPanStatus,
-            bankStatus: overviewForm.fundraiserBankStatus,
-            companyStatus: overviewForm.fundraiserCompanyStatus,
-          },
-        },
-      };
-
-      await updateAdminUser(userId, payload);
-      setIsEditingOverview(false);
-      fetchDetails();
-    } catch (e) {
-      console.error("Update admin user error:", e);
-    } finally {
-      setSavingOverview(false);
-    }
-  };
-
-  const handleCancelOverview = () => {
-    if (!details) return;
-    const investor = getAccessBlock(details, "investor");
-    const fundraiser = getAccessBlock(details, "fundraiser");
-
-    setOverviewForm({
-      name: details?.name || "",
-      email: details?.email || "",
-      phone: details?.profile?.phone || details?.phone || details?.mobile || "",
-      role: details?.role || "user",
-      status: getAccountStatus(details),
-      activeMode: getActiveMode(details),
-
-      investorEnabled: investor.enabled,
-      investorType: investor.type,
-      investorKycStatus: investor.kycStatus,
-      investorPanStatus: investor.panStatus,
-      investorBankStatus: investor.bankStatus,
-
-      fundraiserEnabled: fundraiser.enabled,
-      fundraiserType: fundraiser.type,
-      fundraiserKycStatus: fundraiser.kycStatus,
-      fundraiserPanStatus: fundraiser.panStatus,
-      fundraiserBankStatus: fundraiser.bankStatus,
-      fundraiserCompanyStatus: fundraiser.companyStatus,
+  const patchLocalStatus = (key, value) => {
+    setDetails((prev) => {
+      if (!prev) return prev;
+      if (isInvestorView) {
+        const current = investorAccessFrom(prev);
+        return { ...prev, investorAccess: { ...current, [key]: value } };
+      }
+      const current = accessFrom(prev);
+      return { ...prev, fundraiserAccess: { ...current, [key]: value } };
     });
+  };
 
-    setIsEditingOverview(false);
+  const handleStatusUpdate = async (documentType, key, status) => {
+    const loadingKey = `${documentType}-${status}`;
+    try {
+      setStatusLoading((prev) => ({ ...prev, [loadingKey]: true }));
+      patchLocalStatus(key, status);
+      await updateUserDocumentStatus(
+        userId,
+        isInvestorView ? "investor" : "fundraiser",
+        documentType,
+        status
+      );
+      await fetchDetails();
+    } catch (error) {
+      console.error("Document status update error:", error);
+      await fetchDetails();
+    } finally {
+      setStatusLoading((prev) => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
+  const handleCampaignAction = async (campaignId, action) => {
+    try {
+      setCampaignLoading((prev) => ({ ...prev, [`${campaignId}-${action}`]: true }));
+      if (action === "approve") await approveCampaign(campaignId);
+      if (action === "reject") await rejectCampaign(campaignId);
+      if (action === "delete") await deleteCampaign(campaignId);
+      await fetchDetails();
+    } catch (error) {
+      console.error(`Campaign ${action} error:`, error);
+    } finally {
+      setCampaignLoading((prev) => ({ ...prev, [`${campaignId}-${action}`]: false }));
+    }
   };
 
   return (
     <>
       <div className="mb-6 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 px-5 py-6 text-white sm:px-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.22),_transparent_28%),linear-gradient(135deg,#082f49_0%,#0f172a_46%,#111827_100%)] px-5 py-6 text-white sm:px-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/10 text-white hover:bg-white/15 lg:hidden"
-              >
-                <FaBars />
-              </button>
-
-              <button
-                onClick={() => navigate("/admin/users")}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15"
-              >
-                <FaArrowLeft />
-                Back
-              </button>
-
+              <button onClick={() => setSidebarOpen(true)} className="grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/10 text-white hover:bg-white/15 lg:hidden"><FaBars /></button>
+              <button onClick={() => navigate("/admin/users")} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15"><FaArrowLeft />Back</button>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  {details?.name || "User Profile"}
-                </h1>
-                <p className="mt-1 text-sm text-slate-300">
-                  Account, profiles, verification, fundraiser activity, investor activity and documents
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">{isInvestorView ? "Investor Admin Profile" : "Fundraiser Admin Profile"}</p>
+                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{details?.name || (isInvestorView ? "Investor User" : "Fundraiser User")}</h1>
+                <p className="mt-2 text-sm text-slate-300">
+                  {isInvestorView
+                    ? "Investor overview, access, activity, portfolio, transactions, KYC, and documents are shown here."
+                    : "Fundraiser overview, access, activity, campaigns, KYC, and documents are shown here."}
                 </p>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {profileLabels.length > 0 ? (
-                    profileLabels.map((label) => (
-                      <span
-                        key={label}
-                        className={cn(
-                          "inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-                          getProfileBadgeTone(label)
-                        )}
-                      >
-                        {label}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="inline-flex rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/90">
-                      No profile enabled
-                    </span>
-                  )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    isInvestorView
+                      ? investorAccess.enabled ? "Investor Enabled" : "Investor Disabled"
+                      : fundraiserAccess.enabled ? "Fundraiser Enabled" : "Fundraiser Disabled",
+                    `Type: ${pretty(isInvestorView ? investorAccess.type : fundraiserAccess.type)}`,
+                    `Mode: ${pretty(details?.activeMode || "none")}`,
+                    isInvestorView ? `Investments: ${investments.length}` : `Campaigns: ${campaigns.length}`,
+                  ].map((item) => <span key={item} className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/95">{item}</span>)}
                 </div>
               </div>
             </div>
-
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-slate-300">User ID</p>
-                <p className="max-w-[220px] break-all text-xs text-slate-400">
-                  {details?._id || "—"}
-                </p>
-                <p className="mt-2 text-xs text-slate-300">
-                  Active Mode:{" "}
-                  <span className="font-semibold capitalize text-white">
-                    {getActiveMode(details)}
-                  </span>
-                </p>
-              </div>
-
-              {userPhoto ? (
-                <img
-                  src={userPhoto}
-                  alt={details?.name || "User"}
-                  className="h-16 w-16 rounded-2xl border border-white/10 object-cover"
-                />
-              ) : (
-                <div className="grid h-16 w-16 place-items-center rounded-2xl border border-white/10 bg-white/10 text-xl text-white">
-                  <FaUser />
-                </div>
-              )}
+            <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm text-slate-200 sm:min-w-[290px]">
+              <HeroInfo icon={FaEnvelope} label="Email" value={details?.email} />
+              <HeroInfo icon={FaPhone} label="Phone" value={details?.profile?.phone || details?.phone} />
+              <HeroInfo icon={FaCalendarAlt} label="Joined" value={formatDate(details?.createdAt)} />
+              <HeroInfo icon={FaIdCard} label="User ID" value={details?._id} />
             </div>
           </div>
         </div>
       </div>
 
-      {loading ? (
-        <div className="rounded-[28px] border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
-          Loading user details...
-        </div>
-      ) : !details ? (
-        <div className="rounded-[28px] border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
-          User details not found.
-        </div>
-      ) : (
+      {loading ? <Card className="p-10 text-center text-slate-500">Loading fundraiser profile...</Card> : !details ? <Card className="p-10 text-center text-slate-500">User details not found.</Card> : (
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatBox
-              title="Campaigns Created"
-              value={fundraiserCampaigns.length}
-              accent="from-sky-500 to-blue-600"
+            <Stat
+              title={isInvestorView ? "Investments Made" : "Campaigns Created"}
+              value={isInvestorView ? investments.length : campaigns.length}
+              accent="from-sky-500 to-cyan-500"
             />
-            <StatBox
-              title="Total Campaign Raised"
-              value={INR(totalCampaignAmount)}
+            <Stat
+              title={isInvestorView ? "Total Invested" : "Total Goal"}
+              value={INR(isInvestorView ? totalInvested : totalGoal)}
+              accent="from-blue-600 to-indigo-600"
+            />
+            <Stat
+              title={isInvestorView ? "Portfolio Value" : "Total Raised"}
+              value={INR(isInvestorView ? estimatedCurrentValue : totalRaised)}
               accent="from-emerald-500 to-green-600"
             />
-            <StatBox
-              title="Total Investments"
-              value={INR(totalInvestmentAmount)}
-              accent="from-violet-500 to-purple-600"
-            />
-            <StatBox
-              title="Transactions"
-              value={transactions.length}
+            <Stat
+              title={isInvestorView ? "Transactions" : "Completion Rate"}
+              value={isInvestorView ? transactions.length : `${completion.toFixed(0)}%`}
               accent="from-amber-500 to-orange-500"
             />
           </div>
 
-          <div className="mb-6 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+          <Card className="mb-6 p-4">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition",
-                      activeTab === tab.key
-                        ? "bg-slate-900 text-white shadow-sm"
-                        : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    )}
-                  >
-                    <Icon className="text-sm" />
-                    {tab.label}
-                  </button>
-                );
-              })}
+              {tabs.map(([key, label, Icon]) => (
+                <button key={key} onClick={() => setActiveTab(key)} className={cn("flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition", activeTab === key ? "bg-slate-900 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}>
+                  <Icon className="text-sm" />
+                  <span className="truncate">{label}</span>
+                </button>
+              ))}
             </div>
-          </div>
+          </Card>
 
           {activeTab === "overview" && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-              <div className="xl:col-span-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-center gap-3">
-                  {userPhoto ? (
-                    <img
-                      src={userPhoto}
-                      alt={details?.name || "User"}
-                      className="h-20 w-20 rounded-2xl border border-slate-200 object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-20 w-20 place-items-center rounded-2xl bg-slate-100 text-2xl text-slate-500">
-                      <FaUser />
-                    </div>
-                  )}
-
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">
-                      {details?.name || "—"}
-                    </h3>
-                    <p className="text-sm text-slate-500 capitalize">
-                      System Role: {details?.role || "user"}
-                    </p>
-                    <span
-                      className={cn(
-                        "mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-                        getStatusTone(getAccountStatus(details))
-                      )}
-                    >
-                      {getAccountStatus(details)}
-                    </span>
-                  </div>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+              <Card className="p-6">
+                <SectionTitle
+                  icon={FaUser}
+                  title={isInvestorView ? "Investor Overview" : "Fundraiser Overview"}
+                  subtitle={isInvestorView ? "Identity, contact, address, bank, and investor account information." : "Identity, contact, address, and bank information."}
+                />
+                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Info label="Full Name" value={details?.name} icon={FaUser} />
+                  <Info label="Email" value={details?.email} icon={FaEnvelope} />
+                  <Info label="Phone" value={details?.profile?.phone || details?.phone} icon={FaPhone} />
+                  <Info label="Address" value={address || "--"} icon={FaMapMarkerAlt} />
+                  <Info label="Bank Name" value={details?.bankDetails?.bankName || "--"} icon={FaUniversity} />
+                  <Info label="Account Holder" value={details?.bankDetails?.accountHolderName || "--"} icon={FaUniversity} />
+                  {isInvestorView ? <Info label="Total Invested" value={INR(totalInvested)} icon={FaMoneyBillWave} /> : null}
+                  {isInvestorView ? <Info label="Active Investments" value={activeInvestments} icon={FaReceipt} /> : null}
                 </div>
-
-                <div className="space-y-3">
-                  <MiniInfo icon={FaEnvelope} label="Email" value={details?.email || "—"} />
-                  <MiniInfo
-                    icon={FaPhone}
-                    label="Phone"
-                    value={details?.profile?.phone || details?.phone || details?.mobile || "—"}
-                  />
-                  <MiniInfo
-                    icon={FaCalendarAlt}
-                    label="Joined"
-                    value={formatDate(details?.createdAt)}
-                  />
-                  <MiniInfo
-                    icon={FaExchangeAlt}
-                    label="Current Mode"
-                    value={getActiveMode(details)}
-                  />
-                  <MiniInfo
+              </Card>
+              <div className="space-y-6">
+                <Card className="p-6">
+                  <SectionTitle
                     icon={FaShieldAlt}
-                    label="Last Login"
-                    value={formatDate(details?.lastLogin)}
+                    title="Verification Snapshot"
+                    subtitle={isInvestorView ? "Live investor verification state." : "Live fundraiser verification state."}
                   />
-                </div>
-              </div>
-
-              <div className="xl:col-span-8 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">Account & Profile Controls</h3>
-                    <p className="text-sm text-slate-500">
-                      Manage system role, mode, and separate investor/fundraiser profile states
-                    </p>
+                  <div className="mt-5 space-y-3">
+                    <StatusRow label="KYC Status" value={isInvestorView ? investorAccess.kycStatus : fundraiserAccess.kycStatus} />
+                    {isInvestorView ? null : <StatusRow label="PAN Status" value={fundraiserAccess.panStatus} />}
+                    <StatusRow label="Bank Status" value={isInvestorView ? investorAccess.bankStatus : fundraiserAccess.bankStatus} />
+                    {isInvestorView ? null : <StatusRow label="Company Status" value={fundraiserAccess.companyStatus} />}
                   </div>
+                </Card>
+                <Card className="p-6">
+                  <SectionTitle
+                    icon={FaMoneyBillWave}
+                    title={isInvestorView ? "Portfolio Summary" : "Campaign Summary"}
+                    subtitle={isInvestorView ? "Quick investor portfolio and transaction numbers." : "Quick fundraiser numbers."}
+                  />
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {isInvestorView ? (
+                      <>
+                        <Metric label="Investments" value={investments.length} />
+                        <Metric label="Portfolio Value" value={INR(estimatedCurrentValue)} />
+                        <Metric label="Active" value={activeInvestments} />
+                        <Metric label="Transactions" value={transactions.length} />
+                      </>
+                    ) : (
+                      <>
+                        <Metric label="Approved" value={counts.approved} />
+                        <Metric label="Pending" value={counts.pending} />
+                        <Metric label="Rejected" value={counts.rejected} />
+                        <Metric label="Transactions" value={transactions.length} />
+                      </>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          )}
 
-                  {!isEditingOverview ? (
-                    <button
-                      onClick={() => setIsEditingOverview(true)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-                    >
-                      <FaPen />
-                      Edit
-                    </button>
+          {activeTab === "access" && (
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <Card className="p-6">
+                <SectionTitle
+                  icon={FaUserTie}
+                  title="Profile Access"
+                  subtitle={isInvestorView ? "Investor-specific access configuration." : "Fundraiser-specific access configuration."}
+                />
+                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Info label={isInvestorView ? "Investor Enabled" : "Fundraiser Enabled"} value={isInvestorView ? investorAccess.enabled ? "Yes" : "No" : fundraiserAccess.enabled ? "Yes" : "No"} />
+                  <Info label="Profile Type" value={pretty(isInvestorView ? investorAccess.type : fundraiserAccess.type)} />
+                  <Info label="Active Mode" value={pretty(details?.activeMode || "none")} />
+                  <Info label="Account Role" value={pretty(details?.role || "user")} />
+                </div>
+              </Card>
+              <Card className="p-6">
+                <SectionTitle
+                  icon={FaShieldAlt}
+                  title="Access Review"
+                  subtitle={isInvestorView ? "Approval states tied to investor documents." : "Approval states tied to fundraiser documents."}
+                />
+                <div className="mt-5 space-y-3">
+                  <StatusRow label="KYC" value={isInvestorView ? investorAccess.kycStatus : fundraiserAccess.kycStatus} />
+                  {isInvestorView ? null : <StatusRow label="PAN" value={fundraiserAccess.panStatus} />}
+                  <StatusRow label="Bank" value={isInvestorView ? investorAccess.bankStatus : fundraiserAccess.bankStatus} />
+                  {isInvestorView ? null : <StatusRow label="Company" value={fundraiserAccess.companyStatus} />}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "activity" && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {isInvestorView ? (
+                  <>
+                    <Info label="Total Investments" value={investments.length} />
+                    <Info label="Total Invested" value={INR(totalInvested)} />
+                    <Info label="Active Investments" value={activeInvestments} />
+                    <Info label="Investor Transactions" value={transactions.length} />
+                  </>
+                ) : (
+                  <>
+                    <Info label="Total Campaigns" value={campaigns.length} />
+                    <Info label="Approved Campaigns" value={counts.approved} />
+                    <Info label="Pending Campaigns" value={counts.pending} />
+                    <Info label="Rejected Campaigns" value={counts.rejected} />
+                  </>
+                )}
+              </div>
+              <Card className="p-6">
+                <SectionTitle
+                  icon={FaFolderOpen}
+                  title={isInvestorView ? "Investor Activity" : "Fundraiser Activity"}
+                  subtitle={isInvestorView ? "See where and how much money this investor has invested." : "Campaign creation and status activity timeline."}
+                />
+                <div className="mt-5 space-y-3">
+                  {isInvestorView ? (
+                    investments.length > 0 ? investments.map((investment) => {
+                      const campaign = investment?.campaign || {};
+                      return (
+                        <div key={investment?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-semibold text-slate-900">{campaign?.projectTitle || "Campaign"}</p>
+                            <p className="text-sm text-slate-500">Invested {INR(investment?.amount || 0)} in {pretty(campaign?.projectCategory || "general")}</p>
+                            <p className="mt-1 text-xs text-slate-400">{formatDate(investment?.createdAt)}</p>
+                          </div>
+                          <div className="text-left sm:text-right">
+                            <p className="text-sm font-bold text-slate-900">{INR(investment?.amount || 0)}</p>
+                            <span className={cn("mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(investment?.paymentStatus || investment?.status))}>
+                              {investment?.paymentStatus || investment?.status || "pending"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }) : <Empty text="No investor activity is available for this user yet." />
                   ) : (
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={handleCancelOverview}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        <FaTimes />
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSaveOverview}
-                        disabled={savingOverview}
-                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                      >
-                        <FaSave />
-                        {savingOverview ? "Saving..." : "Save Changes"}
-                      </button>
-                    </div>
+                    campaigns.length > 0 ? campaigns.map((campaign) => (
+                      <div key={campaign?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="font-semibold text-slate-900">{campaign?.projectTitle || "Campaign"}</p>
+                          <p className="text-sm text-slate-500">{pretty(campaign?.status || "pending")} campaign update</p>
+                          <p className="mt-1 text-xs text-slate-400">{formatDate(campaign?.createdAt)}</p>
+                        </div>
+                        <div className="text-left sm:text-right">
+                          <p className="text-sm font-bold text-slate-900">{INR(campaign?.moneyRaised || campaign?.currentFunding || 0)}</p>
+                          <span className={cn("mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(campaign?.status))}>{campaign?.status || "pending"}</span>
+                        </div>
+                      </div>
+                    )) : <Empty text="No fundraiser activity available for this user yet." />
                   )}
                 </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  <EditableField
-                    label="Name"
-                    value={overviewForm.name}
-                    isEditing={isEditingOverview}
-                    onChange={(v) => handleOverviewInput("name", v)}
-                  />
-                  <EditableField
-                    label="Email"
-                    value={overviewForm.email}
-                    isEditing={isEditingOverview}
-                    onChange={(v) => handleOverviewInput("email", v)}
-                    type="email"
-                  />
-                  <EditableField
-                    label="Phone"
-                    value={overviewForm.phone}
-                    isEditing={isEditingOverview}
-                    onChange={(v) => handleOverviewInput("phone", v)}
-                  />
-
-                  <EditableSelect
-                    label="System Role"
-                    value={overviewForm.role}
-                    isEditing={isEditingOverview}
-                    onChange={(v) => handleOverviewInput("role", v)}
-                    options={["user", "admin"]}
-                  />
-
-                  <EditableSelect
-                    label="Account Status"
-                    value={overviewForm.status}
-                    isEditing={isEditingOverview}
-                    onChange={(v) => handleOverviewInput("status", v)}
-                    options={["active", "inactive", "blocked", "pending"]}
-                  />
-
-                  <EditableSelect
-                    label="Active Mode"
-                    value={overviewForm.activeMode}
-                    isEditing={isEditingOverview}
-                    onChange={(v) => handleOverviewInput("activeMode", v)}
-                    options={["none", "investor", "fundraiser"]}
-                  />
-                </div>
-              </div>
+              </Card>
             </div>
           )}
 
-          {activeTab === "profiles" && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <ProfileAccessCard
-                title="Investor Profile"
-                icon={FaMoneyBillWave}
-                badge={
-                  investorAccess.enabled
-                    ? investorAccess.type === "company"
-                      ? "Investor Company"
-                      : "Investor Individual"
-                    : "Investor Disabled"
-                }
-                badgeTone={
-                  investorAccess.enabled
-                    ? getProfileBadgeTone("investor")
-                    : "bg-slate-50 text-slate-600 border-slate-200"
-                }
-                rows={[
-                  {
-                    label: "Enabled",
-                    value: investorAccess.enabled ? "Yes" : "No",
-                    editingKey: "investorEnabled",
-                    type: "boolean",
-                  },
-                  {
-                    label: "Type",
-                    value: overviewForm.investorType,
-                    editingKey: "investorType",
-                    type: "select",
-                    options: ["individual", "company"],
-                  },
-                  {
-                    label: "KYC Status",
-                    value: overviewForm.investorKycStatus,
-                    editingKey: "investorKycStatus",
-                    type: "select",
-                    options: ["NONE", "PENDING", "VERIFIED", "REJECTED"],
-                  },
-                  {
-                    label: "PAN Status",
-                    value: overviewForm.investorPanStatus,
-                    editingKey: "investorPanStatus",
-                    type: "select",
-                    options: ["NONE", "PENDING", "VERIFIED", "REJECTED"],
-                  },
-                  {
-                    label: "Bank Status",
-                    value: overviewForm.investorBankStatus,
-                    editingKey: "investorBankStatus",
-                    type: "select",
-                    options: ["NONE", "PENDING", "VERIFIED", "REJECTED"],
-                  },
-                ]}
-                isEditing={isEditingOverview}
-                onChange={handleOverviewInput}
-              />
-
-              <ProfileAccessCard
-                title="Fundraiser Profile"
-                icon={FaFolderOpen}
-                badge={
-                  fundraiserAccess.enabled
-                    ? fundraiserAccess.type === "company"
-                      ? "Fundraiser Company"
-                      : "Fundraiser Individual"
-                    : "Fundraiser Disabled"
-                }
-                badgeTone={
-                  fundraiserAccess.enabled
-                    ? getProfileBadgeTone("fundraiser")
-                    : "bg-slate-50 text-slate-600 border-slate-200"
-                }
-                rows={[
-                  {
-                    label: "Enabled",
-                    value: fundraiserAccess.enabled ? "Yes" : "No",
-                    editingKey: "fundraiserEnabled",
-                    type: "boolean",
-                  },
-                  {
-                    label: "Type",
-                    value: overviewForm.fundraiserType,
-                    editingKey: "fundraiserType",
-                    type: "select",
-                    options: ["individual", "company"],
-                  },
-                  {
-                    label: "KYC Status",
-                    value: overviewForm.fundraiserKycStatus,
-                    editingKey: "fundraiserKycStatus",
-                    type: "select",
-                    options: ["NONE", "PENDING", "VERIFIED", "REJECTED"],
-                  },
-                  {
-                    label: "PAN Status",
-                    value: overviewForm.fundraiserPanStatus,
-                    editingKey: "fundraiserPanStatus",
-                    type: "select",
-                    options: ["NONE", "PENDING", "VERIFIED", "REJECTED"],
-                  },
-                  {
-                    label: "Bank Status",
-                    value: overviewForm.fundraiserBankStatus,
-                    editingKey: "fundraiserBankStatus",
-                    type: "select",
-                    options: ["NONE", "PENDING", "VERIFIED", "REJECTED"],
-                  },
-                  {
-                    label: "Company Status",
-                    value: overviewForm.fundraiserCompanyStatus,
-                    editingKey: "fundraiserCompanyStatus",
-                    type: "select",
-                    options: ["NONE", "PENDING", "VERIFIED", "REJECTED"],
-                  },
-                ]}
-                isEditing={isEditingOverview}
-                onChange={handleOverviewInput}
-              />
-            </div>
-          )}
-
-          {activeTab === "fundraiser" && (
+          {activeTab === "campaigns" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <DetailCard label="Fundraiser Enabled" value={fundraiserAccess.enabled ? "Yes" : "No"} />
-                <DetailCard label="Type" value={fundraiserAccess.type} />
-                <DetailCard label="Campaigns" value={fundraiserCampaigns.length} />
-                <DetailCard label="Total Raised" value={INR(totalCampaignAmount)} />
-              </div>
-
-              {fundraiserCampaigns.length > 0 ? (
-                fundraiserCampaigns.map((campaign, idx) => {
-                  const campaignImages = getMediaItems(
-                    campaign?.projectImages ||
-                      campaign?.images ||
-                      campaign?.photos ||
-                      campaign?.gallery
+              {isInvestorView ? (
+                investments.length > 0 ? investments.map((investment) => {
+                  const campaign = investment?.campaign || {};
+                  const goal = Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
+                  const raised = Number(campaign?.currentFunding || campaign?.moneyRaised || 0);
+                  const progress = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
+                  const expectedReturn = Math.round(
+                    (Number(investment?.amount || 0) * Number(campaign?.profitPercentage || 0)) / 100
                   );
-
-                  const campaignDocs = getMediaItems(
-                    campaign?.kycDocuments?.length > 0
-                      ? campaign.kycDocuments
-                      : campaign?.documents
-                  );
-
-                  const fundingGoal = Number(
-                    campaign?.fundingGoal || campaign?.targetAmount || 0
-                  );
-                  const raised = Number(
-                    campaign?.moneyRaised || campaign?.currentFunding || 0
-                  );
-                  const progress =
-                    fundingGoal > 0 ? Math.min((raised / fundingGoal) * 100, 100) : 0;
-
-                  const isExpanded = expandedCampaign === campaign?._id;
+                  const gallery = campaignGallery({
+                    documents: {
+                      photo: campaign?.photo,
+                      projectPhotos: campaign?.projectPhotos || [],
+                    },
+                  });
 
                   return (
-                    <div
-                      key={campaign?._id || idx}
-                      className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm"
-                    >
-                      <div className="p-4">
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <Card key={investment?._id} className="overflow-hidden">
+                      <div className="p-5">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                           <div className="min-w-0 flex-1">
-                            <div className="mb-2 flex flex-wrap items-center gap-2">
-                              <span
-                                className={cn(
-                                  "rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-                                  getStatusTone(campaign?.status)
-                                )}
-                              >
-                                {campaign?.status || "pending"}
-                              </span>
-
-                              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
-                                {campaign?.projectCategory || campaign?.category || "General"}
-                              </span>
-
-                              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
-                                {formatDate(campaign?.createdAt)}
-                              </span>
+                            <div className="mb-3 flex flex-wrap gap-2">
+                              <Tag text={campaign?.status || "pending"} className={tone(campaign?.status)} />
+                              <Tag text={pretty(campaign?.projectCategory || "general")} />
+                              <Tag text={formatDate(investment?.createdAt)} />
                             </div>
-
-                            <h3 className="truncate text-lg font-bold text-slate-900">
-                              {campaign?.projectTitle || campaign?.title || "Fundraiser"}
-                            </h3>
-
-                            <p className="mt-1 line-clamp-2 text-sm text-slate-600">
-                              {campaign?.projectOverview || campaign?.description || "No overview available"}
-                            </p>
-
-                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                              <CompactMetric label="Goal" value={INR(fundingGoal)} />
-                              <CompactMetric label="Raised" value={INR(raised)} />
-                              <CompactMetric label="Progress" value={`${progress.toFixed(0)}%`} />
-                              <CompactMetric label="Docs" value={campaignDocs.length} />
+                            <h3 className="text-xl font-bold text-slate-900">{campaign?.projectTitle || "Campaign"}</h3>
+                            <p className="mt-2 text-sm leading-6 text-slate-600">{campaign?.projectOverview || "No campaign overview available."}</p>
+                            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                              <Metric label="Invested" value={INR(investment?.amount || 0)} />
+                              <Metric label="Current Raise" value={INR(raised)} />
+                              <Metric label="Expected Return" value={expectedReturn > 0 ? INR(expectedReturn) : "N/A"} />
+                              <Metric label="Payment Status" value={investment?.paymentStatus || "--"} />
                             </div>
-
-                            <div className="mt-3">
-                              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-600"
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
+                            <div className="mt-4">
+                              <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Campaign progress</span><span>{progress.toFixed(0)}%</span></div>
+                              <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500" style={{ width: `${progress}%` }} /></div>
                             </div>
                           </div>
-
+                          <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:grid-cols-1">
+                            <Metric label="Goal" value={INR(goal)} />
+                            <Metric label="Funding Type" value={campaign?.fundingType || "--"} />
+                            <Metric label="Transfer Status" value={investment?.transferStatus || "--"} />
+                            <Metric label="Order ID" value={investment?.orderId || "--"} />
+                          </div>
+                        </div>
+                        <div className="mt-5">
+                          <Media title="Campaign Media" items={gallery} emptyText="No campaign media available." />
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                }) : <Empty text="No investor campaign details found for this user yet." />
+              ) : (
+                campaigns.length > 0 ? campaigns.map((campaign) => {
+                  const goal = Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
+                  const raised = Number(campaign?.moneyRaised || campaign?.currentFunding || 0);
+                  const progress = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
+                  const docs = campaignDocs(campaign);
+                  const gallery = campaignGallery(campaign);
+                  const expanded = expandedCampaign === campaign?._id;
+                  return (
+                    <Card key={campaign?._id} className="overflow-hidden">
+                      <div className="p-5">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-3 flex flex-wrap gap-2">
+                              <Tag text={campaign?.status || "pending"} className={tone(campaign?.status)} />
+                              <Tag text={pretty(campaign?.projectCategory || "general")} />
+                              <Tag text={formatDate(campaign?.createdAt)} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900">{campaign?.projectTitle || "Campaign"}</h3>
+                            <p className="mt-2 text-sm leading-6 text-slate-600">{campaign?.projectOverview || "No project overview available."}</p>
+                            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                              <Metric label="Goal" value={INR(goal)} />
+                              <Metric label="Raised" value={INR(raised)} />
+                              <Metric label="Funding Type" value={campaign?.fundingType || "--"} />
+                              <Metric label="Documents" value={docs.length} />
+                            </div>
+                            <div className="mt-4">
+                              <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Funding progress</span><span>{progress.toFixed(0)}%</span></div>
+                              <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500" style={{ width: `${progress}%` }} /></div>
+                            </div>
+                          </div>
                           <div className="flex flex-wrap gap-2 lg:justify-end">
-                            <button
-                              onClick={() =>
-                                setExpandedCampaign(isExpanded ? null : campaign?._id)
-                              }
-                              className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              {isExpanded ? "Hide Details" : "View More"}
-                            </button>
-
-                            <button
-                              onClick={() => handleApproveCampaign(campaign?._id)}
-                              className="rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
-                            >
-                              Approve
-                            </button>
-
-                            <button
-                              onClick={() => handleRejectCampaign(campaign?._id)}
-                              className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-600"
-                            >
-                              Reject
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteCampaign(campaign?._id)}
-                              className="rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-rose-700"
-                            >
-                              Delete
-                            </button>
+                            <SmallButton label={expanded ? "Hide Details" : "View Details"} onClick={() => setExpandedCampaign(expanded ? null : campaign?._id)} />
+                            <SmallButton label="Approve" tone="success" onClick={() => handleCampaignAction(campaign?._id, "approve")} loading={campaignLoading[`${campaign?._id}-approve`]} />
+                            <SmallButton label="Reject" tone="danger" onClick={() => handleCampaignAction(campaign?._id, "reject")} loading={campaignLoading[`${campaign?._id}-reject`]} />
+                            <SmallButton label="Delete" tone="dark" onClick={() => handleCampaignAction(campaign?._id, "delete")} loading={campaignLoading[`${campaign?._id}-delete`]} />
                           </div>
                         </div>
                       </div>
-
-                      {isExpanded && (
-                        <div className="border-t border-slate-200 bg-slate-50/60 p-4">
-                          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-                            <DetailCard
-                              label="Category"
-                              value={campaign?.projectCategory || campaign?.category || "—"}
-                            />
-                            <DetailCard label="Created By" value={details?.name || "—"} />
-                            <DetailCard label="Funding Goal" value={INR(fundingGoal)} />
-                            <DetailCard label="Raised Amount" value={INR(raised)} />
-                          </div>
-
-                          <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
-                            <MediaGallery
-                              title="Project Photos"
-                              icon={FaImage}
-                              items={campaignImages}
-                              emptyText="No project photos found."
-                            />
-
-                            <MediaGallery
-                              title="Campaign Documents"
-                              icon={FaFileAlt}
-                              items={campaignDocs}
-                              emptyText="No campaign documents found."
-                            />
+                      {expanded && (
+                        <div className="border-t border-slate-200 bg-slate-50/70 p-5">
+                          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                            <div className="space-y-4">
+                              <Info label="Category" value={pretty(campaign?.projectCategory || "--")} />
+                              <Info label="Funding Type" value={campaign?.fundingType || "--"} />
+                              <Info label="Created On" value={formatDate(campaign?.createdAt)} />
+                              <Info label="Deadline" value={formatDate(campaign?.deadline)} />
+                            </div>
+                            <div className="space-y-4">
+                              <Media title="Campaign Gallery" items={gallery} emptyText="No campaign images uploaded." />
+                              <Media title="Attached Campaign Documents" items={docs} emptyText="No campaign documents uploaded." />
+                            </div>
                           </div>
                         </div>
                       )}
-                    </div>
+                    </Card>
                   );
-                })
-              ) : (
-                <EmptyState text="No fundraiser campaigns found for this user." />
-              )}
-            </div>
-          )}
-
-          {activeTab === "investor" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <DetailCard label="Investor Enabled" value={investorAccess.enabled ? "Yes" : "No"} />
-                <DetailCard label="Type" value={investorAccess.type} />
-                <DetailCard label="Investments" value={investorInvestments.length} />
-                <DetailCard label="Total Invested" value={INR(totalInvestmentAmount)} />
-              </div>
-
-              {investorInvestments.length > 0 ? (
-                investorInvestments.map((inv, idx) => (
-                  <div
-                    key={inv?._id || idx}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="font-semibold text-slate-900">
-                          {inv?.campaign?.title ||
-                            inv?.campaignTitle ||
-                            inv?.projectTitle ||
-                            "Investment"}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          {formatDate(inv?.createdAt || inv?.investmentDate)}
-                        </p>
-                      </div>
-
-                      <div className="text-right">
-                        <p className="font-bold text-violet-700">
-                          {INR(inv?.amount || inv?.investmentAmount || 0)}
-                        </p>
-                        <span
-                          className={cn(
-                            "mt-1 inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold",
-                            getStatusTone(inv?.status || inv?.paymentStatus)
-                          )}
-                        >
-                          {inv?.status || inv?.paymentStatus || "pending"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <EmptyState text="No investor activity found for this user." />
+                }) : <Empty text="No campaigns have been created by this fundraiser yet." />
               )}
             </div>
           )}
 
           {activeTab === "transactions" && (
-            <div className="space-y-3">
-              {transactions.length > 0 ? (
-                transactions.map((txn, idx) => (
-                  <div
-                    key={txn?._id || idx}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="font-semibold capitalize text-slate-900">
-                          {txn?.type || "Transaction"}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          {txn?.transactionId || txn?._id || "—"}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-400">
-                          {formatDate(txn?.createdAt)}
-                        </p>
-                      </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Info label="Total Transactions" value={transactions.length} />
+                <Info label={isInvestorView ? "Total Invested via Transactions" : "Total Raised via Transactions"} value={INR(transactionRaised)} />
+                <Info label="Completed" value={completedTransactions} />
+                <Info label="Pending / Failed" value={`${pendingTransactions} / ${failedTransactions}`} />
+              </div>
 
-                      <div className="text-right">
-                        <p className="font-bold text-slate-900">
-                          {INR(txn?.amount || 0)}
-                        </p>
-                        <span
-                          className={cn(
-                            "mt-1 inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold",
-                            getStatusTone(txn?.status)
-                          )}
-                        >
-                          {txn?.status || "success"}
-                        </span>
+              <Card className="p-6">
+                <SectionTitle
+                  icon={FaReceipt}
+                  title={isInvestorView ? "Investor Transactions" : "Fundraiser Transactions"}
+                  subtitle={isInvestorView ? "Full investment transaction history showing where money was invested and whether payment was completed or not." : "Full transaction history showing raised amount and whether each payment was completed or not."}
+                />
+                <div className="mt-5 space-y-4">
+                  {transactions.length > 0 ? transactions.map((txn) => (
+                    <div key={txn?._id || txn?.transactionId} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex flex-wrap gap-2">
+                            <Tag text={txn?.status || "pending"} className={tone(txn?.status)} />
+                            <Tag text={pretty(txn?.type || "investment")} />
+                            <Tag text={pretty(txn?.paymentMethod || "razorpay")} />
+                            <Tag text={formatDate(txn?.createdAt)} />
+                          </div>
+
+                          <h3 className="text-lg font-bold text-slate-900">
+                            {txn?.campaign?.title || "Unknown Campaign"}
+                          </h3>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {txn?.description || "Fundraiser transaction record"}
+                          </p>
+
+                          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <Info label="Transaction ID" value={txn?.transactionId || "--"} />
+                            <Info label={isInvestorView ? "Fundraiser" : "Investor"} value={isInvestorView ? txn?.fundraiser?.name || "--" : txn?.investor?.name || "--"} />
+                            <Info label={isInvestorView ? "Fundraiser Email" : "Investor Email"} value={isInvestorView ? txn?.fundraiser?.email || "--" : txn?.investor?.email || "--"} />
+                            <Info label="Order ID" value={txn?.orderId || "--"} />
+                            <Info label="Gateway Payment ID" value={txn?.paymentGatewayId || "--"} />
+                            <Info label="Transfer ID" value={txn?.transferId || "--"} />
+                          </div>
+
+                          {txn?.failureReason ? (
+                            <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                              Failure reason: {txn.failureReason}
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:grid-cols-1">
+                          <Metric label={isInvestorView ? "Invested Amount" : "Raised Amount"} value={INR(txn?.amount || 0)} />
+                          <Metric label="Platform Fee" value={INR(txn?.fee || 0)} />
+                          <Metric label="Net Amount" value={INR(txn?.netAmount || 0)} />
+                          <Metric label="Processed On" value={formatDate(txn?.processedAt)} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <EmptyState text="No transactions found for this user." />
-              )}
+                  )) : <Empty text={isInvestorView ? "No investor transactions found for this user yet." : "No fundraiser transactions found for this user yet."} />}
+                </div>
+              </Card>
             </div>
           )}
 
-          {activeTab === "documents" && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <div className="space-y-4">
-                <SectionHeader
-                  icon={FaMoneyBillWave}
-                  title="Investor Documents"
-                  subtitle="Documents attached under investor profile"
-                />
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <DetailCard label="Investor KYC" value={investorAccess.kycStatus} />
-                  <DetailCard label="PAN Status" value={investorAccess.panStatus} />
-                  <DetailCard label="Bank Status" value={investorAccess.bankStatus} />
-                  <DetailCard label="Profile Type" value={investorAccess.type} />
-                </div>
-
-                <MediaGallery
-                  title="Investor Files"
-                  icon={FaFileAlt}
-                  items={investorDocuments}
-                  emptyText="No investor documents found."
-                />
+          {activeTab === "kyc" && (
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+              <div className="space-y-6">
+                <Card className="p-6">
+                  <SectionTitle
+                    icon={FaShieldAlt}
+                    title="KYC Details"
+                    subtitle={isInvestorView ? "Investor KYC details fetched from the backend." : "Fundraiser KYC details fetched from the backend."}
+                  />
+                  <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <Info label="Aadhaar Number" value={isInvestorView ? investorAccess.details?.aadhaarNumber || "--" : fundraiserAccess.details?.aadhaarNumber || "--"} icon={FaIdCard} />
+                    <Info label="PAN Number" value={isInvestorView ? investorAccess.details?.panNumber || "--" : fundraiserAccess.details?.panNumber || "--"} icon={FaIdCard} />
+                    <Info label="Address Proof Type" value={isInvestorView ? investorAccess.details?.addressProofType || "--" : fundraiserAccess.details?.addressProofType || "--"} icon={FaMapMarkerAlt} />
+                    <Info label="Bank Account Number" value={details?.bankDetails?.accountNumber || "--"} icon={FaUniversity} />
+                    <Info label="IFSC Code" value={details?.bankDetails?.ifscCode || "--"} icon={FaUniversity} />
+                    <Info label="Branch Name" value={details?.bankDetails?.branchName || "--"} icon={FaUniversity} />
+                  </div>
+                </Card>
+                <Card className="p-6">
+                  <SectionTitle
+                    icon={FaShieldAlt}
+                    title="Live Status Controls"
+                    subtitle={isInvestorView ? "Update investor KYC and bank statuses in real time." : "Update fundraiser KYC statuses in real time."}
+                  />
+                  <div className="mt-5 space-y-4">
+                    <Approve label="KYC Status" value={isInvestorView ? investorAccess.kycStatus : fundraiserAccess.kycStatus} disabled={isInvestorView ? !investorAccess.documents?.kyc && !investorAccess.documents?.pan && !investorAccess.documents?.addressProof : !fundraiserAccess.documents?.kyc} loading={Object.keys(statusLoading).some((key) => key.startsWith("kyc-"))} onPick={(status) => handleStatusUpdate("kyc", "kycStatus", status)} />
+                    {isInvestorView ? null : <Approve label="PAN Status" value={fundraiserAccess.panStatus} disabled={!fundraiserAccess.documents?.pan} loading={Object.keys(statusLoading).some((key) => key.startsWith("pan-"))} onPick={(status) => handleStatusUpdate("pan", "panStatus", status)} />}
+                    <Approve label="Bank Status" value={isInvestorView ? investorAccess.bankStatus : fundraiserAccess.bankStatus} disabled={isInvestorView ? !investorAccess.documents?.bankProof : !fundraiserAccess.documents?.bankProof} loading={Object.keys(statusLoading).some((key) => key.startsWith("bank-"))} onPick={(status) => handleStatusUpdate("bank", "bankStatus", status)} />
+                    {isInvestorView ? null : <Approve label="Company Status" value={fundraiserAccess.companyStatus} disabled={!fundraiserAccess.documents?.gst && !fundraiserAccess.documents?.license && !fundraiserAccess.documents?.incorporation} loading={Object.keys(statusLoading).some((key) => key.startsWith("company-"))} onPick={(status) => handleStatusUpdate("company", "companyStatus", status)} />}
+                  </div>
+                </Card>
               </div>
-
-              <div className="space-y-4">
-                <SectionHeader
-                  icon={FaBuilding}
-                  title="Fundraiser Documents"
-                  subtitle="Documents attached under fundraiser profile"
-                />
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <DetailCard label="Fundraiser KYC" value={fundraiserAccess.kycStatus} />
-                  <DetailCard label="PAN Status" value={fundraiserAccess.panStatus} />
-                  <DetailCard label="Bank Status" value={fundraiserAccess.bankStatus} />
-                  <DetailCard label="Company Status" value={fundraiserAccess.companyStatus} />
-                </div>
-
-                <MediaGallery
-                  title="Fundraiser Files"
+              <Card className="p-6">
+                <SectionTitle
                   icon={FaFileAlt}
-                  items={fundraiserDocuments}
-                  emptyText="No fundraiser documents found."
+                  title={isInvestorView ? "Investor Documents" : "Fundraiser Documents"}
+                  subtitle="All user documents are listed here and can be viewed."
                 />
-              </div>
+                <div className="mt-5 space-y-4">
+                  {userDocs.length > 0 ? userDocs.map((doc) => <Doc key={`${doc.title}-${doc.url}`} title={doc.title} url={doc.url} status={doc.status} />) : <Empty text={isInvestorView ? "No investor KYC documents have been uploaded." : "No fundraiser KYC documents have been uploaded."} />}
+                </div>
+              </Card>
             </div>
           )}
         </>
@@ -1184,267 +725,16 @@ export default function AdminUserDetails() {
   );
 }
 
-function SectionHeader({ icon: Icon, title, subtitle }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="mt-1 text-slate-500">
-          <Icon />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          <p className="text-sm text-slate-500">{subtitle}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProfileAccessCard({
-  title,
-  icon: Icon,
-  badge,
-  badgeTone,
-  rows = [],
-  isEditing,
-  onChange,
-}) {
-  return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-100 text-slate-600">
-            <Icon />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          </div>
-        </div>
-
-        <span
-          className={cn(
-            "inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-            badgeTone
-          )}
-        >
-          {badge}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {rows.map((row) => (
-          <div
-            key={row.label}
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-          >
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              {row.label}
-            </p>
-
-            {!isEditing ? (
-              <p className="mt-2 text-sm font-semibold capitalize text-slate-900">
-                {String(row.value ?? "—").toLowerCase() === "true"
-                  ? "Yes"
-                  : String(row.value ?? "—").toLowerCase() === "false"
-                  ? "No"
-                  : String(row.value ?? "—")}
-              </p>
-            ) : row.type === "boolean" ? (
-              <select
-                value={String(row.value === "Yes" || row.value === true)}
-                onChange={(e) => onChange(row.editingKey, e.target.value === "true")}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-slate-400"
-              >
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            ) : (
-              <select
-                value={row.value || ""}
-                onChange={(e) => onChange(row.editingKey, e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium capitalize text-slate-900 outline-none focus:border-slate-400"
-              >
-                {(row.options || []).map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function StatBox({ title, value, accent }) {
-  return (
-    <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
-      <div className={cn("h-1.5 bg-gradient-to-r", accent)} />
-      <div className="p-4">
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <h3 className="mt-2 text-2xl font-bold text-slate-900">{value}</h3>
-      </div>
-    </div>
-  );
-}
-
-function EmptyState({ text }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-      {text}
-    </div>
-  );
-}
-
-function DetailCard({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="mt-2 break-words text-sm font-semibold capitalize text-slate-900">
-        {value || "—"}
-      </p>
-    </div>
-  );
-}
-
-function MiniInfo({ icon: Icon, label, value }) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <div className="mt-0.5 text-slate-500">
-        <Icon />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-          {label}
-        </p>
-        <p className="mt-1 break-words text-sm font-semibold capitalize text-slate-900">
-          {value || "—"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function MediaGallery({ title, icon: Icon, items = [], emptyText }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <div className="text-slate-500">
-          <Icon />
-        </div>
-        <p className="text-sm font-semibold text-slate-800">{title}</p>
-      </div>
-
-      {items.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {items.map((item) => (
-            <a
-              key={item.id}
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              className="group overflow-hidden rounded-xl border border-slate-200 bg-white"
-            >
-              {item.isImage ? (
-                <img
-                  src={item.url}
-                  alt={item.name}
-                  className="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                />
-              ) : (
-                <div className="grid h-40 place-items-center bg-slate-100 text-slate-500">
-                  <FaFileAlt className="text-3xl" />
-                </div>
-              )}
-              <div className="border-t border-slate-200 px-3 py-2">
-                <p className="truncate text-xs font-medium text-slate-700">
-                  {item.name}
-                </p>
-              </div>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-slate-500">{emptyText}</p>
-      )}
-    </div>
-  );
-}
-
-function EditableField({
-  label,
-  value,
-  isEditing,
-  onChange,
-  type = "text",
-  placeholder = "Enter value",
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      {isEditing ? (
-        <input
-          type={type}
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-slate-400"
-        />
-      ) : (
-        <p className="mt-2 break-words text-sm font-semibold text-slate-900">
-          {value || "—"}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function EditableSelect({
-  label,
-  value,
-  isEditing,
-  onChange,
-  options = [],
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      {isEditing ? (
-        <select
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium capitalize text-slate-900 outline-none focus:border-slate-400"
-        >
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <p className="mt-2 break-words text-sm font-semibold capitalize text-slate-900">
-          {value || "—"}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function CompactMetric({ label, value }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-bold text-slate-900">{value}</p>
-    </div>
-  );
-}
+function Card({ className, children }) { return <div className={cn("rounded-[28px] border border-slate-200 bg-white shadow-sm", className)}>{children}</div>; }
+function SectionTitle({ icon: Icon, title, subtitle }) { return <div className="flex items-start gap-3"><div className="grid h-11 w-11 place-items-center rounded-2xl bg-sky-100 text-sky-700"><Icon /></div><div><h2 className="text-lg font-bold text-slate-900">{title}</h2><p className="text-sm text-slate-500">{subtitle}</p></div></div>; }
+function HeroInfo({ icon: Icon, label, value }) { return <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3"><div className="mt-0.5 text-sky-200"><Icon /></div><div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">{label}</p><p className="mt-1 break-all text-sm font-medium text-white">{value || "--"}</p></div></div>; }
+function Stat({ title, value, accent }) { return <Card className="overflow-hidden"><div className={cn("h-1.5 bg-gradient-to-r", accent)} /><div className="p-4"><p className="text-sm font-medium text-slate-500">{title}</p><h3 className="mt-2 text-2xl font-bold text-slate-900">{value}</h3></div></Card>; }
+function Info({ label, value, icon: Icon }) { return <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-start gap-3">{Icon ? <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white text-slate-500"><Icon /></div> : null}<div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p><p className="mt-2 break-words text-sm font-semibold text-slate-900">{value || "--"}</p></div></div></div>; }
+function Metric({ label, value }) { return <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3"><p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 text-sm font-bold text-slate-900">{value}</p></div>; }
+function Tag({ text, className }) { return <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", className || "border-slate-200 bg-slate-50 text-slate-700")}>{text}</span>; }
+function StatusRow({ label, value }) { return <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"><span className="text-sm font-medium text-slate-600">{label}</span><span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(value))}>{value || "NONE"}</span></div>; }
+function SmallButton({ label, onClick, loading, tone: variant = "default" }) { const styles = { default: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50", success: "bg-emerald-600 text-white hover:bg-emerald-700", danger: "bg-rose-600 text-white hover:bg-rose-700", dark: "bg-slate-900 text-white hover:bg-slate-800" }; return <button onClick={onClick} disabled={loading} className={cn("rounded-xl px-3.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60", styles[variant])}>{loading ? "Please wait..." : label}</button>; }
+function Approve({ label, value, disabled, loading, onPick }) { return <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold text-slate-900">{label}</p><span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(value))}>{value || "NONE"}</span></div><div className="mt-4 flex flex-wrap gap-2">{STATUS_OPTIONS.map((status) => <button key={status} onClick={() => onPick(status)} disabled={disabled || loading} className={cn("rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition", value === status ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50", (disabled || loading) && "cursor-not-allowed opacity-60")}>{status}</button>)}</div>{disabled ? <p className="mt-3 text-xs text-amber-600">No matching document uploaded for this status yet.</p> : null}</div>; }
+function Media({ title, items, emptyText }) { return <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm font-semibold text-slate-900">{title}</p>{items.length > 0 ? <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{items.map((item) => { const url = normalizeUrl(item.url); const isImage = isImageFile(url); return <a key={`${item.label}-${url}`} href={url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">{isImage ? <img src={url} alt={item.label} className="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.03]" /> : <div className="grid h-40 place-items-center bg-slate-100 text-slate-400"><FaFileAlt className="text-3xl" /></div>}<div className="border-t border-slate-200 px-3 py-2"><p className="truncate text-xs font-medium text-slate-700">{item.label}</p></div></a>; })}</div> : <p className="mt-3 text-sm text-slate-500">{emptyText}</p>}</div>; }
+function Doc({ title, url, status }) { const href = normalizeUrl(url); const image = isImageFile(href); return <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"><div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between"><div className="min-w-0"><p className="text-sm font-semibold text-slate-900">{title}</p><p className="mt-1 break-all text-xs text-slate-500">{href}</p><span className={cn("mt-3 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(status))}>{status || "NONE"}</span></div><a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"><FaEye />View Document</a></div>{image ? <div className="border-t border-slate-200 bg-white p-4"><img src={href} alt={title} className="max-h-72 w-full rounded-2xl bg-slate-100 object-contain" /></div> : null}</div>; }
+function Empty({ text }) { return <Card className="border-dashed bg-slate-50 p-6 text-sm text-slate-500">{text}</Card>; }

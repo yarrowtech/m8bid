@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   ShieldCheck,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import heroImage from "../assets/fundraising-hero.jpg";
+import AccessModeModal from "../components/AccessModeModal.jsx";
 
 /* ---------- utils ---------- */
 function cx(...s) {
@@ -124,7 +125,35 @@ function FAQ({ q, a }) {
 }
 
 export default function FundraisingPage() {
+  const navigate = useNavigate();
+  const [fundraiseAccessOpen, setFundraiseAccessOpen] = useState(false);
+
   useEffect(() => {}, []);
+
+  const canStartFundraiser = useMemo(() => {
+    try {
+      const rawUser =
+        localStorage.getItem("user") || localStorage.getItem("loggedInUser");
+      const rawToken =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+
+      if (!rawUser || !rawToken) return false;
+
+      const user = JSON.parse(rawUser);
+      return Boolean(user?.access?.fundraiser?.enabled);
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const handleStartFundraiserAccess = () => {
+    if (canStartFundraiser) {
+      navigate("/start-fundraiser");
+      return;
+    }
+
+    setFundraiseAccessOpen(true);
+  };
 
   const highlights = useMemo(
     () => [
@@ -175,12 +204,16 @@ export default function FundraisingPage() {
             </p>
 
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <Link to="/start-fundraiser" className={PRIMARY_BTN}>
+              <button
+                type="button"
+                onClick={handleStartFundraiserAccess}
+                className={PRIMARY_BTN}
+              >
                 Start a Fundraiser
                 <span className="ml-2 transition group-hover:translate-x-0.5">
                   →
                 </span>
-              </Link>
+              </button>
 
               <Link to="/browse-investors" className={OUTLINE_BTN}>
                 Explore campaigns
@@ -306,9 +339,13 @@ export default function FundraisingPage() {
               </p>
             </div>
 
-            <Link to="/start-fundraiser" className={OUTLINE_BTN}>
+            <button
+              type="button"
+              onClick={handleStartFundraiserAccess}
+              className={OUTLINE_BTN}
+            >
               Create now <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            </button>
           </div>
 
           <div className="mt-8 grid md:grid-cols-3 gap-6">
@@ -401,18 +438,28 @@ export default function FundraisingPage() {
               </p>
             </div>
 
-            <Link
-              to="/start-fundraiser"
+            <button
+              type="button"
+              onClick={handleStartFundraiserAccess}
               className="group inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold tracking-wide text-slate-900 shadow-sm transition hover:bg-white/90 active:scale-[0.99]"
             >
               Start a Fundraiser
               <span className="ml-2 transition group-hover:translate-x-0.5">
                 →
               </span>
-            </Link>
+            </button>
           </div>
         </div>
       </section>
+
+      <AccessModeModal
+        open={fundraiseAccessOpen}
+        onClose={() => setFundraiseAccessOpen(false)}
+        onLogin={() => navigate("/login")}
+        title="Fundraiser account needed"
+        message="You need to login or create a fundraiser account to start fundraising."
+        buttonLabel="Go to Login"
+      />
 
       <div className="h-10" />
     </main>

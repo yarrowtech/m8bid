@@ -42,6 +42,30 @@ export const updateAdminUser = async (userId, payload) => {
   }
 };
 
+export const deleteAdminUser = async (userId) => {
+  try {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting admin user:", error);
+    throw error;
+  }
+};
+
+export const updateUserDocumentStatus = async (userId, profileType, documentType, status) => {
+  try {
+    const response = await api.patch(`/admin/users/${userId}/document-status`, {
+      profileType,
+      documentType,
+      status,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating document status:", error);
+    throw error;
+  }
+};
+
 /* ---------------- Campaigns ---------------- */
 export const getAdminCampaigns = async () => {
   try {

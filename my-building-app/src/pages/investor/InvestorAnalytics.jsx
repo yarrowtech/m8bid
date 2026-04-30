@@ -29,10 +29,11 @@ const getCurrentValue = (investment, campaign) => {
 
 function MetricCard({ title, value, sub, icon: Icon, tone = "sky" }) {
   const tones = {
-    sky: "bg-sky-100 text-sky-700",
+    sky: "bg-[#f1edff] text-[#6f5cf2]",
     emerald: "bg-emerald-100 text-emerald-700",
-    indigo: "bg-indigo-100 text-indigo-700",
+    indigo: "bg-[#f3efff] text-[#7b68f4]",
     amber: "bg-amber-100 text-amber-700",
+    red: "bg-rose-100 text-rose-700",
   };
 
   return (
@@ -183,7 +184,7 @@ export default function InvestorAnalytics() {
 
           {loading ? (
             <div className="mt-6 flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#6f5cf2]" />
               <span className="ml-3 text-slate-600">Loading analytics...</span>
             </div>
           ) : error ? (
@@ -240,7 +241,7 @@ export default function InvestorAnalytics() {
                       return (
                         <div key={i} className="flex-1 text-center">
                           <div
-                            className="w-full rounded-t-2xl bg-sky-500 transition-all hover:bg-sky-600"
+                            className="w-full rounded-t-2xl bg-[#6f5cf2] transition-all hover:bg-[#5f4ae6]"
                             style={{ height: `${height}px` }}
                             title={`${cat.category}: ${cat.count} investments`}
                           />
