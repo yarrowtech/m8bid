@@ -137,7 +137,8 @@ const loginUser = async (req, res) => {
         });
       }
 
-      if (!user.access?.[preferredMode]?.enabled) {
+      // Allow admin users to login regardless of access settings
+      if (user.role !== "admin" && !user.access?.[preferredMode]?.enabled) {
         return res.status(403).json({
           success: false,
           message: `This account does not have ${preferredMode} access`,
@@ -148,14 +149,15 @@ const loginUser = async (req, res) => {
     if (
       preferredMode &&
       ["investor", "fundraiser"].includes(preferredMode) &&
-      user.access?.[preferredMode]?.enabled
+      user.access?.[preferredMode]?.enabled &&
+      user.role !== "admin"
     ) {
       user.activeMode = preferredMode;
       await user.save();
-    } else if (user.access?.investor?.enabled && !user.access?.fundraiser?.enabled) {
+    } else if (user.role !== "admin" && user.access?.investor?.enabled && !user.access?.fundraiser?.enabled) {
       user.activeMode = "investor";
       await user.save();
-    } else if (user.access?.fundraiser?.enabled && !user.access?.investor?.enabled) {
+    } else if (user.role !== "admin" && user.access?.fundraiser?.enabled && !user.access?.investor?.enabled) {
       user.activeMode = "fundraiser";
       await user.save();
     }

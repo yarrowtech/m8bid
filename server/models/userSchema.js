@@ -83,6 +83,17 @@ access: {
       enum: documentStatusEnum,
       default: "NONE",
     },
+    details: {
+      aadhaarNumber: { type: String, default: "" },
+      panNumber: { type: String, default: "" },
+      addressProofType: { type: String, default: "" },
+    },
+    documents: {
+      kyc: { type: String, default: "" },
+      pan: { type: String, default: "" },
+      addressProof: { type: String, default: "" },
+      bankProof: { type: String, default: "" },
+    },
   },
   fundraiser: {
     enabled: { type: Boolean, default: false },

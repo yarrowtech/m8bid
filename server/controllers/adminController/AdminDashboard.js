@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const Fundraiser = require("../../models/Fundraiser.js");
+const Investment = require("../../models/Investment.js");
+const Transaction = require("../../models/Transaction.js");
 const User = require("../../models/userSchema.js");
 
 const formatMonthKey = (date) => {
@@ -22,6 +24,7 @@ const getFundraiserAccessSummary = (user) => {
     panStatus: fundraiserAccess.panStatus || "NONE",
     bankStatus: fundraiserAccess.bankStatus || "NONE",
     companyStatus: fundraiserAccess.companyStatus || "NONE",
+    details: fundraiserAccess.details || {},
     documents: fundraiserAccess.documents || {},
   };
 };
@@ -34,8 +37,27 @@ const getInvestorAccessSummary = (user) => {
     kycStatus: investorAccess.kycStatus || "NONE",
     panStatus: investorAccess.panStatus || "NONE",
     bankStatus: investorAccess.bankStatus || "NONE",
+    details: investorAccess.details || {},
     documents: investorAccess.documents || {},
   };
+};
+
+const isUserApproved = (user) => {
+  const investor = user?.access?.investor || {};
+  const fundraiser = user?.access?.fundraiser || {};
+
+  const statuses = [
+    investor.kycStatus,
+    investor.bankStatus,
+    fundraiser.kycStatus,
+    fundraiser.panStatus,
+    fundraiser.bankStatus,
+    fundraiser.companyStatus,
+  ]
+    .filter(Boolean)
+    .map((value) => String(value).toUpperCase());
+
+  return statuses.includes("VERIFIED") || String(user?.status || "").toLowerCase() === "approved";
 };
 
 const AdminDashboard = async (req, res) => {
@@ -313,7 +335,7 @@ const getAdminUserDetails = async (req, res) => {
     }
 
     const user = await User.findById(userId).select(
-      "username name email role profile access activeMode createdAt updatedAt"
+      "username name email role profile bankDetails access activeMode createdAt updatedAt"
     );
 
     if (!user) {
@@ -325,6 +347,41 @@ const getAdminUserDetails = async (req, res) => {
 
     const userFundraisers = await Fundraiser.find({ userId })
       .populate("userId", "username name email")
+      .sort({ createdAt: -1 });
+
+    const userInvestments = await Investment.find({ investor: userId })
+      .populate({
+        path: "campaign",
+        select:
+          "projectTitle projectOverview projectCategory fundingType moneyToRaise fundingGoal raisedAmount moneyRaised currentFunding deadline status photo projectPhotos profitPercentage",
+        model: "Fundraiser",
+      })
+      .sort({ createdAt: -1 });
+
+    const investorTransactions = await Transaction.find({ user: userId })
+      .populate({
+        path: "campaign",
+        select: "projectTitle projectCategory moneyToRaise raisedAmount",
+        model: "Fundraiser",
+      })
+      .populate({
+        path: "fundraiser",
+        select: "name email",
+        model: "User",
+      })
+      .sort({ createdAt: -1 });
+
+    const fundraiserTransactions = await Transaction.find({ fundraiser: userId })
+      .populate({
+        path: "campaign",
+        select: "projectTitle projectCategory moneyToRaise raisedAmount",
+        model: "Fundraiser",
+      })
+      .populate({
+        path: "user",
+        select: "name email",
+        model: "User",
+      })
       .sort({ createdAt: -1 });
 
     const campaigns = userFundraisers.map((campaign) => ({
@@ -350,6 +407,108 @@ const getAdminUserDetails = async (req, res) => {
       },
     }));
 
+    const investments = userInvestments.map((investment) => ({
+      _id: investment._id,
+      amount: Number(investment.amount || 0),
+      paymentStatus: investment.paymentStatus || "created",
+      transferStatus: investment.transferStatus || "pending",
+      status: investment.status || "pending",
+      orderId: investment.orderId || "",
+      paymentId: investment.paymentId || "",
+      transferId: investment.transferId || "",
+      linkedAccountId: investment.linkedAccountId || "",
+      platformFee: Number(investment.platformFee || 0),
+      netAmount: Number(investment.netAmount || 0),
+      contributorName: investment.contributorName || "",
+      contributorEmail: investment.contributorEmail || "",
+      contributorPhone: investment.contributorPhone || "",
+      anonymous: Boolean(investment.anonymous),
+      createdAt: investment.createdAt || investment.date || null,
+      campaign: {
+        _id: investment.campaign?._id || null,
+        projectTitle: investment.campaign?.projectTitle || "Unknown Campaign",
+        projectOverview: investment.campaign?.projectOverview || "",
+        projectCategory: investment.campaign?.projectCategory || "",
+        fundingType: investment.campaign?.fundingType || "",
+        fundingGoal: Number(
+          investment.campaign?.fundingGoal || investment.campaign?.moneyToRaise || 0
+        ),
+        currentFunding: Number(
+          investment.campaign?.currentFunding ||
+            investment.campaign?.moneyRaised ||
+            investment.campaign?.raisedAmount ||
+            0
+        ),
+        deadline: investment.campaign?.deadline || null,
+        status: investment.campaign?.status || "pending",
+        profitPercentage: Number(investment.campaign?.profitPercentage || 0),
+        photo: investment.campaign?.photo || "",
+        projectPhotos: investment.campaign?.projectPhotos || [],
+      },
+    }));
+
+    const mapTransaction = (transaction, role = "investor") => ({
+      _id: transaction._id,
+      transactionId: transaction.transactionId || "",
+      amount: Number(transaction.amount || 0),
+      fee: Number(transaction.fee || 0),
+      netAmount: Number(transaction.netAmount || 0),
+      currency: transaction.currency || "INR",
+      status: transaction.status || "pending",
+      type: transaction.type || "investment",
+      paymentMethod: transaction.paymentMethod || "razorpay",
+      paymentGatewayId: transaction.paymentGatewayId || "",
+      orderId: transaction.orderId || "",
+      transferId: transaction.transferId || "",
+      description: transaction.description || "",
+      failureReason: transaction.failureReason || "",
+      processedAt: transaction.processedAt || null,
+      createdAt: transaction.createdAt,
+      investor: {
+        _id: transaction.user?._id || null,
+        name: transaction.user?.name || "Unknown",
+        email: transaction.user?.email || "Unknown",
+      },
+      fundraiser: {
+        _id:
+          role === "investor"
+            ? transaction.fundraiser?._id || null
+            : user._id,
+        name:
+          role === "investor"
+            ? transaction.fundraiser?.name || "Unknown"
+            : user.name || "Unknown",
+        email:
+          role === "investor"
+            ? transaction.fundraiser?.email || "Unknown"
+            : user.email || "Unknown",
+      },
+      campaign: {
+        _id: transaction.campaign?._id || null,
+        title: transaction.campaign?.projectTitle || "Unknown Campaign",
+        category: transaction.campaign?.projectCategory || "",
+        targetAmount: Number(
+          transaction.campaign?.moneyToRaise || transaction.campaign?.fundingGoal || 0
+        ),
+        currentRaised: Number(
+          transaction.campaign?.raisedAmount || transaction.campaign?.moneyRaised || 0
+        ),
+      },
+    });
+
+    const formattedInvestorTransactions = investorTransactions.map((transaction) =>
+      mapTransaction(transaction, "investor")
+    );
+
+    const formattedFundraiserTransactions = fundraiserTransactions.map((transaction) =>
+      mapTransaction(transaction, "fundraiser")
+    );
+
+    const defaultTransactions =
+      user.activeMode === "investor"
+        ? formattedInvestorTransactions
+        : formattedFundraiserTransactions;
+
     return res.status(200).json({
       success: true,
       user: {
@@ -359,15 +518,19 @@ const getAdminUserDetails = async (req, res) => {
         email: user.email,
         role: user.role,
         activeMode: user.activeMode,
+        profile: user.profile || {},
         phone: getUserPhone(user),
         photo: getUserPhoto(user),
+        bankDetails: user.bankDetails || {},
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         investorAccess: getInvestorAccessSummary(user),
         fundraiserAccess: getFundraiserAccessSummary(user),
         campaigns,
-        investments: [],
-        transactions: [],
+        investments,
+        investorTransactions: formattedInvestorTransactions,
+        fundraiserTransactions: formattedFundraiserTransactions,
+        transactions: defaultTransactions,
       },
     });
   } catch (error) {
@@ -488,6 +651,204 @@ const deleteCampaign = async (req, res) => {
   }
 };
 
+const deleteAdminUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user id.",
+      });
+    }
+
+    const user = await User.findById(userId).select("role access status");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    if (String(user.role || "").toLowerCase() === "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin users cannot be deleted from this action.",
+      });
+    }
+
+    const userCampaigns = await Fundraiser.find({ userId }).select("_id");
+    const campaignIds = userCampaigns.map((campaign) => campaign._id);
+
+    await Transaction.deleteMany({
+      $or: [
+        { user: userId },
+        { fundraiser: userId },
+        ...(campaignIds.length > 0 ? [{ campaign: { $in: campaignIds } }] : []),
+      ],
+    });
+
+    await Investment.deleteMany({
+      $or: [
+        { investor: userId },
+        ...(campaignIds.length > 0 ? [{ campaign: { $in: campaignIds } }] : []),
+      ],
+    });
+
+    await Fundraiser.deleteMany({ userId });
+    await User.findByIdAndDelete(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully.",
+      deletedUserId: userId,
+    });
+  } catch (error) {
+    console.error("Delete Admin User Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while deleting user.",
+      error: error.message,
+    });
+  }
+};
+
+const updateUserDocumentStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { profileType, documentType, status } = req.body;
+
+    // Validate input
+    if (!userId || !profileType || !documentType || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: userId, profileType, documentType, status",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user id.",
+      });
+    }
+
+    // Validate profileType
+    if (!["investor", "fundraiser"].includes(profileType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid profileType. Must be 'investor' or 'fundraiser'.",
+      });
+    }
+
+    // Validate status
+    const validStatuses = ["NONE", "PENDING", "VERIFIED", "REJECTED"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+      });
+    }
+
+    // Build the update path dynamically based on profileType and documentType
+    const updatePath = `access.${profileType}.${documentType}Status`;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { [updatePath]: status },
+      { new: true, runValidators: false }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${profileType} ${documentType} status updated to ${status}`,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        investorAccess: getInvestorAccessSummary(user),
+        fundraiserAccess: getFundraiserAccessSummary(user),
+      },
+    });
+  } catch (error) {
+    console.error("Update Document Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating document status.",
+      error: error.message,
+    });
+  }
+};
+
+const updateAdminUserOverview = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, email, role, status, activeMode, profile, access } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user id.",
+      });
+    }
+
+    const updateData = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (role !== undefined) updateData.role = role;
+    if (activeMode !== undefined) updateData.activeMode = activeMode;
+    if (profile !== undefined) updateData.profile = profile;
+    if (access !== undefined) updateData.access = access;
+
+    const user = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: false,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully.",
+      user: {
+        _id: user._id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        activeMode: user.activeMode,
+        phone: getUserPhone(user),
+        photo: getUserPhoto(user),
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        investorAccess: getInvestorAccessSummary(user),
+        fundraiserAccess: getFundraiserAccessSummary(user),
+      },
+    });
+  } catch (error) {
+    console.error("Update Admin User Overview Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating user.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   AdminDashboard,
   getAdminUsers,
@@ -498,4 +859,7 @@ module.exports = {
   approveCampaign,
   rejectCampaign,
   deleteCampaign,
+  deleteAdminUser,
+  updateUserDocumentStatus,
+  updateAdminUserOverview,
 };
