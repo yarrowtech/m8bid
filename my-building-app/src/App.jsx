@@ -19,6 +19,7 @@ import SecurityCompliance from "./components/SecurityCompliance.jsx";
 import MoneyGrowth from "./components/MoneyGrowth.jsx";
 import Testimonials from "./components/Testimonials.jsx";
 import FundraisingCauses from "./components/FundraisingCauses.jsx";
+import WhatWeProvide from "./components/WhatWeProvide.jsx";
 import ProtectedRoute from "./pages/ProtectedRoutes.jsx";
 import PageTransition from "./components/PageTransition.jsx";
 import GlobalScrollMotion from "./components/GlobalScrollMotion.jsx";
@@ -180,11 +181,11 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
           element={
             <>
               <Hero />
+              <WhatWeProvide />
               <FundraisingCauses />
               <HowItWorks />
               <TrendingCampaigns />
               <Plan />
-              <Testimonials />
               <SecurityCompliance />
               <Footer />
             </>
