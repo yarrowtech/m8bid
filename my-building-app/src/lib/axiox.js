@@ -8,7 +8,7 @@ const api = axios.create({
   },
 });
 
-const AUTH_WHITELIST = ["/auth/login", "/auth/register"]; // endpoints that don't need token
+const AUTH_WHITELIST = ["/auth/login", "/auth/register", "/contact/enquiry"]; // endpoints that don't need token
 
 api.interceptors.request.use(
   (config) => {

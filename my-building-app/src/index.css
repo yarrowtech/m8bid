@@ -101,6 +101,22 @@ html {
   animation-delay: 160ms;
 }
 
+.homepage-flow {
+  isolation: isolate;
+}
+
+.homepage-flow > section {
+  position: relative;
+}
+
+.homepage-flow > section.motion-target {
+  transform: translateY(26px) scale(0.995);
+}
+
+.homepage-flow > section.motion-target.motion-in {
+  transform: translateY(0) scale(1);
+}
+
 button,
 a,
 input,

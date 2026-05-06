@@ -71,7 +71,7 @@ export default function WhatWeProvide() {
               </div>
               <button
                 type="button"
-                onClick={() => navigate("/start-fundraiser")}
+                onClick={() => navigate("/how-to-start-a-fundraising")}
                 className="mt-5 inline-flex items-center rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:brightness-110"
               >
                 Go To Fundraising
@@ -108,7 +108,7 @@ export default function WhatWeProvide() {
               </div>
               <button
                 type="button"
-                onClick={() => navigate("/browse-investors")}
+                onClick={() => navigate("/how-to-invest")}
                 className="mt-5 inline-flex items-center rounded-xl bg-gradient-to-r from-blue-700 to-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:brightness-110"
               >
                 Go To Browse Investors

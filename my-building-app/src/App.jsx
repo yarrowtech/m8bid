@@ -52,6 +52,9 @@ import BusinessCampaigns from "./pages/BusinessCampaigns";
 import CauseBasedFunding from "./pages/CauseBasedFunding";
 import FundraisingIdeas from "./pages/FundraisingIdeas";
 import FundraisingCauseTopicPage from "./pages/FundraisingCauseTopicPage.jsx";
+import HowToStartFundraising from "./pages/HowToStartFundraising.jsx";
+import HowToInvest from "./pages/HowToInvest.jsx";
+import ContactPage from "./pages/ContactPage.jsx";
 
 import SelectAccountMode from "./pages/SelectAccountType.jsx";
 import CompanyInvestorDashboard from "./pages/investor/CompanyInvestorDashboard";
@@ -179,16 +182,32 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/"
           element={
-            <>
-              <Hero />
-              <WhatWeProvide />
-              <FundraisingCauses />
-              <HowItWorks />
-              <TrendingCampaigns />
-              <Plan />
-              <SecurityCompliance />
-              <Footer />
-            </>
+            <main className="homepage-flow">
+              <section data-motion data-motion-delay="20">
+                <Hero />
+              </section>
+              <section data-motion data-motion-delay="80">
+                <WhatWeProvide />
+              </section>
+              <section data-motion data-motion-delay="120">
+                <FundraisingCauses />
+              </section>
+              <section data-motion data-motion-delay="160">
+                <HowItWorks />
+              </section>
+              <section data-motion data-motion-delay="200">
+                <TrendingCampaigns />
+              </section>
+              <section data-motion data-motion-delay="240">
+                <Plan />
+              </section>
+              <section data-motion data-motion-delay="280">
+                <SecurityCompliance />
+              </section>
+              <section data-motion data-motion-delay="320">
+                <Footer />
+              </section>
+            </main>
           }
         />
 
@@ -305,6 +324,15 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         />
 
         <Route path="/supporter-space" element={<SupporterSpace />} />
+        <Route
+          path="/contact"
+          element={
+            <>
+              <ContactPage />
+              <Footer />
+            </>
+          }
+        />
         <Route path="/return-based-options" element={<ReturnBasedOptions />} />
         <Route
           path="/verified-opportunities"
@@ -313,6 +341,24 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route path="/business-campaigns" element={<BusinessCampaigns />} />
         <Route path="/cause-based-funding" element={<CauseBasedFunding />} />
         <Route path="/fundraising-ideas" element={<FundraisingIdeas />} />
+        <Route
+          path="/how-to-start-a-fundraising"
+          element={
+            <>
+              <HowToStartFundraising />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/how-to-invest"
+          element={
+            <>
+              <HowToInvest />
+              <Footer />
+            </>
+          }
+        />
         <Route
           path="/fundraising-causes/:causeSlug"
           element={

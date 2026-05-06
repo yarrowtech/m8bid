@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 const MOTION_SELECTOR = [
+  "[data-motion]",
   "main",
   "section",
   "article",
-  "[data-motion]",
   ".motion-item",
   ".card",
   ".rounded-2xl",
@@ -31,16 +31,20 @@ export default function GlobalScrollMotion() {
       { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
     );
 
-    const attachTargets = () => {
-      const targets = document.querySelectorAll(MOTION_SELECTOR);
-      targets.forEach((node, idx) => {
-        if (seen.has(node)) return;
-        seen.add(node);
-        node.classList.add("motion-target");
-        node.style.setProperty("--motion-delay", `${Math.min(idx * 22, 220)}ms`);
-        observer.observe(node);
-      });
-    };
+      const attachTargets = () => {
+        const targets = document.querySelectorAll(MOTION_SELECTOR);
+        targets.forEach((node, idx) => {
+          if (seen.has(node)) return;
+          seen.add(node);
+          node.classList.add("motion-target");
+          const explicitDelay = Number(node.getAttribute("data-motion-delay"));
+          const delay = Number.isFinite(explicitDelay)
+            ? explicitDelay
+            : Math.min(idx * 22, 220);
+          node.style.setProperty("--motion-delay", `${delay}ms`);
+          observer.observe(node);
+        });
+      };
 
     attachTargets();
     const mutationObserver = new MutationObserver(() => attachTargets());
@@ -54,4 +58,3 @@ export default function GlobalScrollMotion() {
 
   return null;
 }
-

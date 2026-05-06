@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { FaEnvelope, FaInstagram, FaLink, FaSms, FaWhatsapp } from "react-icons/fa";
 import { getCampaignById } from "../api/fundraiser.api";
 import sampleImg from "../assets/fundraising-example.jpg";
 
@@ -165,6 +166,8 @@ export default function InvestmentDetail() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [paymentNoticeOpen, setPaymentNoticeOpen] = useState(false);
+  const [sharePanelOpen, setSharePanelOpen] = useState(false);
   const [campaignData, setCampaignData] = useState(state?.campaign || null);
   const [loadingCampaign, setLoadingCampaign] = useState(
     !state?.campaign && Boolean(id)
@@ -642,6 +645,46 @@ export default function InvestmentDetail() {
   };
 
   const closeDocPreview = () => setSelectedDoc(null);
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareText = `Check out this campaign: ${title}`;
+
+  const copyCampaignLink = () => {
+    try {
+      navigator.clipboard?.writeText(shareUrl);
+    } catch {}
+    setSharePanelOpen(false);
+  };
+
+  const shareOptions = [
+    {
+      label: "Email",
+      icon: FaEnvelope,
+      tone: "bg-blue-50 text-blue-700 border-blue-100",
+      href: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(
+        `${shareText}\n${shareUrl}`
+      )}`,
+    },
+    {
+      label: "Messages",
+      icon: FaSms,
+      tone: "bg-slate-50 text-slate-700 border-slate-100",
+      href: `sms:?&body=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+    },
+    {
+      label: "WhatsApp",
+      icon: FaWhatsapp,
+      tone: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      href: `https://wa.me/?text=${encodeURIComponent(
+        `${shareText} ${shareUrl}`
+      )}`,
+    },
+    {
+      label: "Instagram",
+      icon: FaInstagram,
+      tone: "bg-pink-50 text-pink-700 border-pink-100",
+      href: "https://www.instagram.com/",
+    },
+  ];
 
   useEffect(() => {
     const onKeyDown = (e) => {
@@ -654,6 +697,16 @@ export default function InvestmentDetail() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [lightboxOpen, projectImages.length]);
+
+  useEffect(() => {
+    if (!paymentNoticeOpen) return;
+
+    const timer = window.setTimeout(() => {
+      setPaymentNoticeOpen(false);
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [paymentNoticeOpen]);
 
   return (
     <section
@@ -698,6 +751,39 @@ export default function InvestmentDetail() {
           </div>
         </div>
       )}
+
+      <div
+        className={`fixed right-4 top-4 z-[90] w-[calc(100%-2rem)] max-w-md transition-all duration-300 ease-out ${
+          paymentNoticeOpen
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-6 pointer-events-none opacity-0"
+        }`}
+      >
+        <div className="rounded-2xl border border-amber-200 bg-white p-4 shadow-[0_20px_45px_rgba(15,23,42,0.18)]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
+                Payment Unavailable
+              </p>
+              <h2 className="mt-1 text-base font-bold text-slate-900">
+                Payment cannot be made right now
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                This campaign's online payment setup is temporarily under
+                review. Please check back later before contributing.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPaymentNoticeOpen(false)}
+              className="shrink-0 rounded-lg px-2 py-1 text-sm font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              aria-label="Dismiss payment notice"
+            >
+              x
+            </button>
+          </div>
+        </div>
+      </div>
 
       {lightboxOpen && (
         <div
@@ -1039,22 +1125,83 @@ export default function InvestmentDetail() {
 
             <div className="mt-4 grid grid-cols-1 gap-3">
               <button
-                onClick={() => navigate("/payment", { state: { campaign } })}
+                onClick={() => setPaymentNoticeOpen(true)}
                 className="rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-4 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_12px_24px_rgba(79,70,229,0.22)] transition hover:-translate-y-0.5 hover:brightness-110"
               >
                 Donate / Invest
               </button>
-              <button
-                className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-                onClick={() => {
-                  try {
-                    navigator.clipboard?.writeText(window.location.href);
-                  } catch {}
-                  alert("Link copied.");
-                }}
-              >
-                Share Campaign
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                  onClick={() => setSharePanelOpen((open) => !open)}
+                >
+                  Share Campaign
+                </button>
+
+                {sharePanelOpen && (
+                  <div className="absolute bottom-full right-0 z-[120] mb-4 w-[min(24rem,calc(100vw-2rem))] rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.24)]">
+                    <div className="absolute -bottom-2 right-8 h-4 w-4 rotate-45 border-b border-r border-slate-200 bg-white" />
+                    <div className="relative">
+                      <div className="flex items-center justify-between border-b border-indigo-100 pb-4">
+                        <p className="text-base font-semibold text-indigo-700">
+                          Share this to ...
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setSharePanelOpen(false)}
+                          className="rounded-lg px-2.5 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                          aria-label="Close share options"
+                        >
+                          x
+                        </button>
+                      </div>
+
+                      <div className="mt-5 grid grid-cols-4 gap-4">
+                        {shareOptions.map((option) => {
+                          const Icon = option.icon;
+
+                          return (
+                            <a
+                              key={option.label}
+                              href={option.href}
+                              target={
+                                option.label === "WhatsApp" ||
+                                option.label === "Instagram"
+                                  ? "_blank"
+                                  : undefined
+                              }
+                              rel={
+                                option.label === "WhatsApp" ||
+                                option.label === "Instagram"
+                                  ? "noreferrer"
+                                  : undefined
+                              }
+                              className="group flex flex-col items-center gap-2 text-center text-xs font-medium text-slate-700"
+                            >
+                              <span
+                                className={`flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl transition group-hover:-translate-y-0.5 ${option.tone}`}
+                              >
+                                <Icon />
+                              </span>
+                              {option.label}
+                            </a>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={copyCampaignLink}
+                        className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3.5 text-sm font-semibold text-white hover:bg-slate-800"
+                      >
+                        <FaLink className="h-4 w-4" />
+                        Copy Link
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </SectionCard>
         </div>

@@ -403,6 +403,15 @@ export default function Header() {
     setMobileOpen(false);
   };
 
+  const openContactPage = () => {
+    setInvestOpen(false);
+    setFundraiseOpen(false);
+    setProfileOpen(false);
+    setMobileOpen(false);
+    setDrawerOpen(false);
+    navigate("/contact");
+  };
+
   const activeMode = loggedInUser?.activeMode || "none";
   const hasSession = Boolean(loggedInUser && localStorage.getItem("token"));
   const isInvestorMode = activeMode === "investor";
@@ -511,9 +520,9 @@ const fundraiseItems = [
       : undefined,
   },
   {
-    label: "Business Campaigns",
-    desc: "Raise support for business growth and new initiatives.",
-    to: !hasSession ? null : isInvestorMode ? null : "/business-campaigns",
+    label: "How to Start a Fundraising",
+    desc: "Understand fundraising clearly with step-by-step guidance.",
+    to: !hasSession ? null : isInvestorMode ? null : "/how-to-start-a-fundraising",
     onClick: !hasSession
       ? handleGuestFundraiseAccess
       : isInvestorMode
@@ -636,7 +645,7 @@ const fundraiseItems = [
 
             <button
               type="button"
-              onClick={() => openDrawer("contact")}
+              onClick={openContactPage}
               className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               Contact
@@ -818,7 +827,7 @@ const fundraiseItems = [
 
               <button
                 type="button"
-                onClick={() => openDrawer("contact")}
+                onClick={openContactPage}
                 className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
               >
                 <Mail className="h-4 w-4" />

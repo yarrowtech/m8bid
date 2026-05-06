@@ -217,8 +217,8 @@ export default function Hero() {
         {/* content */}
         <div className="relative z-10 mx-auto flex min-h-[calc(100vh-120px)] max-w-7xl items-center justify-between gap-8">
           {/* Left floating images */}
-          <div className="hidden flex-1 md:flex flex-col items-start gap-3">
-            <div style={{ transform: "translateY(-24px) translateX(10.5rem)" }}>
+          <div className="hidden flex-1 xl:flex flex-col items-start gap-3">
+            <div style={{ transform: "translateY(-24px) translateX(5.5rem)" }}>
               <CircularProgressImage
                 src={img4}
                 label="Growth Campaign"
@@ -234,7 +234,7 @@ export default function Hero() {
                 percentage={72}
               />
             </div>
-            <div style={{ transform: "translateY(-28px) translateX(10.75rem)" }}>
+            <div style={{ transform: "translateY(-28px) translateX(5.75rem)" }}>
               <CircularProgressImage
                 src={img3}
                 label="Momentum"
@@ -274,7 +274,7 @@ export default function Hero() {
               </button>
 
               <button
-                onClick={() => navigate("/browse-investors")}
+                onClick={() => navigate("/how-to-invest")}
                 className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white/75 px-8 py-4 text-base font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white"
               >
                 Explore Campaigns
@@ -284,7 +284,7 @@ export default function Hero() {
           
 
             {/* stats */}
-            <div className="mx-auto mt-35 grid max-w-4xl gap-3 sm:grid-cols-3">
+            <div className="mx-auto mt-24 grid max-w-3xl gap-3 sm:mt-28 sm:grid-cols-3">
               <StatChip
                 icon={ShieldCheck}
                 title="Trust Layer"
@@ -304,8 +304,8 @@ export default function Hero() {
           </div>
 
           {/* Right floating images */}
-          <div className="hidden flex-1 md:flex flex-col items-end gap-3">
-            <div style={{ transform: "translateY(-24px) translateX(-10.25rem)" }}>
+          <div className="hidden flex-1 xl:flex flex-col items-end gap-3">
+            <div style={{ transform: "translateY(-24px) translateX(-5.25rem)" }}>
               <CircularProgressImage
                 src={img5}
                 label="Investor Ready"
@@ -321,7 +321,7 @@ export default function Hero() {
                 percentage={76}
               />
             </div>
-            <div style={{ transform: "translateY(-30px) translateX(-10.35rem)" }}>
+            <div style={{ transform: "translateY(-30px) translateX(-5.35rem)" }}>
               <CircularProgressImage
                 src={img6}
                 label="Strong Traction"
