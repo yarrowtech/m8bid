@@ -12,6 +12,7 @@ const cookieParser = require("cookie-parser");
 const CampaignRouter = require("./routes/campaignsRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const investmentRoutes = require("./routes/investment");
+const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -30,6 +31,7 @@ app.use("/api/investor", investorRouter); // Investor Routes
 app.use("/api/campaigns", CampaignRouter); // Campaigns Routes
 app.use("/api/admin", decodeToken, isAdmin, adminRoutes); // Admin Routes
 app.use("/api/investments", investmentRoutes);
+app.use("/api/contact", contactRoutes);
 
 
 
