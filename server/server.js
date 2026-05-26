@@ -24,6 +24,11 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(bodyParser.json()); // Parse JSON bodies
 app.use(cookieParser()); // Parse cookies
 
+// Root route
+app.get("/", (req, res) => {
+  res.send("The Backend Server is Running");
+});
+
 // Routes
 app.use("/api/auth", authRoutes); // Authentication Routes
 app.use("/api/fundraiser", fundRaiserRouter); // Correct endpoint for fundraisers
@@ -46,5 +51,5 @@ mongoose
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log("The Backend Server is Running");
 });
