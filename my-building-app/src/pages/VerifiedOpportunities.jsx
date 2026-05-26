@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import sampleImg from "../assets/fundraising-example.jpg";
+import SEO from "../components/SEO.jsx";
 
 const API_URL = "http://localhost:5000/api/campaigns"; // change if needed
 
@@ -297,8 +298,65 @@ export default function VerifiedOpportunities() {
   }, [campaigns.length, loading]);
 
   return (
-    <section
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/30 px-6 py-16 md:py-20"
+    <>
+      <SEO
+        title="Verified Campaigns — Discover Trusted & Structured Opportunities on MateBid"
+        description="Browse verified campaigns on MateBid — structured presentation, stronger trust signals, and clearer campaign clarity to help contributors make confident decisions."
+        keywords="verified campaigns, trusted campaigns India, verified crowdfunding, structured campaigns, MateBid verified, campaign verification, credible raising campaigns, approved campaigns platform, transparent campaigns, contributor verified"
+        canonical="/verified-opportunities"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://www.matebid.com/verified-opportunities",
+              url: "https://www.matebid.com/verified-opportunities",
+              name: "Verified Campaigns — Discover Trusted & Structured Opportunities on MateBid | M8BID",
+              description:
+                "Browse verified campaigns on MateBid — structured presentation, stronger trust signals, and clearer campaign clarity to help contributors make confident decisions.",
+              isPartOf: { "@id": "https://www.matebid.com/#website" },
+              breadcrumb: {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
+                  { "@type": "ListItem", position: 2, name: "Verified Opportunities", item: "https://www.matebid.com/verified-opportunities" },
+                ],
+              },
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "Does verified mean guaranteed?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "No. Verified campaigns show stronger platform trust signals and clearer presentation, but users should still review them carefully.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Why is a verified section important?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "It helps users focus on campaigns that feel more credible, structured, and easier to evaluate.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "What is the value of this page?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "It helps users quickly discover campaigns that stand out in clarity, review quality, and overall trust presentation.",
+                  },
+                },
+              ],
+            },
+          ],
+        }}
+      />
+      <section
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/30 px-6 py-16 md:py-20"
       style={{
         fontFamily:
           "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
@@ -482,5 +540,6 @@ export default function VerifiedOpportunities() {
         </div>
       </div>
     </section>
+    </>
   );
 }

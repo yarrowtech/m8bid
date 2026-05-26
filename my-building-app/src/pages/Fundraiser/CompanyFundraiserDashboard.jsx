@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import FundraiserSidebar from "./FundraiserSidebar";
 
 function StatCard({ title, value, sub }) {
   return (
@@ -15,8 +16,10 @@ export default function CompanyFundraiserDashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
+      <FundraiserSidebar active="dashboard" />
+      <main className="flex-1 overflow-y-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl space-y-8">
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
           <p className="text-sm font-semibold text-slate-500 uppercase">
             Company Fundraiser Account
@@ -82,6 +85,7 @@ export default function CompanyFundraiserDashboard() {
           </div>
         </div>
       </div>
+      </main>
     </div>
   );
 }

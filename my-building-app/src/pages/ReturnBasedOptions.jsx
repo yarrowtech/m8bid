@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import sampleImg from "../assets/fundraising-example.jpg";
+import SEO from "../components/SEO.jsx";
 
 const API_URL = "http://localhost:5000/api/campaigns"; // change if needed
 
@@ -209,7 +210,7 @@ export default function ReturnBasedOptions() {
       icon: Landmark,
       title: "How money and withdrawals work",
       points: [
-        "Investor money first enters the campaign contribution flow and supports the campaign objective.",
+        "Contributor money first enters the campaign contribution flow and supports the campaign objective.",
         "Returns and withdrawals depend on the campaign’s own structure, payout logic, and timeline.",
       ],
     },
@@ -217,21 +218,21 @@ export default function ReturnBasedOptions() {
 
   const notes = [
     "Profit return campaigns should explain return logic clearly.",
-    "Investors should understand payout expectations before participating.",
+    "Contributors should understand payout expectations before participating.",
     "Clear campaign structure builds confidence and reduces ambiguity.",
   ];
 
   const faqs = [
     {
       q: "What is a profit return campaign?",
-      a: "A campaign designed with a structured return model where investors participate with return expectations tied to campaign terms.",
+      a: "A campaign designed with a structured return model where contributors participate with return expectations tied to campaign terms.",
     },
     {
       q: "How is it different from supporter participation?",
       a: "Supporter participation is contribution-focused, while profit return campaigns are more structured and tied to expected value or return visibility.",
     },
     {
-      q: "Can investors withdraw anytime?",
+      q: "Can contributors withdraw anytime?",
       a: "Not always. Withdrawal and payout depend on the campaign’s own return cycle, policy, and payout workflow.",
     },
   ];
@@ -281,8 +282,65 @@ export default function ReturnBasedOptions() {
   }, [campaigns.length, loading]);
 
   return (
-    <section
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 px-6 py-16 md:py-20"
+    <>
+      <SEO
+        title="Return-Based Campaigns — Profit Return Opportunities on MateBid"
+        description="Explore profit return campaigns on MateBid — structured return models, contributor payout visibility, and transparent campaign progress for informed contributors."
+        keywords="return based campaigns, profit return campaigns, structured return contributing, contributor campaigns India, MateBid return, campaign returns, profit based raising, contributing to return campaigns, crowdfunding returns, profit campaign platform"
+        canonical="/return-based-options"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://www.matebid.com/return-based-options",
+              url: "https://www.matebid.com/return-based-options",
+              name: "Return-Based Campaigns — Profit Return Opportunities on MateBid | M8BID",
+              description:
+                "Explore profit return campaigns on MateBid — structured return models, contributor payout visibility, and transparent campaign progress for informed contributors.",
+              isPartOf: { "@id": "https://www.matebid.com/#website" },
+              breadcrumb: {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
+                  { "@type": "ListItem", position: 2, name: "Return Based Options", item: "https://www.matebid.com/return-based-options" },
+                ],
+              },
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "What is a profit return campaign?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "A campaign designed with a structured return model where contributors participate with return expectations tied to campaign terms.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "How is it different from supporter participation?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Supporter participation is contribution-focused, while profit return campaigns are more structured and tied to expected value or return visibility.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Can contributors withdraw anytime?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Not always. Withdrawal and payout depend on the campaign's own return cycle, policy, and payout workflow.",
+                  },
+                },
+              ],
+            },
+          ],
+        }}
+      />
+      <section
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 px-6 py-16 md:py-20"
       style={{
         fontFamily:
           "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
@@ -458,5 +516,6 @@ export default function ReturnBasedOptions() {
         </div>
       </div>
     </section>
+    </>
   );
 }

@@ -15,6 +15,7 @@ import {
 
 import heroImage from "../assets/fundraising-hero.jpg";
 import AccessModeModal from "../components/AccessModeModal.jsx";
+import SEO from "../components/SEO.jsx";
 
 /* ---------- utils ---------- */
 function cx(...s) {
@@ -126,11 +127,11 @@ function FAQ({ q, a }) {
 
 export default function FundraisingPage() {
   const navigate = useNavigate();
-  const [fundraiseAccessOpen, setFundraiseAccessOpen] = useState(false);
+  const [raiseAccessOpen, setRaiseAccessOpen] = useState(false);
 
   useEffect(() => {}, []);
 
-  const canStartFundraiser = useMemo(() => {
+  const canStartRaiser = useMemo(() => {
     try {
       const rawUser =
         localStorage.getItem("user") || localStorage.getItem("loggedInUser");
@@ -146,13 +147,13 @@ export default function FundraisingPage() {
     }
   }, []);
 
-  const handleStartFundraiserAccess = () => {
-    if (canStartFundraiser) {
+  const handleStartRaiserAccess = () => {
+    if (canStartRaiser) {
       navigate("/start-fundraiser");
       return;
     }
 
-    setFundraiseAccessOpen(true);
+    setRaiseAccessOpen(true);
   };
 
   const highlights = useMemo(
@@ -165,6 +166,71 @@ export default function FundraisingPage() {
   );
 
   return (
+    <>
+      <SEO
+        title="Start a Business Raiser — Launch, Share & Collect Securely"
+        description="Launch a raising campaign on MateBid in minutes. Set your goal, share your story, and collect contributions securely. KYC-verified, built for founders, startups, and growing businesses."
+        keywords="start a raiser, business raising campaign, raise money online India, crowdfunding campaign, launch a campaign, secure raising platform, KYC verified campaign, MateBid raiser, raising for business, founders campaign, startup raiser"
+        canonical="/fundraising"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://www.matebid.com/fundraising",
+              url: "https://www.matebid.com/fundraising",
+              name: "Start a Business Raiser — Launch, Share & Collect Securely | M8BID",
+              description:
+                "Launch a raising campaign on MateBid. Set your goal, share your story, and collect contributions securely. KYC-verified and built for founders.",
+              isPartOf: { "@id": "https://www.matebid.com/#website" },
+              breadcrumb: {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
+                  { "@type": "ListItem", position: 2, name: "Start Raising", item: "https://www.matebid.com/fundraising" },
+                ],
+              },
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "Is there a fee to start a raiser?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "You can start a raiser without setup fees. Platform charges (if any) are applied transparently based on your configured policy.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "How do payouts work?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "After successful payment confirmation and platform checks, payouts are transferred to your linked bank account based on your configured workflow.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Can I edit my raiser after publishing?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Yes. You can update your story, images, and milestones. Some changes may require review depending on your platform policy.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "How can I get more supporters?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Share early, post regular updates, add real photos/videos, and make your milestone plan clear. The first 48 hours are important for momentum.",
+                  },
+                },
+              ],
+            },
+          ],
+        }}
+      />
     <main
       className="relative overflow-hidden text-slate-900"
       style={{
@@ -190,7 +256,7 @@ export default function FundraisingPage() {
             </div>
 
             <h1 className="mt-4 text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-              Start a Business Fundraiser that{" "}
+              Start a Business Raiser that{" "}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 looks credible
               </span>{" "}
@@ -198,7 +264,7 @@ export default function FundraisingPage() {
             </h1>
 
             <p className="mt-4 text-lg text-slate-700 leading-relaxed max-w-xl">
-              Create your fundraiser, share it with your network, and collect
+              Create your raiser, share it with your network, and collect
               contributions securely. Clear milestones, transparent story, and a
               professional campaign page that builds trust.
             </p>
@@ -206,10 +272,10 @@ export default function FundraisingPage() {
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
-                onClick={handleStartFundraiserAccess}
+                onClick={handleStartRaiserAccess}
                 className={PRIMARY_BTN}
               >
-                Start a Fundraiser
+                Start a Raiser
                 <span className="ml-2 transition group-hover:translate-x-0.5">
                   →
                 </span>
@@ -235,7 +301,7 @@ export default function FundraisingPage() {
               <span className="h-1 w-1 rounded-full bg-slate-300" />
               <div className="inline-flex items-center gap-2">
                 <Users className="h-4 w-4 text-blue-700" />
-                Built for founders & investors
+                Built for founders & contributors
               </div>
             </div>
           </div>
@@ -247,7 +313,7 @@ export default function FundraisingPage() {
               <div className="p-4 border-b border-white/50 bg-white/60 backdrop-blur">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-semibold text-slate-900">
-                    Fundraiser Preview
+                    Raiser Preview
                   </div>
                   <div className="text-xs font-medium text-slate-500">
                     Professional layout
@@ -258,7 +324,7 @@ export default function FundraisingPage() {
               <div className="p-4">
                 <img
                   src={heroImage}
-                  alt="Fundraising hero"
+                  alt="Raising hero"
                   className="w-full h-[320px] object-cover rounded-2xl"
                 />
 
@@ -331,7 +397,7 @@ export default function FundraisingPage() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
               <h2 className="text-3xl font-bold text-slate-900">
-                How fundraising works
+                How raising works
               </h2>
               <p className="mt-2 text-slate-600 max-w-2xl">
                 A simple 3-step flow designed to help you launch quickly and
@@ -341,7 +407,7 @@ export default function FundraisingPage() {
 
             <button
               type="button"
-              onClick={handleStartFundraiserAccess}
+              onClick={handleStartRaiserAccess}
               className={OUTLINE_BTN}
             >
               Create now <ArrowRight className="ml-2 h-4 w-4" />
@@ -352,7 +418,7 @@ export default function FundraisingPage() {
             <StepCard
               step={1}
               icon={Sparkles}
-              title="Create your fundraiser"
+              title="Create your raiser"
               desc="Add your story, goal, timeline, and visuals. Set clear milestones so supporters understand your plan."
             />
             <StepCard
@@ -386,7 +452,7 @@ export default function FundraisingPage() {
             <Feature
               icon={ShieldCheck}
               title="Secure payments"
-              desc="Payment verification and clear transaction records for reliable fundraising."
+              desc="Payment verification and clear transaction records for reliable raising."
             />
             <Feature
               icon={BadgeCheck}
@@ -412,15 +478,15 @@ export default function FundraisingPage() {
 
           <div className="mt-8 grid md:grid-cols-2 gap-5">
             <FAQ
-              q="Is there a fee to start a fundraiser?"
-              a="You can start a fundraiser without setup fees. Platform charges (if any) are applied transparently based on your configured policy."
+              q="Is there a fee to start a raiser?"
+              a="You can start a raiser without setup fees. Platform charges (if any) are applied transparently based on your configured policy."
             />
             <FAQ
               q="How do payouts work?"
               a="After successful payment confirmation and platform checks, payouts are transferred to your linked bank account based on your configured workflow."
             />
             <FAQ
-              q="Can I edit my fundraiser after publishing?"
+              q="Can I edit my raiser after publishing?"
               a="Yes. You can update your story, images, and milestones. Some changes may require review depending on your platform policy."
             />
             <FAQ
@@ -431,19 +497,19 @@ export default function FundraisingPage() {
 
           <div className="mt-10 rounded-3xl border border-white/40 bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h3 className="text-2xl font-bold">Ready to start fundraising?</h3>
+              <h3 className="text-2xl font-bold">Ready to start raising?</h3>
               <p className="mt-2 text-white/90 max-w-xl">
-                Create a professional fundraiser page in minutes and start
+                Create a professional raiser page in minutes and start
                 sharing today.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={handleStartFundraiserAccess}
+              onClick={handleStartRaiserAccess}
               className="group inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold tracking-wide text-slate-900 shadow-sm transition hover:bg-white/90 active:scale-[0.99]"
             >
-              Start a Fundraiser
+              Start a Raiser
               <span className="ml-2 transition group-hover:translate-x-0.5">
                 →
               </span>
@@ -453,15 +519,16 @@ export default function FundraisingPage() {
       </section>
 
       <AccessModeModal
-        open={fundraiseAccessOpen}
-        onClose={() => setFundraiseAccessOpen(false)}
+        open={raiseAccessOpen}
+        onClose={() => setRaiseAccessOpen(false)}
         onLogin={() => navigate("/login")}
-        title="Fundraiser account needed"
-        message="You need to login or create a fundraiser account to start fundraising."
+        title="Raiser account needed"
+        message="You need to login or create a raiser account to start raising."
         buttonLabel="Go to Login"
       />
 
       <div className="h-10" />
     </main>
+    </>
   );
 }

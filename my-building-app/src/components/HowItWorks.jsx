@@ -84,7 +84,7 @@ export default function HowItWorks() {
           </div>
 
           <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-            Fundraising here is easy, powerful, and trusted
+            Raising here is easy, powerful, and trusted
           </h2>
 
           <p className="mt-3 text-base leading-7 text-slate-600 md:text-lg">
@@ -100,15 +100,15 @@ export default function HowItWorks() {
             <StepCard
               step="1"
               icon={Sparkles}
-              title="Create your fundraiser"
-              desc="Use our guided tools to add your campaign story, funding goal, milestones, and visuals. You can update your fundraiser anytime as your campaign evolves."
+              title="Create your raiser"
+              desc="Use our guided tools to add your campaign story, raising goal, milestones, and visuals. You can update your raiser anytime as your campaign evolves."
             />
 
             <StepCard
               step="2"
               icon={Share2}
               title="Reach supporters by sharing"
-              desc="Share your fundraiser link across your network and use your dashboard tools to build momentum, attract supporters, and keep your audience engaged."
+              desc="Share your raiser link across your network and use your dashboard tools to build momentum, attract supporters, and keep your audience engaged."
             />
 
             <StepCard
@@ -199,7 +199,7 @@ export default function HowItWorks() {
                 Ready to launch your campaign?
               </p>
               <p className="mt-1 text-sm text-slate-300">
-                Create your fundraiser, publish your story, and start collecting
+                Create your raiser, publish your story, and start collecting
                 support with confidence.
               </p>
             </div>

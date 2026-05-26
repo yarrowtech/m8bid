@@ -143,12 +143,12 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
                   Platform Overview
                 </p>
                 <h3 className="mt-2 text-2xl font-bold">
-                  Built to make fundraising more credible, transparent, and
+                  Built to make raising more credible, transparent, and
                   accessible.
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-slate-300">
                   M8-BID is a modern crowdfunding platform designed to connect
-                  founders, fundraisers, and supporters through a secure and
+                  founders, raisers, and supporters through a secure and
                   professional digital experience. We focus on trust,
                   transparency, and clear campaign presentation so users can
                   raise and contribute with confidence.
@@ -156,7 +156,7 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
               </div>
 
               <DrawerSection icon={Info} title="Who We Are">
-                M8-BID is a fundraising and campaign platform built for modern
+                M8-BID is a raising and campaign platform built for modern
                 startups, causes, and business initiatives. Our goal is to
                 simplify the way campaigns are created, presented, shared, and
                 managed while maintaining a professional and reliable experience
@@ -164,7 +164,7 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
               </DrawerSection>
 
               <DrawerSection icon={ShieldCheck} title="What We Believe">
-                We believe fundraising should not feel confusing or
+                We believe raising should not feel confusing or
                 unstructured. A good platform should help people tell their
                 story clearly, show progress transparently, and create trust
                 between campaign creators and supporters. That is why M8-BID
@@ -176,7 +176,7 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
                 <ul className="list-disc space-y-2 pl-5">
                   <li>Professional campaign creation and presentation</li>
                   <li>
-                    Support for both contribution-based and structured funding
+                    Support for both contribution-based and structured raising
                     flows
                   </li>
                   <li>
@@ -188,7 +188,7 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
               </DrawerSection>
 
               <DrawerSection icon={ShieldCheck} title="Our Vision">
-                Our vision is to make digital fundraising more trustworthy, more
+                Our vision is to make digital raising more trustworthy, more
                 efficient, and more professional for founders, businesses, and
                 supporters alike. We want M8-BID to become a platform where
                 campaigns are not only visible, but believable.
@@ -204,7 +204,7 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
                   We would love to hear from you.
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-blue-50">
-                  Whether you have a product question, fundraising inquiry,
+                  Whether you have a product question, raising inquiry,
                   partnership proposal, or support request, the M8-BID team is
                   here to help.
                 </p>
@@ -233,7 +233,7 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
                   M8-BID Operations Team
                 </div>
                 <div className="mt-1">
-                  Serving digital-first fundraising and campaign management
+                  Serving digital-first raising and campaign management
                   workflows.
                 </div>
               </DrawerSection>
@@ -391,8 +391,8 @@ export default function Header() {
   };
 
   const toggleMenu = (menu) => {
-    setInvestOpen(menu === "invest" ? !investOpen : false);
-    setFundraiseOpen(menu === "fundraise" ? !fundraiseOpen : false);
+    setInvestOpen(menu === "Contribute" ? !investOpen : false);
+    setFundraiseOpen(menu === "Raising" ? !fundraiseOpen : false);
   };
 
   const openDrawer = (type) => {
@@ -467,8 +467,8 @@ export default function Header() {
 
 const investItems = [
   {
-    label: "Browse Investors",
-    desc: "Explore active opportunities and investor-focused campaigns.",
+    label: "Browse Contributing Opportunities",
+    desc: "Explore active opportunities and contributor-focused campaigns.",
     to: !hasSession ? null : isFundraiserMode ? null : "/browse-investors",
     onClick: !hasSession
       ? handleGuestInvestAccess
@@ -510,7 +510,7 @@ const investItems = [
 
 const fundraiseItems = [
   {
-    label: "Start a Fundraiser",
+    label: "Start Raising",
     desc: "Launch your fundraiser with a guided creation flow.",
     to: !hasSession ? null : isInvestorMode ? null : "/fundraising",
     onClick: !hasSession
@@ -520,17 +520,17 @@ const fundraiseItems = [
       : undefined,
   },
   {
-    label: "How to Start a Fundraising",
+    label: "How to Start a Raiser",
     desc: "Understand fundraising clearly with step-by-step guidance.",
-    to: !hasSession ? null : isInvestorMode ? null : "/how-to-start-a-fundraising",
-    onClick: !hasSession
-      ? handleGuestFundraiseAccess
-      : isInvestorMode
-      ? handleFundraiseRestrictedAccess
-      : undefined,
+    to: "/how-to-start-a-fundraising",
+    onClick: () => {
+      setInvestOpen(false);
+      setFundraiseOpen(false);
+      setMobileOpen(false);
+    },
   },
   {
-    label: "Cause-Based Funding",
+    label: "Cause-Based Raising",
     desc: "Create campaigns for support-oriented fundraising.",
     to: !hasSession ? null : isInvestorMode ? null : "/cause-based-funding",
     onClick: !hasSession
@@ -540,7 +540,7 @@ const fundraiseItems = [
       : undefined,
   },
   {
-    label: "Fundraising Ideas",
+    label: "Raising Ideas",
     desc: "Get inspired with campaign direction and planning ideas.",
     to: !hasSession ? null : isInvestorMode ? null : "/fundraising-ideas",
     onClick: !hasSession
@@ -590,7 +590,7 @@ const fundraiseItems = [
                 M8BID
               </div>
               <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                Fundraising Platform
+                Raising Platform
               </div>
             </div>
           </div>
@@ -609,12 +609,12 @@ const fundraiseItems = [
 
             <div className="relative">
               <NavButton
-                label="Invest"
+                label="Contribute"
                 open={investOpen}
-                onClick={() => toggleMenu("invest")}
+                onClick={() => toggleMenu("Contribute")}
               />
               <DropdownPanel
-                title="Invest"
+                title="Contribute"
                 subtitle="Discover verified opportunities and structured ways to participate."
                 items={investItems}
                 open={investOpen}
@@ -623,12 +623,12 @@ const fundraiseItems = [
 
             <div className="relative">
               <NavButton
-                label="Fundraise"
+                label="Raising"
                 open={fundraiseOpen}
-                onClick={() => toggleMenu("fundraise")}
+                onClick={() => toggleMenu("Raising")}
               />
               <DropdownPanel
-                title="Fundraise"
+                title="Raising"
                 subtitle="Start a professional campaign and build momentum with clarity."
                 items={fundraiseItems}
                 open={fundraiseOpen}
@@ -637,7 +637,9 @@ const fundraiseItems = [
 
             <button
               type="button"
-              onClick={() => openDrawer("about")}
+              onClick={() =>
+                location.pathname === "/" ? openDrawer("about") : navigate("/about")
+              }
               className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               About
@@ -767,7 +769,7 @@ const fundraiseItems = [
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <BadgeDollarSign className="h-4 w-4" />
-                  Browse Investors
+                  Browse Contributing Opportunities
                 </button>
               ) : isFundraiserMode ? (
                 <button
@@ -776,7 +778,7 @@ const fundraiseItems = [
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <BadgeDollarSign className="h-4 w-4" />
-                  Browse Investors
+                  Browse Contributing Opportunities
                 </button>
               ) : (
                 <Link
@@ -784,7 +786,7 @@ const fundraiseItems = [
                   className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <BadgeDollarSign className="h-4 w-4" />
-                  Browse Investors
+                  Browse Contributing Opportunities
                 </Link>
               )}
 
@@ -795,7 +797,7 @@ const fundraiseItems = [
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <HandCoins className="h-4 w-4" />
-                  Start a Fundraiser
+                  Start Raising
                 </button>
               ) : isInvestorMode ? (
                 <button
@@ -804,7 +806,7 @@ const fundraiseItems = [
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <HandCoins className="h-4 w-4" />
-                  Start a Fundraiser
+                  Start Raising
                 </button>
               ) : (
                 <Link
@@ -812,17 +814,20 @@ const fundraiseItems = [
                   className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <HandCoins className="h-4 w-4" />
-                  Start a Fundraiser
+                  Start Raising
                 </Link>
               )}
 
               <button
                 type="button"
-                onClick={() => openDrawer("about")}
+                onClick={() => {
+                  setMobileOpen(false);
+                  location.pathname === "/" ? openDrawer("about") : navigate("/about");
+                }}
                 className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
               >
                 <Info className="h-4 w-4" />
-                About M8-BID
+                About M8BID
               </button>
 
               <button
@@ -856,7 +861,7 @@ const fundraiseItems = [
         open={fundraiseBlockedOpen}
         onClose={() => setFundraiseBlockedOpen(false)}
         onLogin={handleFundraiseLoginRedirect}
-        title="Fundraiser account needed"
+        title="Raiser account needed"
         message="You need to login or register account as a fundraiser to start a fundraising campaign."
         buttonLabel="Go to Login"
       />
@@ -864,8 +869,8 @@ const fundraiseItems = [
         open={investBlockedOpen}
         onClose={() => setInvestBlockedOpen(false)}
         onLogin={handleInvestLoginRedirect}
-        title="Investor account needed"
-        message="You need to login or register account as an investor to invest in a campaign."
+        title="Contributor account needed"
+        message="You need to login or register account as a contributor to contribute to a campaign."
         buttonLabel="Go to Login"
       />
     </>

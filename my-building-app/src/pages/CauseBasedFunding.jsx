@@ -11,12 +11,13 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO.jsx";
 
 const topCards = [
   {
     icon: HeartHandshake,
     title: "Support-oriented campaigns",
-    desc: "Cause-based funding is best for campaigns built around help, support, care, community impact, or mission-driven fundraising.",
+    desc: "Cause-based funding is best for campaigns built around help, support, care, community impact, or mission-driven raising.",
   },
   {
     icon: ShieldCheck,
@@ -110,6 +111,63 @@ function SectionCard({ icon: Icon, title, points }) {
 
 export default function CauseBasedFunding() {
   return (
+    <>
+      <SEO
+        title="Cause-Based Raising — Support, Mission & Community Campaigns"
+        description="Start a cause-based raising campaign on MateBid — transparent, support-driven, and built for NGOs, social causes, medical emergencies, and community missions."
+        keywords="cause-based raising, support campaign India, mission-driven raising, NGO crowdfunding, social cause campaign, community raising, medical emergency raising, cause campaign platform, MateBid cause, transparent raising campaign"
+        canonical="/cause-based-funding"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://www.matebid.com/cause-based-funding",
+              url: "https://www.matebid.com/cause-based-funding",
+              name: "Cause-Based Raising — Support, Mission & Community Campaigns | M8BID",
+              description:
+                "Start a cause-based raising campaign on MateBid — transparent, support-driven, and built for NGOs, social causes, medical emergencies, and community missions.",
+              isPartOf: { "@id": "https://www.matebid.com/#website" },
+              breadcrumb: {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
+                  { "@type": "ListItem", position: 2, name: "Cause-Based Raising", item: "https://www.matebid.com/cause-based-funding" },
+                ],
+              },
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "What is cause-based raising?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Cause-based raising refers to campaigns focused on support, mission, or community need rather than structured return-oriented participation.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "What should supporters see on these pages?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Supporters should see a clear cause explanation, funding purpose, trust signals, and updates that help them understand the campaign better.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Why is transparency important in cause-based campaigns?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Because emotional connection alone is not enough. Supporters also need confidence that the campaign is genuine and clearly explained.",
+                  },
+                },
+              ],
+            },
+          ],
+        }}
+      />
     <section
       className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-rose-50/30 px-6 py-16 md:py-20"
       style={{
@@ -125,12 +183,12 @@ export default function CauseBasedFunding() {
           </div>
 
           <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-            Fundraising built around purpose, support, and trust
+            Raising built around purpose, support, and trust
           </h1>
 
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
             Cause-based funding is designed for campaigns where the goal is support,
-            community impact, or mission-driven fundraising. These pages should feel
+            community impact, or mission-driven raising. These pages should feel
             human, clear, and trustworthy.
           </p>
         </div>
@@ -213,5 +271,6 @@ export default function CauseBasedFunding() {
         </div>
       </div>
     </section>
+    </>
   );
 }

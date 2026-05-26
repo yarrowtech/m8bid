@@ -190,17 +190,23 @@ export default function HowToInvest() {
     }
   };
 
-  const handleBrowseInvestors = () => {
+  const handleInvestorAction = (path) => {
     const user = getSessionUser();
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const hasInvestorAccount = Boolean(user?.access?.investor?.enabled);
+    const hasInvestorAccount = Boolean(
+      user?.access?.investor?.enabled && user?.activeMode === "investor"
+    );
 
     if (!user || !token || !hasInvestorAccount) {
       setInvestorAccessOpen(true);
       return;
     }
 
-    navigate("/browse-investors");
+    navigate(path);
+  };
+
+  const handleBrowseInvestors = () => {
+    handleInvestorAction("/browse-investors");
   };
 
   return (
@@ -551,7 +557,7 @@ export default function HowToInvest() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/verified-opportunities")}
+              onClick={() => handleInvestorAction("/verified-opportunities")}
               className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
             >
               View Verified Opportunities

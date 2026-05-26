@@ -13,6 +13,7 @@ import helpsImage from "../assets/startup-sample.jpg";
 import donationImage from "../assets/donation.jpg";
 import investmentImage from "../assets/investors-hero.jpg";
 import AccessModeModal from "../components/AccessModeModal.jsx";
+import SEO from "../components/SEO.jsx";
 
 function ZigSection({ title, text, image, alt, reverse = false, children }) {
   return (
@@ -132,8 +133,8 @@ function StepSection({ title, intro, steps }) {
 
 export default function HowToStartFundraising() {
   const navigate = useNavigate();
-  const [fundraiserAccessOpen, setFundraiserAccessOpen] = useState(false);
-  const fundraisingSteps = [
+  const [raiserAccessOpen, setRaiserAccessOpen] = useState(false);
+  const raisingSteps = [
     {
       title: "Define The Goal",
       text: "Decide the exact purpose, target amount, deadline, and expected outcome.",
@@ -186,47 +187,117 @@ export default function HowToStartFundraising() {
     }
   };
 
-  const handleStartFundraiser = () => {
+  const handleRaiserAction = (path) => {
     const user = getSessionUser();
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const hasFundraiserAccount = Boolean(user?.access?.fundraiser?.enabled);
+    const hasRaiserAccount = Boolean(
+      user?.access?.fundraiser?.enabled && user?.activeMode === "fundraiser"
+    );
 
-    if (!user || !token || !hasFundraiserAccount) {
-      setFundraiserAccessOpen(true);
+    if (!user || !token || !hasRaiserAccount) {
+      setRaiserAccessOpen(true);
       return;
     }
 
-    navigate("/fundraising");
+    navigate(path);
+  };
+
+  const handleStartRaiser = () => {
+    handleRaiserAction("/fundraising");
   };
 
   return (
     <>
+      <SEO
+        title="How to Start Raising — Complete Step-by-Step Guide for Founders"
+        description="Learn how to start a raising campaign on MateBid. Define your goal, build your raiser page, share with supporters, and collect contributions securely. A complete guide for founders and businesses."
+        keywords="how to start raising, start a raiser, raising guide India, raising campaign steps, raiser page tips, MateBid raising, donation based raising, contribution based raising, raising for startups, how to raise funds online, crowdfunding guide"
+        canonical="/how-to-start-a-fundraising"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://www.matebid.com/how-to-start-a-fundraising",
+              url: "https://www.matebid.com/how-to-start-a-fundraising",
+              name: "How to Start Raising — Complete Step-by-Step Guide for Founders | M8BID",
+              description:
+                "A complete guide on how to start a raising campaign — define your goal, build your raiser page, share with supporters, and collect contributions securely.",
+              isPartOf: { "@id": "https://www.matebid.com/#website" },
+              breadcrumb: {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
+                  { "@type": "ListItem", position: 2, name: "How to Start Raising", item: "https://www.matebid.com/how-to-start-a-fundraising" },
+                ],
+              },
+            },
+            {
+              "@type": "HowTo",
+              name: "How to Start a Raising Campaign",
+              description: "A step-by-step guide to launching a raising campaign on MateBid — from defining your goal to tracking contributions.",
+              step: [
+                {
+                  "@type": "HowToStep",
+                  position: 1,
+                  name: "Define The Goal",
+                  text: "Decide the exact purpose, target amount, deadline, and expected outcome.",
+                },
+                {
+                  "@type": "HowToStep",
+                  position: 2,
+                  name: "Create The Page",
+                  text: "Add story, category, photos, amount breakup, location, and documents.",
+                },
+                {
+                  "@type": "HowToStep",
+                  position: 3,
+                  name: "Publish And Share",
+                  text: "Share the campaign with close contacts first, then post on wider channels.",
+                },
+                {
+                  "@type": "HowToStep",
+                  position: 4,
+                  name: "Receive Support",
+                  text: "Supporters review the campaign and contribute through the platform flow.",
+                },
+                {
+                  "@type": "HowToStep",
+                  position: 5,
+                  name: "Track And Update",
+                  text: "Monitor progress, add updates, and keep supporters informed from your dashboard.",
+                },
+              ],
+            },
+          ],
+        }}
+      />
     <main className="bg-gradient-to-b from-white to-slate-50 text-slate-800">
       <section className="mx-auto max-w-6xl px-6 pb-10 pt-12 md:px-10 md:pb-14 md:pt-16">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-700">
-          Fundraising Guide
+          Raising Guide
         </p>
         <h1 className="mt-3 max-w-4xl text-3xl font-extrabold leading-tight text-slate-900 md:text-5xl">
-          How To Start A Fundraising
+          How To Start Raising
         </h1>
         <p className="mt-5 max-w-4xl text-base leading-8 text-slate-600 md:text-lg">
-          A simple and professional walkthrough of fundraising: what it is, how it works,
+          A simple and professional walkthrough of raising: what it is, how it works,
           which model to choose, and how to run a campaign that people understand and trust.
         </p>
       </section>
 
       <ZigSection
-        title="What Is Fundraising?"
-        text="Fundraising means collecting financial support from people for a cause, project, startup, or business objective. A strong fundraiser clearly explains why money is needed, how much is needed, how it will be used, and what outcomes will be delivered."
+        title="What Is Raising?"
+        text="Raising means collecting financial support from people for a cause, project, startup, or business objective. A strong raiser clearly explains why money is needed, how much is needed, how it will be used, and what outcomes will be delivered."
         image={heroImage}
-        alt="Fundraising presentation and campaign overview"
+        alt="Raising presentation and campaign overview"
       >
         <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-          On this platform, fundraising happens through a structured campaign page where you add your story,
+          On this platform, raising happens through a structured campaign page where you add your story,
           target amount, timeline, and supporting proof so contributors can make informed decisions.
         </p>
         <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-          Think of your fundraiser page as a public explanation of your plan. It
+          Think of your raiser page as a public explanation of your plan. It
           should answer the basic questions quickly: who you are, what you are
           building or solving, why support is needed now, and what progress
           people can expect after the funds are used.
@@ -234,16 +305,16 @@ export default function HowToStartFundraising() {
       </ZigSection>
 
       <StepSection
-        title="How Fundraising Works: Step By Step"
-        intro="This is the complete fundraising flow from idea to campaign tracking. Follow it in order so your page feels planned, trustworthy, and easy for supporters to understand."
-        steps={fundraisingSteps}
+        title="How Raising Works: Step By Step"
+        intro="This is the complete raising flow from idea to campaign tracking. Follow it in order so your page feels planned, trustworthy, and easy for supporters to understand."
+        steps={raisingSteps}
       />
 
       <ZigSection
-        title="How Fundraising Helps"
-        text="Fundraising helps founders and creators move faster from idea to execution. It also builds trust because your campaign stays transparent with progress and updates."
+        title="How Raising Helps"
+        text="Raising helps founders and creators move faster from idea to execution. It also builds trust because your campaign stays transparent with progress and updates."
         image={helpsImage}
-        alt="Supporters contributing through donation-based fundraising"
+        alt="Supporters contributing through donation-based raising"
         reverse
       >
         <ul className="mt-4 list-disc space-y-2 pl-6 text-sm leading-8 text-slate-700 md:text-base">
@@ -258,7 +329,7 @@ export default function HowToStartFundraising() {
 
       <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Before You Create A Fundraiser
+          Before You Create A Raiser
         </h2>
         <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
           A campaign becomes much stronger when the important details are ready
@@ -298,25 +369,25 @@ export default function HowToStartFundraising() {
 
       <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Common Types Of Fundraisers
+          Common Types Of Raisers
         </h2>
         <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-          Before choosing donation-based or investment-based fundraising, it helps
-          to identify your fundraiser category. Different categories attract
+          Before choosing donation-based or contribution-based raising, it helps
+          to identify your raiser category. Different categories attract
           different supporter behavior and communication style.
         </p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            "Startup Launch Fundraiser",
-            "Business Expansion Fundraiser",
-            "Medical Emergency Fundraiser",
-            "Education Support Fundraiser",
-            "Social Cause Fundraiser",
-            "Community Development Fundraiser",
-            "Creative Project Fundraiser",
-            "NGO / Non-Profit Fundraiser",
-            "Event-Based Fundraiser",
+            "Startup Launch Raiser",
+            "Business Expansion Raiser",
+            "Medical Emergency Raiser",
+            "Education Support Raiser",
+            "Social Cause Raiser",
+            "Community Development Raiser",
+            "Creative Project Raiser",
+            "NGO / Non-Profit Raiser",
+            "Event-Based Raiser",
           ].map((item) => (
             <div
               key={item}
@@ -330,10 +401,10 @@ export default function HowToStartFundraising() {
 
       <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          What A Strong Fundraiser Page Should Include
+          What A Strong Raiser Page Should Include
         </h2>
         <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-          The best fundraiser pages are not complicated. They are complete,
+          The best raiser pages are not complicated. They are complete,
           honest, and easy to scan. A supporter should understand your campaign
           without needing to ask basic follow-up questions.
         </p>
@@ -369,15 +440,15 @@ export default function HowToStartFundraising() {
 
       <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Types Of Fundraising On This Platform
+          Types Of Raising On This Platform
         </h2>
 
         <div className="mt-8 space-y-10">
           <div className="grid items-center gap-8 lg:grid-cols-2">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">1. Donation-Based Fundraising</h3>
+              <h3 className="text-xl font-bold text-slate-900">1. Donation-Based Raising</h3>
               <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-                Donation-based fundraising is support-first. People contribute because they believe in your mission
+                Donation-based raising is support-first. People contribute because they believe in your mission
                 and impact, not because they expect financial return.
               </p>
               <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
@@ -398,9 +469,9 @@ export default function HowToStartFundraising() {
               className="order-1 h-[210px] w-full rounded-2xl object-cover shadow-md md:h-[250px] lg:order-2"
             />
             <div className="order-2 lg:order-1">
-              <h3 className="text-xl font-bold text-slate-900">2. Investment-Based Fundraising</h3>
+              <h3 className="text-xl font-bold text-slate-900">2. Contribution-Based Raising</h3>
               <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-                Investment-based fundraising is growth-first. Contributors back campaigns with a business mindset,
+                Contribution-based raising is growth-first. Contributors back campaigns with a business mindset,
                 so your milestones, plan, and execution quality matter more.
               </p>
               <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
@@ -413,10 +484,10 @@ export default function HowToStartFundraising() {
 
       <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          How To Share Your Fundraiser
+          How To Share Your Raiser
         </h2>
         <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-          Publishing the page is only the first step. Fundraising works better
+          Publishing the page is only the first step. Raising works better
           when you share consistently with the right people and explain progress
           without sounding pushy.
         </p>
@@ -485,31 +556,31 @@ export default function HowToStartFundraising() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
-            onClick={handleStartFundraiser}
+            onClick={handleStartRaiser}
             className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800"
           >
-            Start Fundraiser Now
+            Start Raiser Now
             <ArrowRight className="ml-2 h-4 w-4" />
           </button>
           <button
             type="button"
-            onClick={() => navigate("/fundraising-ideas")}
+            onClick={() => handleRaiserAction("/fundraising-ideas")}
             className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
           >
-            Explore Fundraising Ideas
+            Explore Raising Ideas
           </button>
         </div>
       </section>
     </main>
     <AccessModeModal
-      open={fundraiserAccessOpen}
-      onClose={() => setFundraiserAccessOpen(false)}
+      open={raiserAccessOpen}
+      onClose={() => setRaiserAccessOpen(false)}
       onLogin={() => {
-        setFundraiserAccessOpen(false);
+        setRaiserAccessOpen(false);
         navigate("/login");
       }}
-      title="Fundraiser account needed"
-      message="You need a fundraiser account to start fundraising. Please login with a fundraiser account or create one first."
+      title="Raiser account needed"
+      message="You need a raiser account to start raising. Please login with a raiser account or create one first."
       buttonLabel="Go to Login"
     />
     </>

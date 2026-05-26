@@ -224,7 +224,7 @@ function ProfileDropdown({ user, navigate }) {
                 Update KYC
               </p>
               <p className="text-[11px] text-slate-400">
-                Manage investor verification details
+                Manage Contributor verification details
               </p>
             </div>
           </button>
@@ -255,10 +255,10 @@ function ProfileDropdown({ user, navigate }) {
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-900">
-                Investor Profile
+                Contributor Profile
               </p>
               <p className="text-[11px] text-slate-400">
-                View your investor account details
+                View your contributor account details
               </p>
             </div>
           </button>
@@ -370,7 +370,7 @@ export default function InvestorDashboard() {
           localStorage.setItem("user", JSON.stringify(liveUser));
         }
       } catch (err) {
-        setError(err?.message || err?.error || "Failed to load investor dashboard");
+        setError(err?.message || err?.error || "Failed to load Contributor dashboard");
       } finally {
         setLoading(false);
       }
@@ -550,7 +550,7 @@ export default function InvestorDashboard() {
             <div className="mt-4 flex items-start justify-between gap-4">
               <div className="flex-1 rounded-[24px] bg-gradient-to-r from-[#6f5cf2] via-[#7b68f4] to-[#8d7bff] px-5 py-5 text-white shadow-sm">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ebe6ff]">
-                  Investor Dashboard
+                   Contributor Dashboard
                 </p>
 
                 <h1 className="mt-2 text-[22px] font-semibold leading-tight md:text-[24px]">
@@ -663,7 +663,7 @@ export default function InvestorDashboard() {
           <aside className="hidden w-[320px] shrink-0 border-l border-slate-200 bg-white px-4 py-5 xl:block">
             <div className="flex items-center justify-between">
               <h3 className="text-[28px] font-semibold tracking-tight text-slate-900">
-                My Investor Profile
+                My Contributor Profile
               </h3>
             </div>
 
@@ -686,7 +686,7 @@ export default function InvestorDashboard() {
                 Hello {firstName}
               </h4>
               <p className="mt-1 max-w-[230px] text-center text-[11px] leading-5 text-slate-500">
-                Keep your investor profile complete to improve onboarding, trust and transaction readiness.
+                Keep your contributor profile complete to improve onboarding, trust and transaction readiness.
               </p>
               <p className="mt-2 text-xs font-medium text-[#6f5cf2]">
                 View Profile -

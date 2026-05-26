@@ -51,5 +51,10 @@ export const logoutUser = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   localStorage.removeItem("loggedInUser");
+  localStorage.removeItem("activeMode");
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("user");
+  sessionStorage.removeItem("loggedInUser");
+  sessionStorage.removeItem("activeMode");
   return true;
 };

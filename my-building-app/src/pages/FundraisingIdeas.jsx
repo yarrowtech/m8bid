@@ -11,6 +11,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO.jsx";
 
 const ideaCards = [
   {
@@ -21,19 +22,19 @@ const ideaCards = [
   {
     icon: PenSquare,
     title: "Storytelling ideas",
-    desc: "Practical ways to make a fundraising page more compelling, understandable, and emotionally engaging.",
+    desc: "Practical ways to make a raising page more compelling, understandable, and emotionally engaging.",
   },
   {
     icon: Megaphone,
     title: "Promotion ideas",
-    desc: "Simple approaches for sharing your fundraiser and building momentum after launch.",
+    desc: "Simple approaches for sharing your raiser and building momentum after launch.",
   },
 ];
 
 const ideaSections = [
   {
     icon: Target,
-    title: "Good fundraising campaign ideas often start with",
+    title: "Good raising campaign ideas often start with",
     points: [
       "A very clear purpose for why funds are needed",
       "A target amount that feels realistic and explainable",
@@ -63,7 +64,7 @@ const ideaSections = [
   },
   {
     icon: Megaphone,
-    title: "What fundraising ideas should avoid",
+    title: "What raising ideas should avoid",
     points: [
       "Vague titles that do not explain the campaign clearly",
       "Unclear funding goals with no explanation",
@@ -88,11 +89,11 @@ const faqs = [
     a: "Start with the funding purpose, the amount needed, and why it matters now. Those three points are usually enough to shape the first version of a strong campaign.",
   },
   {
-    q: "Do fundraising ideas need to be very unique?",
+    q: "Do raising ideas need to be very unique?",
     a: "Not always. A campaign does not need to be unusual — it needs to be clear, well structured, and believable.",
   },
   {
-    q: "What makes a fundraising idea effective?",
+    q: "What makes a raising idea effective?",
     a: "A good idea becomes effective when it is presented with clarity, trust, realistic goals, and a story that connects with people.",
   },
 ];
@@ -121,8 +122,65 @@ function SectionCard({ icon: Icon, title, points }) {
 
 export default function FundraisingIdeas() {
   return (
-    <section
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 px-6 py-16 md:py-20"
+    <>
+      <SEO
+        title="Raising Campaign Ideas — Direction, Storytelling & Promotion Tips"
+        description="Get raising campaign ideas on MateBid — storytelling tips, page-building direction, and promotion strategies to launch a clear and credible raising campaign."
+        keywords="raising campaign ideas, how to start a raising campaign, campaign direction tips, storytelling for raising, raising page ideas, MateBid raising, crowdfunding ideas India, campaign promotion tips, startup raising ideas, business campaign ideas"
+        canonical="/fundraising-ideas"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://www.matebid.com/fundraising-ideas",
+              url: "https://www.matebid.com/fundraising-ideas",
+              name: "Raising Campaign Ideas — Direction, Storytelling & Promotion Tips | M8BID",
+              description:
+                "Get raising campaign ideas on MateBid — storytelling tips, page-building direction, and promotion strategies to launch a clear and credible raising campaign.",
+              isPartOf: { "@id": "https://www.matebid.com/#website" },
+              breadcrumb: {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
+                  { "@type": "ListItem", position: 2, name: "Raising Ideas", item: "https://www.matebid.com/fundraising-ideas" },
+                ],
+              },
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "What if I do not know how to start my campaign?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Start with the funding purpose, the amount needed, and why it matters now. Those three points are usually enough to shape the first version of a strong campaign.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Do raising ideas need to be very unique?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Not always. A campaign does not need to be unusual — it needs to be clear, well structured, and believable.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "What makes a raising idea effective?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "A good idea becomes effective when it is presented with clarity, trust, realistic goals, and a story that connects with people.",
+                  },
+                },
+              ],
+            },
+          ],
+        }}
+      />
+      <section
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 px-6 py-16 md:py-20"
       style={{
         fontFamily:
           "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
@@ -132,15 +190,15 @@ export default function FundraisingIdeas() {
         <div className="mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 shadow-sm">
             <Lightbulb className="h-4 w-4 text-amber-700" />
-            Fundraising Ideas
+            Raising Ideas
           </div>
 
           <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-            Better ideas lead to stronger fundraising pages
+            Better ideas lead to stronger raising pages
           </h1>
 
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
-            A good fundraising idea does not need to be complicated. It needs to be
+            A good raising idea does not need to be complicated. It needs to be
             clear, timely, and easy for others to understand. This page helps you
             shape stronger campaign direction before you launch.
           </p>
@@ -170,7 +228,7 @@ export default function FundraisingIdeas() {
         <div className="mt-12 rounded-3xl border border-slate-200 bg-slate-900 px-6 py-8 text-white shadow-lg">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5 text-amber-300" />
-            <h2 className="text-xl font-bold">Example fundraising idea directions</h2>
+            <h2 className="text-xl font-bold">Example raising idea directions</h2>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -211,11 +269,12 @@ export default function FundraisingIdeas() {
             to="/fundraising"
             className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
           >
-            Start a fundraiser
+            Start a raiser
             <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-0.5" />
           </Link>
         </div>
       </div>
     </section>
+    </>
   );
 }

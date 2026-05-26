@@ -12,6 +12,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO.jsx";
 
 const highlights = [
   {
@@ -114,7 +115,64 @@ function SectionCard({ icon: Icon, title, points }) {
 
 export default function SupporterSpace() {
   return (
-    <section
+    <>
+      <SEO
+        title="Supporter Space — Contribute with Confidence to Verified Campaigns"
+        description="Discover how to contribute to campaigns on MateBid — understand campaign mechanics, trust signals, and how to support verified raising campaigns with confidence."
+        keywords="supporter space, contribute to campaigns, contributor platform, transparent campaigns, MateBid supporter, crowdfunding supporters, campaign contribution, verified campaigns India, support campaigns online, raise campaign support"
+        canonical="/supporter-space"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://www.matebid.com/supporter-space",
+              url: "https://www.matebid.com/supporter-space",
+              name: "Supporter Space — Contribute with Confidence to Verified Campaigns | M8BID",
+              description:
+                "Discover how to contribute to campaigns on MateBid — understand campaign mechanics, trust signals, and how to support verified raising campaigns with confidence.",
+              isPartOf: { "@id": "https://www.matebid.com/#website" },
+              breadcrumb: {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
+                  { "@type": "ListItem", position: 2, name: "Supporter Space", item: "https://www.matebid.com/supporter-space" },
+                ],
+              },
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "Who is supporter space for?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Supporter Space is for users who want to contribute to campaigns, understand how funding works on the platform, and follow campaign progress with more confidence.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Does supporter space only apply to donation-style campaigns?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Not necessarily. It mainly supports users who want to understand and engage with campaigns from a supporter perspective, even if the campaign structure varies.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "What should a supporter expect after contributing?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "A supporter should expect transparency around campaign progress, updates from the fundraiser when applicable, and a clear record of their participation.",
+                  },
+                },
+              ],
+            },
+          ],
+        }}
+      />
+      <section
       className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 px-6 py-16 md:py-20"
       style={{
         fontFamily:
@@ -241,5 +299,6 @@ export default function SupporterSpace() {
         </div>
       </div>
     </section>
+    </>
   );
 }

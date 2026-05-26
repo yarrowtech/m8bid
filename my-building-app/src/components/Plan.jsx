@@ -24,16 +24,16 @@ const plans = [
     tag: "For supporters",
   },
   {
-    name: "Investment ",
-    desc: "Built for users who want to invest in campaigns and participate in their growth. This focuses purely on investment contribution without mentioning any return structure.",
+    name: "Contribution ",
+    desc: "Built for users who want to contribute to campaigns and participate in their growth. This focuses purely on contribution without mentioning any return structure.",
     min: "₹500",
     return: "Participation based",
-    fund: "Investment contribution model",
+    fund: "Contribution model",
     image: incomeImg,
-    badge: "Investment Plan",
+    badge: "Contribution Plan",
     accent: "from-blue-600 to-indigo-600",
     iconBg: "bg-blue-50",
-    tag: "For investors",
+    tag: "For contributors",
   },
 ];
 

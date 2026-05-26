@@ -101,6 +101,13 @@ html {
   animation-delay: 160ms;
 }
 
+.fundraiser-workspace-content > div > aside:first-child,
+.fundraiser-workspace-content > div > div > aside:first-child,
+.investor-workspace-content > div > aside:first-child,
+.investor-workspace-content > div > div > aside:first-child {
+  display: none !important;
+}
+
 .homepage-flow {
   isolation: isolate;
 }

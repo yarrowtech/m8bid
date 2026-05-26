@@ -12,6 +12,7 @@ import {
   FaRightFromBracket,
   FaUserShield,
 } from "react-icons/fa6";
+import { logoutUser } from "../../api/user";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
@@ -35,8 +36,9 @@ export default function AdminSidebar({
 
   const handleLogout = () => {
     Cookies.remove("token");
-    localStorage.removeItem("user");
-    navigate("/login");
+    logoutUser();
+    setOpen(false);
+    navigate("/login", { replace: true });
   };
 
   return (

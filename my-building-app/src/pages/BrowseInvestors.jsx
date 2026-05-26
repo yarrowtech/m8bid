@@ -4,6 +4,7 @@ import heroImg from "../assets/investors-hero.jpg";
 import sampleImg from "../assets/fundraising-example.jpg";
 import { getAllCampaigns } from "../api/campaign";
 import AccessModeModal from "../components/AccessModeModal.jsx";
+import SEO from "../components/SEO.jsx";
 
 const INR = (n) => {
   const num = Number(n || 0);
@@ -172,10 +173,10 @@ export default function BrowseInvestors() {
     y: 0,
     item: null,
   });
-  const [investAccessOpen, setInvestAccessOpen] = useState(false);
+  const [contributeAccessOpen, setContributeAccessOpen] = useState(false);
 
   const navigate = useNavigate();
-  const needsInvestorAccess = useMemo(() => {
+  const needsContributorAccess = useMemo(() => {
     try {
       const rawUser =
         localStorage.getItem("user") || localStorage.getItem("loggedInUser");
@@ -212,10 +213,10 @@ export default function BrowseInvestors() {
   }, []);
 
   useEffect(() => {
-    if (needsInvestorAccess) {
-      setInvestAccessOpen(true);
+    if (needsContributorAccess) {
+      setContributeAccessOpen(true);
     }
-  }, [needsInvestorAccess]);
+  }, [needsContributorAccess]);
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 60 * 1000);
@@ -419,6 +420,40 @@ export default function BrowseInvestors() {
   }, [filteredAndSorted]);
 
   return (
+    <>
+      <SEO
+        title="Browse Campaigns — Discover & Contribute to Verified Startups"
+        description="Discover active raising campaigns from verified startups, businesses, and founders on MateBid. Search, filter by location, evaluate funding progress and legal status, then contribute with full transparency."
+        keywords="browse campaigns, contribute to startups India, verified raising campaigns, startup contribution platform, business crowdfunding, contribute to campaigns, active campaigns MateBid, crowdfunding India, campaign funding progress, contributor platform"
+        canonical="/browse-investors"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "@id": "https://www.matebid.com/browse-investors",
+          name: "Browse Campaigns — Discover & Contribute to Verified Startups | M8BID",
+          description:
+            "Discover active Raising campaigns from verified startups, businesses, and founders. Search, filter, and contribute with full transparency on MateBid.",
+          url: "https://www.matebid.com/browse-investors",
+          isPartOf: { "@id": "https://www.matebid.com/#website" },
+          breadcrumb: {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://www.matebid.com",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Browse Campaigns",
+                item: "https://www.matebid.com/browse-investors",
+              },
+            ],
+          },
+        }}
+      />
     <section
       className="min-h-screen bg-white text-gray-900 [font-feature-settings:'ss01','cv02','cv03','cv04']"
       style={{
@@ -436,13 +471,13 @@ export default function BrowseInvestors() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-1 text-xs font-semibold tracking-wide text-blue-800 shadow-sm backdrop-blur">
                 <span className="h-2 w-2 rounded-full bg-blue-600" />
-                Verified fundraising & investor discovery
+                Verified raising & contributor discovery
               </div>
 
               <h1 className="mt-4 text-[2rem] font-semibold tracking-[-0.02em] leading-[1.05] text-gray-900 sm:text-5xl">
                 Discover Startups.
                 <span className="block bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">
-                  Invest with confidence.
+                  Contribute with confidence.
                 </span>
               </h1>
 
@@ -459,7 +494,7 @@ export default function BrowseInvestors() {
                   }}
                   className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold tracking-wide text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 active:scale-[0.99]"
                 >
-                  Start Investing Today
+                  Start Contributing Today
                   <span className="ml-2 transition group-hover:translate-x-0.5">→</span>
                 </button>
 
@@ -506,7 +541,7 @@ export default function BrowseInvestors() {
               <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/40 shadow-xl backdrop-blur">
                 <img
                   src={heroImg}
-                  alt="Investors Hero"
+                  alt="Contributors Hero"
                   className="h-[250px] w-full object-cover sm:h-[320px]"
                   loading="lazy"
                 />
@@ -894,13 +929,14 @@ export default function BrowseInvestors() {
       )}
 
       <AccessModeModal
-        open={investAccessOpen}
-        onClose={() => setInvestAccessOpen(false)}
+        open={contributeAccessOpen}
+        onClose={() => setContributeAccessOpen(false)}
         onLogin={() => navigate("/login")}
-        title="Investor account needed"
-        message="You need to login or create an investor account to invest in a campaign."
+        title="Contributor account needed"
+        message="You need to login or create a contributor account to contribute to a campaign."
         buttonLabel="Go to Login"
       />
-    </section>
+      </section>
+    </>
   );
 }

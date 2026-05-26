@@ -4,7 +4,7 @@ export const fundraisingCauses = [
     title: "Projects",
     tagline: "Raise for creative, technical, or community project execution.",
     overview:
-      "Project fundraising is useful when you are building something specific with a clear scope, timeline, and execution plan.",
+      "Project raising is useful when you are building something specific with a clear scope, timeline, and execution plan.",
     whatToInclude: [
       "Project goal, expected outcome, and timeline",
       "Budget split for tools, team, production, or launch",
@@ -17,7 +17,7 @@ export const fundraisingCauses = [
     title: "NGO",
     tagline: "Support social impact missions and nonprofit initiatives.",
     overview:
-      "NGO fundraising should communicate mission credibility, target beneficiaries, and transparent use of contributions.",
+      "NGO raising should communicate mission credibility, target beneficiaries, and transparent use of contributions.",
     whatToInclude: [
       "Mission statement and the exact social problem being addressed",
       "Who benefits and how many people are expected to be impacted",
@@ -30,7 +30,7 @@ export const fundraisingCauses = [
     title: "Education",
     tagline: "Fund tuition, learning resources, skilling, and training goals.",
     overview:
-      "Education fundraising works best with clear academic goals, fee details, and a realistic plan for completion.",
+      "Education raising works best with clear academic goals, fee details, and a realistic plan for completion.",
     whatToInclude: [
       "Course or academic objective and institution details",
       "Fee structure, books, tools, and living expense breakdown",
@@ -43,7 +43,7 @@ export const fundraisingCauses = [
     title: "Business",
     tagline: "Raise funds for expansion, operations, or growth initiatives.",
     overview:
-      "Business fundraising pages should show clarity on opportunity, traction, and how funds create measurable growth.",
+      "Business raising pages should show clarity on opportunity, traction, and how funds create measurable growth.",
     whatToInclude: [
       "Business model, market need, and current traction",
       "Use of funds across hiring, inventory, marketing, or operations",
@@ -56,7 +56,7 @@ export const fundraisingCauses = [
     title: "Medical Emergency",
     tagline: "Collect urgent support for treatment, surgery, or care.",
     overview:
-      "Medical emergency fundraising must be transparent, urgent, and respectful, with verified treatment details.",
+      "Medical emergency raising must be transparent, urgent, and respectful, with verified treatment details.",
     whatToInclude: [
       "Patient condition and treatment requirement in simple terms",
       "Hospital estimate, doctor notes, or treatment documentation",
@@ -69,7 +69,7 @@ export const fundraisingCauses = [
     title: "Companies",
     tagline: "Raise for corporate initiatives, product lines, or scaling plans.",
     overview:
-      "Company fundraising campaigns should communicate governance, purpose, and responsible use of contributor funds.",
+      "Company raising campaigns should communicate governance, purpose, and responsible use of contributor funds.",
     whatToInclude: [
       "Company profile, stage, and core product or service",
       "Funding objective tied to specific business outcomes",
@@ -82,7 +82,7 @@ export const fundraisingCauses = [
     title: "Startups",
     tagline: "Launch and scale early-stage startup ideas with community backing.",
     overview:
-      "Startup fundraising needs a strong problem-solution story, market potential, and a milestone-driven launch plan.",
+      "Startup raising needs a strong problem-solution story, market potential, and a milestone-driven launch plan.",
     whatToInclude: [
       "Problem statement, solution, and target users",
       "MVP status, early validation, or pilot results",

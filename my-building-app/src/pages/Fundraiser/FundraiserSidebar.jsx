@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -9,6 +10,7 @@ import {
   LogOut,
   Gavel,
 } from "lucide-react";
+import { logoutUser } from "../../api/user";
 
 function SidebarItem({ icon: Icon, label, active = false, onClick }) {
   return (
@@ -40,27 +42,19 @@ export default function FundraiserSidebar({
 }) {
   const navigate = useNavigate();
 
-  // ✅ WORKING LOGOUT FUNCTION
   const handleLogout = () => {
-    // Clear all auth data
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("activeMode");
+    Cookies.remove("token");
+    logoutUser();
 
-    sessionStorage.clear();
-
-    // Reset React state (important for UI update)
     if (setLoggedInUser) {
       setLoggedInUser(null);
     }
 
-    // Redirect to homepage
-    navigate("/", { replace: true });
+    navigate("/login", { replace: true });
   };
 
   return (
-    <aside className="hidden xl:flex xl:w-[255px] shrink-0 flex-col border-r border-slate-200 bg-white px-5 py-5">
+    <aside className="hidden h-screen xl:flex xl:w-[255px] shrink-0 flex-col border-r border-slate-200 bg-white px-5 py-5">
       <button
         onClick={() => navigate("/")}
         className="flex items-center gap-3 text-left"
@@ -72,7 +66,7 @@ export default function FundraiserSidebar({
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
             M8BID
           </h2>
-          <p className="text-[11px] text-slate-400">Fundraiser Portal</p>
+          <p className="text-[11px] text-slate-400">Raiser Portal</p>
         </div>
       </button>
 
@@ -115,12 +109,12 @@ export default function FundraiserSidebar({
         </div>
       </div>
 
-      <div className="mt-auto pt-8">
+      <div className="mt-auto border-t border-slate-100 pt-4">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+          className="flex w-full items-center gap-3 rounded-2xl bg-rose-50 px-3 py-3 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-100"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-rose-600">
             <LogOut size={17} />
           </span>
           Logout

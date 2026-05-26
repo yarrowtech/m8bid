@@ -230,7 +230,7 @@ function ProfileDropdown({ user, navigate }) {
                 Update your KYC & Documents
               </p>
               <p className="text-[11px] text-slate-400">
-                Upload fundraiser required documents
+                Upload Raiser required documents
               </p>
             </div>
           </button>
@@ -264,7 +264,7 @@ function ProfileDropdown({ user, navigate }) {
                 Profile Settings
               </p>
               <p className="text-[11px] text-slate-400">
-                Manage your fundraiser account
+                Manage your Raiser account
               </p>
             </div>
           </button>
@@ -315,7 +315,7 @@ const normalizeProfileStatus = (value, type = "default") => {
   return value || "-";
 };
 
-export default function FundraiserDashboard() {
+export default function FundraiserDashboard({ embedded = false }) {
   const navigate = useNavigate();
   const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -440,11 +440,240 @@ export default function FundraiserDashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#f5f8fc]">
+      <div className="flex h-screen flex-1 items-center justify-center bg-[#f5f8fc]">
         <p className="text-lg font-semibold text-slate-700">Loading dashboard...</p>
       </div>
     );
   }
+
+  const content = (
+    <div className="flex min-w-0 flex-1">
+      <main
+        className="min-w-0 flex-1 overflow-y-auto border-l border-slate-200 bg-[#f5f8fc] px-4 py-4 scrollbar-hide md:px-5"
+        style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative w-full max-w-[380px]">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search your campaigns..."
+              className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:bg-white"
+            />
+          </div>
+
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              <Home size={15} />
+              Home
+            </button>
+
+            <TopIconButton>
+              <Mail size={14} />
+            </TopIconButton>
+
+            <TopIconButton>
+              <Bell size={14} />
+            </TopIconButton>
+
+            <div className="h-6 w-px bg-slate-200" />
+
+            <ProfileDropdown user={user} navigate={navigate} />
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-start justify-between gap-4">
+          <div className="flex-1 rounded-[24px] bg-gradient-to-r from-sky-600 to-indigo-600 px-5 py-5 text-white shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-100">
+              Raiser Dashboard
+            </p>
+
+            <h1 className="mt-2 text-[22px] font-semibold leading-tight md:text-[24px]">
+              Manage your Raiser profile, documents, campaigns and withdrawals.
+            </h1>
+
+            <div className="mt-2 text-sm text-sky-100">
+              Hello {firstName}, all your real Raiser data is shown here.
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => navigate("/start-fundraiser")}
+                className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-md transition hover:bg-slate-100 active:scale-[0.98]"
+              >
+                Start Raising
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-white">
+                  <ArrowRight size={13} />
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate("/browse-investors")}
+                className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 active:scale-[0.98]"
+              >
+                Explore Contributing Opportunities →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="mt-5 grid gap-5 md:grid-cols-3">
+          {stats.map((item, i) => (
+            <MiniStatCard key={i} {...item} />
+          ))}
+        </div>
+
+        <section className="mt-5 rounded-[24px] bg-[#f5f8fc]">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-[22px] font-semibold tracking-tight text-slate-900">
+              Campaign Cards
+            </h2>
+
+            <button
+              onClick={() => navigate("/fundraiser/campaigns")}
+              className="text-sm font-semibold text-sky-700 hover:text-sky-800"
+            >
+              See all
+            </button>
+          </div>
+
+          <div className="mt-3 pr-2">
+            {filteredFundraisers.length === 0 ? (
+              <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-8 text-center">
+                <p className="text-lg font-semibold text-slate-800">
+                  No campaigns found
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Create a Raiser and it will appear here.
+                </p>
+                <button
+                  onClick={() => navigate("/start-fundraiser")}
+                  className="mt-4 rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Create Campaign
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-3 xl:grid-cols-3">
+                {filteredFundraisers.map((item) => (
+                  <CampaignCard
+                    key={item._id}
+                    tag={item.projectCategory}
+                    title={item.projectTitle}
+                    raised={formatINR(item.raisedAmount)}
+                    target={formatINR(item.moneyToRaise)}
+                    status={item.status}
+                    daysLeft={calcDaysLeft(item.deadline)}
+                    progress={calcProgress(item.raisedAmount, item.moneyToRaise)}
+                    onView={() =>
+                      navigate(`/investment-detail/${item._id}`, {
+                        state: { campaign: item },
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <aside className="hidden w-[320px] shrink-0 border-l border-slate-200 bg-white px-4 py-5 xl:block">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[28px] font-semibold tracking-tight text-slate-900">
+            My Raiser Profile
+          </h3>
+        </div>
+
+        <div
+          onClick={() => navigate("/fundraiser/profile")}
+          className="mt-5 flex cursor-pointer flex-col items-center rounded-[24px] border border-slate-100 bg-[#fafcff] p-4 transition hover:bg-slate-50 hover:shadow-sm"
+        >
+          <div className="relative flex h-[122px] w-[122px] items-center justify-center rounded-full border-[8px] border-sky-100">
+            <div className="absolute inset-0 rotate-[28deg] rounded-full border-[8px] border-transparent border-r-sky-500 border-t-indigo-500" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 to-indigo-200 text-lg font-semibold text-slate-800">
+              {user?.name?.charAt(0) || "J"}
+            </div>
+
+            <div className="absolute right-0 top-4 rounded-full bg-blue-600 px-2 py-0.5 text-[9px] font-semibold text-white">
+              {approvedCount > 0 ? "Live" : "New"}
+            </div>
+          </div>
+
+          <h4 className="mt-4 text-center text-[25px] font-semibold tracking-tight text-slate-900">
+            Hello {firstName} ðŸ‘‹
+          </h4>
+          <p className="mt-1 max-w-[230px] text-center text-[11px] leading-5 text-slate-500">
+            Complete your fundraiser profile to improve campaign trust and approvals.
+          </p>
+          <p className="mt-2 text-xs font-medium text-sky-700">
+            View Profile â†’
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-3">
+          <div onClick={() => navigate("/fundraiser/profile")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+            <RightMetricCard title="Profile Completion" value={`${profileCompletion}%`} sub="Based on live profile, KYC, and bank details" icon={BadgeCheck} tone="sky" />
+          </div>
+          <div onClick={() => navigate("/fundraiser/profile/kyc")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+            <RightMetricCard
+              title="KYC Status"
+              value={String(kycStatus)}
+              sub="Live status from your fundraiser profile"
+              icon={FileCheck}
+              tone={String(kycStatus).toLowerCase().includes("approved") || String(kycStatus).toLowerCase().includes("verified") ? "emerald" : String(kycStatus).toLowerCase().includes("rejected") ? "rose" : "amber"}
+            />
+          </div>
+          <div onClick={() => navigate("/fundraiser/profile/bank")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+            <RightMetricCard
+              title="Bank Account"
+              value={bankStatus}
+              sub="Live status from your linked bank details"
+              icon={Landmark}
+              tone={bankLinked ? "emerald" : String(bankStatus).toLowerCase().includes("rejected") ? "rose" : "indigo"}
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          <div onClick={() => navigate("/fundraiser/campaigns")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+            <RightMetricCard title="Approved Campaigns" value={String(approvedCount).padStart(2, "0")} sub="Visible to investors" icon={BriefcaseBusiness} tone="sky" />
+          </div>
+          <div onClick={() => navigate("/fundraiser/analytics")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+            <RightMetricCard title="Total Raised" value={formatINR(totalRaised)} sub={`Against target ${formatINR(totalTarget)}`} icon={IndianRupee} tone="emerald" />
+          </div>
+          <div onClick={() => navigate("/fundraiser/withdrawals")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+            <RightMetricCard title="Total Withdrawals" value={formatINR(0)} sub="Withdrawal system not connected yet" icon={CircleDollarSign} tone="indigo" />
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          <PrimaryBlueButton onClick={() => navigate("/fundraiser/profile/kyc")} fullWidth>
+            Update KYC & Documents
+          </PrimaryBlueButton>
+          <PrimaryBlueButton onClick={() => navigate("/fundraiser/profile/bank")} fullWidth>
+            Link Bank Account
+          </PrimaryBlueButton>
+        </div>
+      </aside>
+    </div>
+  );
+
+  if (embedded) return content;
 
   return (
     <div
@@ -456,297 +685,7 @@ export default function FundraiserDashboard() {
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f5f8fc]">
         <FundraiserSidebar active="dashboard" />
-
-        <div className="flex min-w-0 flex-1">
-          <main
-            className="min-w-0 flex-1 overflow-y-auto border-l border-slate-200 bg-[#f5f8fc] px-4 py-4 scrollbar-hide md:px-5"
-            style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="relative w-full max-w-[380px]">
-                <Search
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search your campaigns..."
-                  className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:bg-white"
-                />
-              </div>
-
-              <div className="ml-auto flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => navigate("/")}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                >
-                  <Home size={15} />
-                  Home
-                </button>
-
-                <TopIconButton>
-                  <Mail size={14} />
-                </TopIconButton>
-
-                <TopIconButton>
-                  <Bell size={14} />
-                </TopIconButton>
-
-                <div className="h-6 w-px bg-slate-200" />
-
-                <ProfileDropdown user={user} navigate={navigate} />
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-start justify-between gap-4">
-              <div className="flex-1 rounded-[24px] bg-gradient-to-r from-sky-600 to-indigo-600 px-5 py-5 text-white shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-100">
-                  Fundraiser Dashboard
-                </p>
-
-                <h1 className="mt-2 text-[22px] font-semibold leading-tight md:text-[24px]">
-                  Manage your fundraiser profile, documents, campaigns and withdrawals.
-                </h1>
-
-                <div className="mt-2 text-sm text-sky-100">
-                  Hello {firstName}, all your real fundraiser data is shown here.
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={() => navigate("/start-fundraiser")}
-                    className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-md transition hover:bg-slate-100 active:scale-[0.98]"
-                  >
-                    Start a Fundraiser
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-white">
-                      <ArrowRight size={13} />
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => navigate("/browse-investors")}
-                    className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 active:scale-[0.98]"
-                  >
-                    Explore Investments →
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {error ? (
-              <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {error}
-              </div>
-            ) : null}
-
-            <div className="mt-5 grid gap-5 md:grid-cols-3">
-              {stats.map((item, i) => (
-                <MiniStatCard key={i} {...item} />
-              ))}
-            </div>
-
-            <section className="mt-5 rounded-[24px] bg-[#f5f8fc]">
-              <div className="flex items-center justify-between px-1">
-                <h2 className="text-[22px] font-semibold tracking-tight text-slate-900">
-                  Campaign Cards
-                </h2>
-
-                <button
-                  onClick={() => navigate("/fundraiser/campaigns")}
-                  className="text-sm font-semibold text-sky-700 hover:text-sky-800"
-                >
-                  See all
-                </button>
-              </div>
-
-              <div className="mt-3 pr-2">
-                {filteredFundraisers.length === 0 ? (
-                  <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-8 text-center">
-                    <p className="text-lg font-semibold text-slate-800">
-                      No campaigns found
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Create a fundraiser and it will appear here.
-                    </p>
-                    <button
-                      onClick={() => navigate("/start-fundraiser")}
-                      className="mt-4 rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                    >
-                      Create Campaign
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid gap-3 xl:grid-cols-3">
-                    {filteredFundraisers.map((item) => (
-                     <CampaignCard
-  key={item._id}
-  tag={item.projectCategory}
-  title={item.projectTitle}
-  raised={formatINR(item.raisedAmount)}
-  target={formatINR(item.moneyToRaise)}
-  status={item.status}
-  daysLeft={calcDaysLeft(item.deadline)}
-  progress={calcProgress(item.raisedAmount, item.moneyToRaise)}
-   onView={() =>
-  navigate(`/investment-detail/${item._id}`, {
-    state: { campaign: item },
-  })
-}
-/>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </section>
-          </main>
-
-          <aside className="hidden w-[320px] shrink-0 border-l border-slate-200 bg-white px-4 py-5 xl:block">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[28px] font-semibold tracking-tight text-slate-900">
-                My Fundraiser Profile
-              </h3>
-            </div>
-
-            <div
-              onClick={() => navigate("/fundraiser/profile")}
-              className="mt-5 flex cursor-pointer flex-col items-center rounded-[24px] border border-slate-100 bg-[#fafcff] p-4 transition hover:bg-slate-50 hover:shadow-sm"
-            >
-              <div className="relative flex h-[122px] w-[122px] items-center justify-center rounded-full border-[8px] border-sky-100">
-                <div className="absolute inset-0 rotate-[28deg] rounded-full border-[8px] border-transparent border-r-sky-500 border-t-indigo-500" />
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 to-indigo-200 text-lg font-semibold text-slate-800">
-                  {user?.name?.charAt(0) || "J"}
-                </div>
-
-                <div className="absolute right-0 top-4 rounded-full bg-blue-600 px-2 py-0.5 text-[9px] font-semibold text-white">
-                  {approvedCount > 0 ? "Live" : "New"}
-                </div>
-              </div>
-
-              <h4 className="mt-4 text-center text-[25px] font-semibold tracking-tight text-slate-900">
-                Hello {firstName} 👋
-              </h4>
-              <p className="mt-1 max-w-[230px] text-center text-[11px] leading-5 text-slate-500">
-                Complete your fundraiser profile to improve campaign trust and approvals.
-              </p>
-              <p className="mt-2 text-xs font-medium text-sky-700">
-                View Profile →
-              </p>
-            </div>
-
-            <div className="mt-5 grid gap-3">
-              <div
-                onClick={() => navigate("/fundraiser/profile")}
-                className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <RightMetricCard
-                  title="Profile Completion"
-                  value={`${profileCompletion}%`}
-                  sub="Based on live profile, KYC, and bank details"
-                  icon={BadgeCheck}
-                  tone="sky"
-                />
-              </div>
-
-              <div
-                onClick={() => navigate("/fundraiser/profile/kyc")}
-                className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <RightMetricCard
-                  title="KYC Status"
-                  value={String(kycStatus)}
-                  sub="Live status from your fundraiser profile"
-                  icon={FileCheck}
-                  tone={
-                    String(kycStatus).toLowerCase().includes("approved") ||
-                    String(kycStatus).toLowerCase().includes("verified")
-                      ? "emerald"
-                      : String(kycStatus).toLowerCase().includes("rejected")
-                      ? "rose"
-                      : "amber"
-                  }
-                />
-              </div>
-
-              <div
-                onClick={() => navigate("/fundraiser/profile/bank")}
-                className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <RightMetricCard
-                  title="Bank Account"
-                  value={bankStatus}
-                  sub="Live status from your linked bank details"
-                  icon={Landmark}
-                  tone={
-                    bankLinked
-                      ? "emerald"
-                      : String(bankStatus).toLowerCase().includes("rejected")
-                      ? "rose"
-                      : "indigo"
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              <div
-                onClick={() => navigate("/fundraiser/campaigns")}
-                className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <RightMetricCard
-                  title="Approved Campaigns"
-                  value={String(approvedCount).padStart(2, "0")}
-                  sub="Visible to investors"
-                  icon={BriefcaseBusiness}
-                  tone="sky"
-                />
-              </div>
-
-              <div
-                onClick={() => navigate("/fundraiser/analytics")}
-                className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <RightMetricCard
-                  title="Total Raised"
-                  value={formatINR(totalRaised)}
-                  sub={`Against target ${formatINR(totalTarget)}`}
-                  icon={IndianRupee}
-                  tone="emerald"
-                />
-              </div>
-
-              <div
-                onClick={() => navigate("/fundraiser/withdrawals")}
-                className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <RightMetricCard
-                  title="Total Withdrawals"
-                  value={formatINR(0)}
-                  sub="Withdrawal system not connected yet"
-                  icon={CircleDollarSign}
-                  tone="indigo"
-                />
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              <PrimaryBlueButton
-                onClick={() => navigate("/fundraiser/profile/kyc")}
-                fullWidth
-              >
-                Update KYC & Documents
-              </PrimaryBlueButton>
-
-              <PrimaryBlueButton
-                onClick={() => navigate("/fundraiser/profile/bank")}
-                fullWidth
-              >
-                Link Bank Account
-              </PrimaryBlueButton>
-            </div>
-          </aside>
-        </div>
+        {content}
       </div>
     </div>
   );

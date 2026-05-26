@@ -130,7 +130,7 @@ export default function Hero() {
   const navigate = useNavigate();
   const [fundraiseBlockedOpen, setFundraiseBlockedOpen] = useState(false);
   const [fundraiseBlockedMessage, setFundraiseBlockedMessage] = useState(
-    "You need to login or register account as a fundraiser to start a fundraising campaign."
+    "You need to login or register account as a raiser to start a raising campaign."
   );
 
   const getSessionUser = () => {
@@ -149,7 +149,7 @@ export default function Hero() {
 
     if (!hasSession) {
       setFundraiseBlockedMessage(
-        "You need to login or register account as a fundraiser to start a fundraising campaign."
+        "You need to login or register account as a raiser to start a raising campaign."
       );
       setFundraiseBlockedOpen(true);
       return;
@@ -157,7 +157,7 @@ export default function Hero() {
 
     if (user?.activeMode === "investor") {
       setFundraiseBlockedMessage(
-        "Warning: You are currently logged in as an investor. A fundraiser account is needed to access fundraising actions."
+        "Warning: You are currently logged in as an investor. A raiser account is needed to access raising actions."
       );
       setFundraiseBlockedOpen(true);
       return;
@@ -176,8 +176,8 @@ export default function Hero() {
     >
       {/* Top banner */}
       <div className="w-full bg-gradient-to-r from-blue-600 to-indigo-800 text-white text-center py-3 px-4 text-sm md:text-base font-medium tracking-wide">
-        🎉 Special Offer: Launch your startup fundraiser and get bonus visibility
-        + reduced platform fees
+        🎉 Special Offer: Launch your startup raiser and get bonus visibility
+          + reduced platform fees
       </div>
 
       <section className="relative min-h-screen overflow-hidden px-6 pt-10 pb-16 md:px-10 lg:px-14">
@@ -252,14 +252,14 @@ export default function Hero() {
             </div>
 
             <h1 className="mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl">
-              Start fundraising
+              Start raising
               <span className="block bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent">
                 journey here
               </span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-700 md:text-lg">
-              Launch your campaign with a polished fundraising experience,
+              Launch your campaign with a polished raising experience,
               inspire confidence, and raise support through a secure,
               professional platform built for modern startups and founders.
             </p>
@@ -269,7 +269,7 @@ export default function Hero() {
                 onClick={handleStartFundraiserClick}
                 className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-4 text-base font-semibold tracking-wide text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 active:scale-[0.99]"
               >
-                Start A Fundraiser
+                Start A Raiser
                 <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-0.5" />
               </button>
 
