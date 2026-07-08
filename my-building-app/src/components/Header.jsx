@@ -567,7 +567,7 @@ export default function Header() {
             <img
               src={finallogo}
               alt="M8BID logo"
-              className="h-11 w-auto object-contain"
+              className="h-11 w-auto origin-left object-contain scale-115 md:scale-130"
             />
           </div>
 
