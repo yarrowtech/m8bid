@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "react-snap",
+    "postbuild": "node scripts/postbuild.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -17,7 +17,10 @@
       "removeComments": false
     },
     "skipThirdPartyRequests": true,
-    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ],
     "routes": [
       "/",
       "/matebid",
@@ -34,12 +37,14 @@
     "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.3.1",
     "@mui/x-charts": "^8.9.2",
+    "@sparticuz/chromium-min": "^147.0.2",
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",
     "js-cookie": "^3.0.5",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.576.0",
     "multer": "^2.0.2",
+    "puppeteer-core": "^24.42.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-helmet-async": "^3.0.0",
