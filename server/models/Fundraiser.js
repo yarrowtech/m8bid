@@ -1,6 +1,21 @@
 // models/Fundraiser.js
 const mongoose = require("mongoose");
 
+const documentSchema = new mongoose.Schema(
+  {
+    key: { type: String, required: true },
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    kind: {
+      type: String,
+      enum: ["LICENSE", "KYC", "PAN", "GST", "OTHER"],
+      default: "OTHER",
+    },
+    required: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 const fundraiserSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -8,27 +23,12 @@ const fundraiserSchema = new mongoose.Schema(
     projectTitle: { type: String, required: true, trim: true },
     projectOverview: { type: String, required: true, trim: true },
 
-    projectCategory: {
-      type: String,
-      enum: [
-        "technology",
-        "fintech",
-        "education",
-        "ecommerce",
-        "manufacturing",
-        "agriculture",
-        "cleanenergy",
-        "realestate",
-        "hospitality",
-        "transport",
-        "food",
-        "retail",
-        "sports",
-        "creative",
-        "others",
-      ],
-      required: true,
-    },
+    campaignType: { type: String, default: "" },
+    campaignSubcategory: { type: String, default: "" },
+    entityName: { type: String, default: "" },
+    useOfFunds: { type: String, default: "" },
+
+    projectCategory: { type: String, required: true, trim: true },
 
     projectLocation: {
       state: { type: String, default: "" },
@@ -62,6 +62,8 @@ const fundraiserSchema = new mongoose.Schema(
     gst: { type: String, default: "" },
     companyRegistration: { type: String, default: "" },
     legalDocument: { type: String, default: "" },
+    documents: { type: [documentSchema], default: [] },
+    documentProfile: { type: [mongoose.Schema.Types.Mixed], default: [] },
 
 
 

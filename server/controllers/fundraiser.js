@@ -4,35 +4,122 @@ const Fundraiser = require("../models/Fundraiser");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 const User = require("../models/userSchema");
 
-const ALLOWED_CATEGORIES = [
-  "technology",
-  "fintech",
-  "education",
-  "ecommerce",
-  "manufacturing",
-  "agriculture",
-  "cleanenergy",
-  "realestate",
-  "hospitality",
-  "transport",
-  "food",
-  "retail",
-  "sports",
-  "creative",
-  "others",
-];
-
 const ALLOWED_FUNDING_TYPES = ["Profit Return", "Non-Profit Return"];
+const ALLOWED_CAMPAIGN_TYPES = ["ngo", "business", "medical", "education", "company", "startup", "project"];
+const ALLOWED_BUSINESS_VARIANTS = ["small-business", "food-business", "normal-business", "custom"];
+
+const DOCUMENT_KIND_BY_FIELD = {
+  ngoRegistration: "LICENSE",
+  tradeLicence: "LICENSE",
+  trustDeed: "OTHER",
+  trustAgreement: "OTHER",
+  ngoDetails: "OTHER",
+  ownerNames: "OTHER",
+  impactProof: "OTHER",
+
+  businessRegistration: "LICENSE",
+  businessAddressProof: "OTHER",
+  businessDocuments: "OTHER",
+  shopAddressProof: "OTHER",
+  addressLicence: "LICENSE",
+  hawkerLicence: "LICENSE",
+  businessProof: "OTHER",
+  foodLicence: "LICENSE",
+  fireLicence: "LICENSE",
+  placeLicence: "LICENSE",
+
+  hospitalQuotation: "OTHER",
+  prescription: "OTHER",
+  healthRecord: "KYC",
+  operationDocument: "OTHER",
+
+  trademark: "OTHER",
+  patent: "OTHER",
+  registrationCertificate: "LICENSE",
+  moa: "OTHER",
+  aoa: "OTHER",
+  pitchDeck: "OTHER",
+
+  admissionLetter: "OTHER",
+  feeStructure: "OTHER",
+  academicProof: "OTHER",
+
+  incorporationCertificate: "LICENSE",
+  gstCertificate: "GST",
+  financialStatement: "OTHER",
+  boardResolution: "OTHER",
+
+  projectProposal: "OTHER",
+  estimateSheet: "OTHER",
+  approvalLetter: "LICENSE",
+  planBlueprint: "OTHER",
+
+  supportingDocument: "OTHER",
+  budgetEstimate: "OTHER",
+  additionalProof: "OTHER",
+
+  businessPlan: "OTHER",
+  financialReport: "OTHER",
+  doctorNote: "OTHER",
+  hospitalEstimate: "OTHER",
+  diagnosisReport: "OTHER",
+  mvpProof: "OTHER",
+  tractionProof: "OTHER",
+};
+
+const REQUIRED_DOCUMENTS = {
+  ngo: ["ngoRegistration", "tradeLicence", "trustDeed", "trustAgreement", "ngoDetails", "ownerNames"],
+  medical: ["hospitalQuotation", "prescription", "healthRecord"],
+  education: ["admissionLetter", "feeStructure"],
+  company: ["incorporationCertificate", "gstCertificate", "financialStatement"],
+  startup: ["trademark", "tradeLicence", "registrationCertificate", "moa", "aoa"],
+  project: ["projectProposal", "estimateSheet", "approvalLetter"],
+  business: {
+    default: ["businessRegistration", "businessAddressProof", "tradeLicence"],
+    "small-business": ["shopAddressProof", "addressLicence", "businessProof"],
+    "food-business": ["foodLicence", "fireLicence", "placeLicence"],
+  },
+};
 
 const toNum = (v, def = 0) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : def;
 };
 
+const escapeRegex = (value = "") => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const toBool = (v) =>
   v === true || v === "true" || v === 1 || v === "1";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const normalizeFilesInput = (files) => {
+  if (!files) return {};
+  if (Array.isArray(files)) {
+    return files.reduce((acc, file) => {
+      if (!file?.fieldname) return acc;
+      if (!acc[file.fieldname]) acc[file.fieldname] = [];
+      acc[file.fieldname].push(file);
+      return acc;
+    }, {});
+  }
+  return files;
+};
+
+const getBusinessVariant = (value = "") => {
+  const normalized = String(value).toLowerCase();
+  if (normalized.includes("small")) return "small-business";
+  if (normalized.includes("food")) return "food-business";
+  return "normal-business";
+};
+
+const getRequiredDocuments = (campaignType, campaignSubcategory) => {
+  if (campaignType === "business") {
+    const variant = getBusinessVariant(campaignSubcategory);
+    return REQUIRED_DOCUMENTS.business[variant] || REQUIRED_DOCUMENTS.business.default;
+  }
+  return REQUIRED_DOCUMENTS[campaignType] || [];
+};
 
 const uploadSingle = async (files, field, folder) => {
   const file = files?.[field]?.[0];
@@ -63,20 +150,43 @@ const uploadOptionalFile = async (files, field, folder, fallback = "") => {
 
 const createFundRaiser = async (req, res) => {
   try {
-    const { id: userId } = req.params;
+    const { id: routeUserId } = req.params;
+    const authenticatedUserId = req.user?._id?.toString();
 
-    if (!userId || !isValidObjectId(userId)) {
+    if (!authenticatedUserId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. Please log in again.",
+      });
+    }
+
+    if (
+      routeUserId &&
+      isValidObjectId(routeUserId) &&
+      String(routeUserId) !== authenticatedUserId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only create a fundraiser for your own account",
+      });
+    }
+
+    if (!isValidObjectId(authenticatedUserId)) {
       return res.status(400).json({
         success: false,
         message: "Valid user id is required",
       });
     }
 
-    const files = req.files || {};
+    const files = normalizeFilesInput(req.files);
 
     const projectTitle = (req.body.projectTitle || "").trim();
     const projectOverview = (req.body.projectOverview || "").trim();
+    const campaignType = (req.body.campaignType || "").trim().toLowerCase();
+    const campaignSubcategory = (req.body.campaignSubcategory || "").trim();
     const projectCategory = (req.body.projectCategory || "").trim();
+    const entityName = (req.body.entityName || "").trim();
+    const useOfFunds = (req.body.useOfFunds || "").trim();
     const fundingType = (req.body.fundingType || "").trim();
     const introduction = (req.body.introduction || "").trim();
 
@@ -101,11 +211,21 @@ const createFundRaiser = async (req, res) => {
       });
     }
 
-    if (!projectCategory || !ALLOWED_CATEGORIES.includes(projectCategory)) {
+    if (!campaignType || !ALLOWED_CAMPAIGN_TYPES.includes(campaignType)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid project category",
+        message: "Invalid campaign type",
       });
+    }
+
+    if (campaignType === "business") {
+      const variant = getBusinessVariant(campaignSubcategory || projectCategory);
+      if (!ALLOWED_BUSINESS_VARIANTS.includes(variant)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid business subcategory",
+        });
+      }
     }
 
     if (!ALLOWED_FUNDING_TYPES.includes(fundingType)) {
@@ -136,6 +256,20 @@ const createFundRaiser = async (req, res) => {
       });
     }
 
+    if (!entityName) {
+      return res.status(400).json({
+        success: false,
+        message: "Entity name is required",
+      });
+    }
+
+    if (!useOfFunds) {
+      return res.status(400).json({
+        success: false,
+        message: "Use of funds is required",
+      });
+    }
+
     if (fundingType === "Profit Return" && profitPercentage < 0) {
       return res.status(400).json({
         success: false,
@@ -143,11 +277,37 @@ const createFundRaiser = async (req, res) => {
       });
     }
 
+    const requiredDocs = getRequiredDocuments(campaignType, campaignSubcategory || projectCategory);
+    const missingRequiredDoc = requiredDocs.find((field) => !files?.[field]?.[0]);
+    if (missingRequiredDoc) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required document: ${missingRequiredDoc}`,
+      });
+    }
+
+    const normalizedDocumentProfile = (() => {
+      try {
+        const parsed = JSON.parse(req.body.documentProfile || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    })();
+
+    const resolvedProjectCategory =
+      projectCategory ||
+      `${campaignType.toUpperCase()} / ${campaignSubcategory || "General"}`;
+
     const payload = {
-      userId,
+      userId: authenticatedUserId,
       projectTitle,
       projectOverview,
-      projectCategory,
+      campaignType,
+      campaignSubcategory,
+      entityName,
+      useOfFunds,
+      projectCategory: resolvedProjectCategory,
 
       projectLocation: {
         state: (req.body.state || "").trim(),
@@ -161,12 +321,12 @@ const createFundRaiser = async (req, res) => {
       profitPercentage,
       introduction,
 
-   
       promotion: req.body.promotion === "yes" ? "yes" : "no",
       promoteCampaign: toBool(req.body.promoteCampaign),
 
       // better default for admin workflow
       status: "pending",
+      documents: [],
     };
 
     if (req.body.deadline) {
@@ -203,19 +363,39 @@ const createFundRaiser = async (req, res) => {
       "fundraisers/promo"
     );
 
-    // docs
-    payload.license = await uploadSingle(files, "license", "fundraisers/docs");
-    payload.gst = await uploadSingle(files, "gst", "fundraisers/docs");
-    payload.companyRegistration = await uploadSingle(
-      files,
-      "companyRegistration",
-      "fundraisers/docs"
-    );
-    payload.legalDocument = await uploadSingle(
-      files,
-      "legalDocument",
-      "fundraisers/docs"
-    );
+    const docFiles = [];
+    for (const [fieldName, fileList] of Object.entries(files)) {
+      if (!DOCUMENT_KIND_BY_FIELD[fieldName]) continue;
+
+      for (const file of fileList) {
+        const uploaded = await uploadToCloudinary(file, "fundraisers/docs");
+        const url = uploaded?.secure_url || "";
+        if (!url) continue;
+
+        docFiles.push({
+          key: fieldName,
+          name: file.originalname || file.fieldname || fieldName,
+          url,
+          kind: DOCUMENT_KIND_BY_FIELD[fieldName] || "OTHER",
+          required: requiredDocs.includes(fieldName),
+        });
+      }
+    }
+
+    payload.documents = docFiles;
+    payload.documentProfile = normalizedDocumentProfile;
+
+    const aliasByPriority = {
+      license: ["tradeLicence", "businessRegistration", "foodLicence", "shopAddressProof", "approvalLetter", "projectProposal"],
+      gst: ["gstCertificate"],
+      companyRegistration: ["registrationCertificate", "incorporationCertificate"],
+      legalDocument: ["trustDeed", "trustAgreement", "moa", "aoa", "boardResolution", "operationDocument"],
+    };
+
+    for (const [alias, fields] of Object.entries(aliasByPriority)) {
+      const match = docFiles.find((doc) => fields.includes(doc.key));
+      if (match) payload[alias] = match.url;
+    }
 
     const created = await Fundraiser.create(payload);
 
@@ -267,8 +447,8 @@ const getAllFundraisers = async (req, res) => {
   try {
     const query = { status: "approved" };
 
-    if (req.query.category && ALLOWED_CATEGORIES.includes(req.query.category)) {
-      query.projectCategory = req.query.category;
+    if (req.query.category) {
+      query.projectCategory = new RegExp(escapeRegex(req.query.category), "i");
     }
 
     const data = await Fundraiser.find(query)

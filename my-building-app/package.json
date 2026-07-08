@@ -6,8 +6,26 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "react-snap",
     "lint": "eslint .",
     "preview": "vite preview"
+  },
+  "reactSnap": {
+    "source": "dist",
+    "minifyHtml": {
+      "collapseWhitespace": false,
+      "removeComments": false
+    },
+    "skipThirdPartyRequests": true,
+    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
+    "routes": [
+      "/",
+      "/matebid",
+      "/about",
+      "/contact",
+      "/how-to-start-a-fundraising",
+      "/how-to-invest"
+    ]
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -39,6 +57,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
+    "react-snap": "^1.23.0",
     "rollup": "^4.44.1",
     "vite": "^7.0.0"
   }

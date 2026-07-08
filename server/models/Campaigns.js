@@ -1,5 +1,20 @@
 const mongoose = require("mongoose");
 
+const documentSchema = new mongoose.Schema(
+  {
+    key: { type: String, required: true },
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    kind: {
+      type: String,
+      enum: ["LICENSE", "KYC", "PAN", "GST", "OTHER"],
+      default: "OTHER",
+    },
+    required: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 const recentDonorSchema = new mongoose.Schema(
   {
     author: { type: String, default: "Anonymous" },
@@ -52,11 +67,12 @@ const campaignSchema = new mongoose.Schema(
     projectTitle: { type: String, required: true, trim: true },
     projectOverview: { type: String, required: true, trim: true },
 
-    projectCategory: {
-      type: String,
-      enum: ["Business", "Startup", "Company Growth"],
-      required: true,
-    },
+    campaignType: { type: String, default: "" },
+    campaignSubcategory: { type: String, default: "" },
+    entityName: { type: String, default: "" },
+    useOfFunds: { type: String, default: "" },
+
+    projectCategory: { type: String, required: true, trim: true },
 
     projectLocation: {
       state: { type: String, default: "" },
@@ -96,7 +112,8 @@ const campaignSchema = new mongoose.Schema(
     kyc: { type: String, default: "" },
     pan: { type: String, default: "" },
 
-    documents: { type: [docSchema], default: [] },
+    documents: { type: [documentSchema], default: [] },
+    documentProfile: { type: [mongoose.Schema.Types.Mixed], default: [] },
 
     bankDetails: {
       bankName: { type: String, default: "" },

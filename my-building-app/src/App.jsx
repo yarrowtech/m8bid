@@ -21,7 +21,6 @@ import MoneyGrowth from "./components/MoneyGrowth.jsx";
 import Testimonials from "./components/Testimonials.jsx";
 import FundraisingCauses from "./components/FundraisingCauses.jsx";
 import WhatWeProvide from "./components/WhatWeProvide.jsx";
-import ProtectedRoute from "./pages/ProtectedRoutes.jsx";
 import PageTransition from "./components/PageTransition.jsx";
 import GlobalScrollMotion from "./components/GlobalScrollMotion.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
@@ -59,6 +58,7 @@ import HowToStartFundraising from "./pages/HowToStartFundraising.jsx";
 import HowToInvest from "./pages/HowToInvest.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import About from "./pages/About.jsx";
+import MateBidBrandPage from "./pages/MateBidBrandPage.jsx";
 
 import SelectAccountMode from "./pages/SelectAccountType.jsx";
 import CompanyInvestorDashboard from "./pages/investor/CompanyInvestorDashboard";
@@ -316,9 +316,9 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
           element={
             <main className="homepage-flow">
               <SEO
-                title="#1 Crowdfunding Platform for Startups, Businesses & Causes"
-                description="M8BID is India's professional crowdfunding platform. Launch a raising campaign for your startup, NGO, business, or cause — or contribute to verified campaigns securely. KYC-backed, transparent, and trusted by founders and backers."
-                keywords="crowdfunding platform India, startup fundraising, raise funds online, business crowdfunding, NGO fundraising, donation crowdfunding, contribute to campaigns, verified campaigns, M8BID, campaign funding, crowdfunding for education, medical crowdfunding"
+                title="MateBid / M8BID Crowdfunding Platform for Startups, Businesses & Causes"
+                description="MateBid, also known as M8BID, is India's professional crowdfunding platform for raising, funding, and contributing to verified startup, business, NGO, and cause campaigns."
+                keywords="MateBid, matebid, M8BID, m8bid, MateBid raising, MateBid contributing, MateBid funding, crowdfunding platform India, startup fundraising, raise funds online, business crowdfunding, NGO fundraising, donation crowdfunding, contribute to campaigns, verified campaigns, campaign funding, crowdfunding for education, medical crowdfunding"
                 canonical="/"
                 jsonLd={{
                   "@context": "https://schema.org",
@@ -349,7 +349,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
                       "@type": "WebPage",
                       "@id": "https://www.matebid.com/#webpage",
                       url: "https://www.matebid.com",
-                      name: "#1 Crowdfunding Platform for Startups, Businesses & Causes | M8BID",
+                      name: "MateBid / M8BID Crowdfunding Platform for Startups, Businesses & Causes",
                       isPartOf: { "@id": "https://www.matebid.com/#website" },
                       about: { "@id": "https://www.matebid.com/#organization" },
                       description:
@@ -397,33 +397,25 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/browse-investors"
           element={
-            <RequireAccountMode mode="investor">
-              <>
-                <BrowseInvestors />
-                <Footer />
-              </>
-            </RequireAccountMode>
+            <>
+              <BrowseInvestors />
+              <Footer />
+            </>
           }
         />
 
         <Route
           path="/investment-detail/:id"
-          element={
-            <RequireAccountMode mode="investor">
-              <InvestmentDetail />
-            </RequireAccountMode>
-          }
+          element={<InvestmentDetail />}
         />
 
         <Route
           path="/fundraising"
           element={
-            <RequireAccountMode mode="fundraiser">
-              <>
-                <FundraisingPage />
-                <Footer />
-              </>
-            </RequireAccountMode>
+            <>
+              <FundraisingPage />
+              <Footer />
+            </>
           }
         />
 
@@ -461,6 +453,15 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
           element={
             <>
               <About />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/matebid"
+          element={
+            <>
+              <MateBidBrandPage />
               <Footer />
             </>
           }

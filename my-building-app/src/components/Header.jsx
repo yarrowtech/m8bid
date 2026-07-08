@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
+import finallogo from "../assets/finallogo.png";
 import {
   Search,
   ChevronDown,
@@ -451,105 +452,86 @@ export default function Header() {
     navigate("/login");
   };
 
-  const handleGuestInvestAccess = () => {
+  const closeMenus = () => {
     setInvestOpen(false);
     setFundraiseOpen(false);
+    setProfileOpen(false);
     setMobileOpen(false);
-    setInvestBlockedOpen(true);
   };
 
-  const handleGuestFundraiseAccess = () => {
-    setInvestOpen(false);
-    setFundraiseOpen(false);
-    setMobileOpen(false);
-    setFundraiseBlockedOpen(true);
-  };
-
-const investItems = [
-  {
-    label: "Browse Contributing Opportunities",
-    desc: "Explore active opportunities and contributor-focused campaigns.",
-    to: !hasSession ? null : isFundraiserMode ? null : "/browse-investors",
-    onClick: !hasSession
-      ? handleGuestInvestAccess
-      : isFundraiserMode
-      ? handleInvestRestrictedAccess
-      : undefined,
-  },
-  {
-    label: "Supporter Space",
-    desc: "Discover FAQs, updates, and how contributions work.",
-    to: !hasSession ? null : isFundraiserMode ? null : "/supporter-space",
-    onClick: !hasSession
-      ? handleGuestInvestAccess
-      : isFundraiserMode
-      ? handleInvestRestrictedAccess
-      : undefined,
-  },
-  {
-    label: "Return Based Options",
-    desc: "Explore structured participation with expected returns.",
-    to: !hasSession ? null : isFundraiserMode ? null : "/return-based-options",
-    onClick: !hasSession
-      ? handleGuestInvestAccess
-      : isFundraiserMode
-      ? handleInvestRestrictedAccess
-      : undefined,
-  },
-  {
-    label: "Verified Opportunities",
-    desc: "See campaigns reviewed through platform workflows.",
-    to: !hasSession ? null : isFundraiserMode ? null : "/verified-opportunities",
-    onClick: !hasSession
-      ? handleGuestInvestAccess
-      : isFundraiserMode
-      ? handleInvestRestrictedAccess
-      : undefined,
-  },
-];
-
-const fundraiseItems = [
-  {
-    label: "Start Raising",
-    desc: "Launch your fundraiser with a guided creation flow.",
-    to: !hasSession ? null : isInvestorMode ? null : "/fundraising",
-    onClick: !hasSession
-      ? handleGuestFundraiseAccess
-      : isInvestorMode
-      ? handleFundraiseRestrictedAccess
-      : undefined,
-  },
-  {
-    label: "How to Start a Raiser",
-    desc: "Understand fundraising clearly with step-by-step guidance.",
-    to: "/how-to-start-a-fundraising",
-    onClick: () => {
-      setInvestOpen(false);
-      setFundraiseOpen(false);
-      setMobileOpen(false);
+  const investItems = [
+    {
+      label: "Browse Contributing Opportunities",
+      desc: "Explore active opportunities and contributor-focused campaigns.",
+      to: "/browse-investors",
+      onClick: closeMenus,
     },
-  },
-  {
-    label: "Cause-Based Raising",
-    desc: "Create campaigns for support-oriented fundraising.",
-    to: !hasSession ? null : isInvestorMode ? null : "/cause-based-funding",
-    onClick: !hasSession
-      ? handleGuestFundraiseAccess
-      : isInvestorMode
-      ? handleFundraiseRestrictedAccess
-      : undefined,
-  },
-  {
-    label: "Raising Ideas",
-    desc: "Get inspired with campaign direction and planning ideas.",
-    to: !hasSession ? null : isInvestorMode ? null : "/fundraising-ideas",
-    onClick: !hasSession
-      ? handleGuestFundraiseAccess
-      : isInvestorMode
-      ? handleFundraiseRestrictedAccess
-      : undefined,
-  },
-];
+    {
+      label: "Supporter Space",
+      desc: "Discover FAQs, updates, and how contributions work.",
+      to: !hasSession ? null : isFundraiserMode ? null : "/supporter-space",
+      onClick: !hasSession
+        ? handleInvestRestrictedAccess
+        : isFundraiserMode
+        ? handleInvestRestrictedAccess
+        : closeMenus,
+    },
+    {
+      label: "Return Based Options",
+      desc: "Explore structured participation with expected returns.",
+      to: !hasSession ? null : isFundraiserMode ? null : "/return-based-options",
+      onClick: !hasSession
+        ? handleInvestRestrictedAccess
+        : isFundraiserMode
+        ? handleInvestRestrictedAccess
+        : closeMenus,
+    },
+    {
+      label: "Verified Opportunities",
+      desc: "See campaigns reviewed through platform workflows.",
+      to: !hasSession ? null : isFundraiserMode ? null : "/verified-opportunities",
+      onClick: !hasSession
+        ? handleInvestRestrictedAccess
+        : isFundraiserMode
+        ? handleInvestRestrictedAccess
+        : closeMenus,
+    },
+  ];
+
+  const fundraiseItems = [
+    {
+      label: "Start Raising",
+      desc: "Launch your fundraiser with a guided creation flow.",
+      to: "/fundraising",
+      onClick: closeMenus,
+    },
+    {
+      label: "How to Start a Raiser",
+      desc: "Understand fundraising clearly with step-by-step guidance.",
+      to: "/how-to-start-a-fundraising",
+      onClick: closeMenus,
+    },
+    {
+      label: "Cause-Based Raising",
+      desc: "Create campaigns for support-oriented fundraising.",
+      to: !hasSession ? null : isInvestorMode ? null : "/cause-based-funding",
+      onClick: !hasSession
+        ? handleFundraiseRestrictedAccess
+        : isInvestorMode
+        ? handleFundraiseRestrictedAccess
+        : closeMenus,
+    },
+    {
+      label: "Raising Ideas",
+      desc: "Get inspired with campaign direction and planning ideas.",
+      to: !hasSession ? null : isInvestorMode ? null : "/fundraising-ideas",
+      onClick: !hasSession
+        ? handleFundraiseRestrictedAccess
+        : isInvestorMode
+        ? handleFundraiseRestrictedAccess
+        : closeMenus,
+    },
+  ];
 
   const NavButton = ({ label, open, onClick }) => (
     <button
@@ -582,17 +564,11 @@ const fundraiseItems = [
             className="flex cursor-pointer items-center gap-3"
             onClick={() => navigate("/")}
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-lg font-bold text-white shadow-lg shadow-blue-600/20">
-              M8
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-lg font-bold tracking-tight text-white">
-                M8BID
-              </div>
-              <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                Raising Platform
-              </div>
-            </div>
+            <img
+              src={finallogo}
+              alt="M8BID logo"
+              className="h-11 w-auto object-contain"
+            />
           </div>
 
           {/* Desktop Nav */}
@@ -604,6 +580,13 @@ const fundraiseItems = [
               className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               Home
+            </Link>
+
+            <Link
+              to="/matebid"
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              MateBid
             </Link>
 
 
@@ -756,22 +739,29 @@ const fundraiseItems = [
               </Link>
 
               <Link
+                to="/matebid"
+                className="block rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                MateBid
+              </Link>
+
+              <Link
                 to="/fundraising"
                 className="block rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
               >
                 How it Works
               </Link>
 
-              {!hasSession ? (
-                <button
-                  type="button"
-                  onClick={handleGuestInvestAccess}
-                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+              {!hasSession || !isFundraiserMode ? (
+                <Link
+                  to="/browse-investors"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <BadgeDollarSign className="h-4 w-4" />
                   Browse Contributing Opportunities
-                </button>
-              ) : isFundraiserMode ? (
+                </Link>
+              ) : (
                 <button
                   type="button"
                   onClick={handleInvestRestrictedAccess}
@@ -780,26 +770,18 @@ const fundraiseItems = [
                   <BadgeDollarSign className="h-4 w-4" />
                   Browse Contributing Opportunities
                 </button>
-              ) : (
-                <Link
-                  to="/browse-investors"
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-                >
-                  <BadgeDollarSign className="h-4 w-4" />
-                  Browse Contributing Opportunities
-                </Link>
               )}
 
-              {!hasSession ? (
-                <button
-                  type="button"
-                  onClick={handleGuestFundraiseAccess}
-                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
+              {!hasSession || !isInvestorMode ? (
+                <Link
+                  to="/fundraising"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <HandCoins className="h-4 w-4" />
                   Start Raising
-                </button>
-              ) : isInvestorMode ? (
+                </Link>
+              ) : (
                 <button
                   type="button"
                   onClick={handleFundraiseRestrictedAccess}
@@ -808,14 +790,6 @@ const fundraiseItems = [
                   <HandCoins className="h-4 w-4" />
                   Start Raising
                 </button>
-              ) : (
-                <Link
-                  to="/fundraising"
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-                >
-                  <HandCoins className="h-4 w-4" />
-                  Start Raising
-                </Link>
               )}
 
               <button

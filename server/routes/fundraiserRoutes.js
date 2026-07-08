@@ -11,7 +11,7 @@ const {
   updateFundraiserBank,
   deleteFundraiserDocument,
 } = require("../controllers/fundraiser");
-const { protect } = require("../middleware/authmiddleware");
+const { protect, requireFundraiser } = require("../middleware/authmiddleware");
 
 const storage = multer.diskStorage({});
 const upload = multer({ storage });
@@ -23,17 +23,9 @@ const fundRaiserRouter = express.Router();
 ========================= */
 fundRaiserRouter.post(
   "/create-fundraiser/:id",
-  upload.fields([
-    { name: "photo", maxCount: 1 },
-    { name: "projectPhotos", maxCount: 10 },
-    { name: "video", maxCount: 1 },
-    { name: "promoVideo", maxCount: 1 },
-    { name: "promoPoster", maxCount: 1 },
-    { name: "license", maxCount: 1 },
-    { name: "gst", maxCount: 1 },
-    { name: "companyRegistration", maxCount: 1 },
-    { name: "legalDocument", maxCount: 1 },
-  ]),
+  protect,
+  requireFundraiser,
+  upload.any(),
   createFundRaiser
 );
 

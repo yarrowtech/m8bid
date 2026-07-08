@@ -6,6 +6,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    target: 'es2018',
+  },
   server:{
     host: true,
   }

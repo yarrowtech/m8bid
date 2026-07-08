@@ -1,0 +1,23 @@
+# robots.txt - MateBid (M8BID)
+
+User-agent: *
+
+# Public SEO pages
+Allow: /
+Allow: /matebid
+Allow: /about
+Allow: /contact
+Allow: /how-to-start-a-fundraising
+Allow: /how-to-invest
+
+# Private dashboard, payment, and account-gated routes
+Disallow: /admin
+Disallow: /admin/
+Disallow: /investor/
+Disallow: /fundraiser/
+Disallow: /payment
+Disallow: /start-fundraiser
+Disallow: /investment-detail
+Disallow: /select-account-mode
+
+Sitemap: https://www.matebid.com/sitemap.xml

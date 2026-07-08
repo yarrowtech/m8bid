@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FaEnvelope, FaInstagram, FaLink, FaSms, FaWhatsapp } from "react-icons/fa";
 import { getCampaignById } from "../api/fundraiser.api";
 import sampleImg from "../assets/fundraising-example.jpg";
+import AccessModeModal from "../components/AccessModeModal.jsx";
 
 const INR = (n) => {
   const num = Number(n || 0);
@@ -28,6 +29,49 @@ const pickFirst = (...vals) => {
 };
 
 const toArray = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+
+const CAMPAIGN_TYPE_LABELS = {
+  ngo: "NGO / Nonprofit",
+  business: "Business",
+  medical: "Medical Emergency",
+  education: "Education",
+  company: "Company",
+  startup: "Startup",
+  project: "Project",
+};
+
+const BUSINESS_SUBCATEGORY_LABELS = {
+  "small-business": "Small Business",
+  "food-business": "Food Business",
+  "normal-business": "Normal Business",
+  custom: "Custom / Other",
+};
+
+const getCampaignTypeLabel = (type = "") => {
+  const key = String(type || "").toLowerCase();
+  return CAMPAIGN_TYPE_LABELS[key] || CAMPAIGN_TYPE_LABELS.project;
+};
+
+const getBusinessSubcategoryLabel = (subcategory = "") => {
+  const key = String(subcategory || "").toLowerCase();
+  return BUSINESS_SUBCATEGORY_LABELS[key] || "Business";
+};
+
+const getCampaignCategoryLabel = (campaign) => {
+  const type = String(campaign?.campaignType || "").toLowerCase();
+  const subcategory = String(campaign?.campaignSubcategory || "");
+
+  if (type) {
+    const typeLabel = getCampaignTypeLabel(type);
+    if (type === "business") {
+      return `${typeLabel} / ${getBusinessSubcategoryLabel(subcategory)}`;
+    }
+    if (subcategory) return `${typeLabel} / ${subcategory}`;
+    return typeLabel;
+  }
+
+  return pickFirst(campaign?.projectCategory, campaign?.category, "General");
+};
 
 const getFileUrl = (value) => {
   if (!value) return "";
@@ -167,12 +211,28 @@ export default function InvestmentDetail() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [paymentNoticeOpen, setPaymentNoticeOpen] = useState(false);
+  const [investAccessOpen, setInvestAccessOpen] = useState(false);
   const [sharePanelOpen, setSharePanelOpen] = useState(false);
   const [campaignData, setCampaignData] = useState(state?.campaign || null);
   const [loadingCampaign, setLoadingCampaign] = useState(
     !state?.campaign && Boolean(id)
   );
   const [campaignError, setCampaignError] = useState("");
+  const hasContributorAccess = useMemo(() => {
+    try {
+      const rawUser =
+        localStorage.getItem("user") || localStorage.getItem("loggedInUser");
+      const rawToken =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+
+      if (!rawUser || !rawToken) return false;
+
+      const user = JSON.parse(rawUser);
+      return Boolean(user?.access?.investor?.enabled);
+    } catch {
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     if (state?.campaign) {
@@ -226,42 +286,6 @@ export default function InvestmentDetail() {
       isMounted = false;
     };
   }, [id, state?.campaign]);
-
-  if (loadingCampaign) {
-    return (
-      <div className="grid min-h-[60vh] place-items-center px-4">
-        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
-          <h1 className="text-lg font-semibold text-slate-900">
-            Loading campaign details...
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Please wait while we fetch the latest campaign data.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!campaignData) {
-    return (
-      <div className="grid min-h-[60vh] place-items-center px-4">
-        <div className="w-full max-w-md rounded-3xl border border-red-200 bg-red-50 p-6 shadow-lg">
-          <h1 className="text-lg font-semibold text-red-700">
-            {campaignError || "No campaign data found."}
-          </h1>
-          <p className="mt-2 text-sm text-red-600">
-            Please go back and open a campaign again.
-          </p>
-          <button
-            className="mt-4 w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
-            onClick={() => navigate(-1)}
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const campaign = campaignData;
 
@@ -334,10 +358,15 @@ export default function InvestmentDetail() {
     : "N/A";
 
   const category = pickFirst(
+    getCampaignCategoryLabel(campaign),
     campaign?.projectCategory,
     campaign?.category,
     "General"
   );
+  const campaignType = pickFirst(campaign?.campaignType, "").toString().toLowerCase();
+  const campaignSubcategory = pickFirst(campaign?.campaignSubcategory, "");
+  const entityName = pickFirst(campaign?.entityName, campaign?.organizationName, campaign?.businessName, "");
+  const useOfFunds = pickFirst(campaign?.useOfFunds, "");
 
   const fundingType = pickFirst(campaign?.fundingType, "Donation Based");
   const profitPercentage = pickFirst(campaign?.profitPercentage, 0);
@@ -365,76 +394,59 @@ export default function InvestmentDetail() {
   const thumbImages = projectImages.slice(0, 6);
 
   const documents = useMemo(() => {
-    const docs = [
-      {
-        name: "Trade License",
-        url: getFileUrl(campaign?.license),
-        status:
-          campaign?.licenseStatus || (campaign?.license ? "Uploaded" : "Pending"),
-        details: pickFirst(campaign?.licenseNumber, campaign?.licenseDetails, "-"),
-      },
-      {
-        name: "Company Registration",
-        url: getFileUrl(campaign?.companyRegistration),
-        status:
-          campaign?.companyRegistrationStatus ||
-          (campaign?.companyRegistration ? "Uploaded" : "Pending"),
-        details: pickFirst(
-          campaign?.registrationNumber,
-          campaign?.registrationDetails,
-          "-"
-        ),
-      },
-      {
-        name: "GST / Tax",
-        url: getFileUrl(campaign?.gst),
-        status: campaign?.gstStatus || (campaign?.gst ? "Uploaded" : "Pending"),
-        details: pickFirst(campaign?.gstNumber, campaign?.gstDetails, "-"),
-      },
-      {
-        name: "Legal Document",
-        url: getFileUrl(campaign?.legalDocument),
-        status:
-          campaign?.legalDocumentStatus ||
-          (campaign?.legalDocument ? "Uploaded" : "Pending"),
-        details: pickFirst(
-          campaign?.legalDocumentName,
-          campaign?.legalDetails,
-          "-"
-        ),
-      },
-      {
-        name: "PAN Card",
-        url: getFileUrl(campaign?.panCard),
-        status: campaign?.panStatus || (campaign?.panCard ? "Uploaded" : "Pending"),
-        details: pickFirst(campaign?.panNumber, "-"),
-      },
-      {
-        name: "Address Proof",
-        url: getFileUrl(campaign?.addressProof),
-        status:
-          campaign?.addressProofStatus ||
-          (campaign?.addressProof ? "Uploaded" : "Pending"),
-        details: pickFirst(campaign?.addressProofType, "-"),
-      },
+    const structuredDocs = toArray(campaign?.documents)
+      .map((doc, idx) => {
+        const url = getFileUrl(doc?.url || doc?.path || doc?.secure_url || doc);
+        if (!url) return null;
+
+        return {
+          name: pickFirst(doc?.name, doc?.label, doc?.key, `Document ${idx + 1}`),
+          url,
+          status: doc?.required ? "Required" : pickFirst(doc?.status, "Uploaded"),
+          details: pickFirst(doc?.key, doc?.kind, doc?.name, "Uploaded document"),
+          kind: doc?.kind || "OTHER",
+        };
+      })
+      .filter(Boolean);
+
+    if (structuredDocs.length > 0) return structuredDocs;
+
+    const fallbackDocs = [
+      { name: "Trade License", url: getFileUrl(campaign?.license), status: campaign?.licenseStatus || (campaign?.license ? "Uploaded" : "Pending"), details: pickFirst(campaign?.licenseNumber, campaign?.licenseDetails, "-"), kind: "LICENSE" },
+      { name: "Company Registration", url: getFileUrl(campaign?.companyRegistration), status: campaign?.companyRegistrationStatus || (campaign?.companyRegistration ? "Uploaded" : "Pending"), details: pickFirst(campaign?.registrationNumber, campaign?.registrationDetails, "-"), kind: "LICENSE" },
+      { name: "GST / Tax", url: getFileUrl(campaign?.gst), status: campaign?.gstStatus || (campaign?.gst ? "Uploaded" : "Pending"), details: pickFirst(campaign?.gstNumber, campaign?.gstDetails, "-"), kind: "GST" },
+      { name: "Legal Document", url: getFileUrl(campaign?.legalDocument), status: campaign?.legalDocumentStatus || (campaign?.legalDocument ? "Uploaded" : "Pending"), details: pickFirst(campaign?.legalDocumentName, campaign?.legalDetails, "-"), kind: "OTHER" },
+      { name: "PAN Card", url: getFileUrl(campaign?.panCard), status: campaign?.panStatus || (campaign?.panCard ? "Uploaded" : "Pending"), details: pickFirst(campaign?.panNumber, "-"), kind: "PAN" },
+      { name: "Address Proof", url: getFileUrl(campaign?.addressProof), status: campaign?.addressProofStatus || (campaign?.addressProof ? "Uploaded" : "Pending"), details: pickFirst(campaign?.addressProofType, "-"), kind: "KYC" },
     ];
 
-    return docs.filter((doc) => doc.url && doc.url !== "");
+    return fallbackDocs.filter((doc) => doc.url && doc.url !== "");
   }, [campaign]);
 
   const legalDocumentsList = useMemo(() => {
+    const fromDocs = toArray(campaign?.documents)
+      .map((doc, idx) => {
+        const url = getFileUrl(doc?.url || doc?.path || doc?.secure_url || doc);
+        if (!url) return null;
+        return {
+          label: pickFirst(doc?.name, doc?.label, doc?.key, `Document ${idx + 1}`),
+          status: doc?.required ? "Required" : pickFirst(doc?.status, "Uploaded"),
+          details: pickFirst(doc?.key, doc?.kind, "Uploaded file"),
+        };
+      })
+      .filter(Boolean);
+
+    if (fromDocs.length > 0) return fromDocs;
+
     return [
       {
         label: "Trade License",
-        status:
-          campaign?.licenseStatus || (campaign?.license ? "Uploaded" : "Pending"),
+        status: campaign?.licenseStatus || (campaign?.license ? "Uploaded" : "Pending"),
         details: pickFirst(campaign?.licenseNumber, "Uploaded file"),
       },
       {
         label: "Company Registration",
-        status:
-          campaign?.companyRegistrationStatus ||
-          (campaign?.companyRegistration ? "Uploaded" : "Pending"),
+        status: campaign?.companyRegistrationStatus || (campaign?.companyRegistration ? "Uploaded" : "Pending"),
         details: pickFirst(campaign?.registrationNumber, "Uploaded file"),
       },
       {
@@ -444,9 +456,7 @@ export default function InvestmentDetail() {
       },
       {
         label: "Legal Document",
-        status:
-          campaign?.legalDocumentStatus ||
-          (campaign?.legalDocument ? "Uploaded" : "Pending"),
+        status: campaign?.legalDocumentStatus || (campaign?.legalDocument ? "Uploaded" : "Pending"),
         details: pickFirst(campaign?.legalDocumentName, "Uploaded file"),
       },
       {
@@ -456,9 +466,7 @@ export default function InvestmentDetail() {
       },
       {
         label: "Address Proof",
-        status:
-          campaign?.addressProofStatus ||
-          (campaign?.addressProof ? "Uploaded" : "Pending"),
+        status: campaign?.addressProofStatus || (campaign?.addressProof ? "Uploaded" : "Pending"),
         details: pickFirst(campaign?.addressProofType, "-"),
       },
       {
@@ -484,17 +492,7 @@ export default function InvestmentDetail() {
     ];
   }, [campaign]);
 
-  const verifiedCount = [...legalDocumentsList, ...infraList].filter((item) =>
-    [
-      "verified",
-      "approved",
-      "clear",
-      "available",
-      "yes",
-      "connected",
-      "uploaded",
-    ].includes(String(item.status || "").toLowerCase())
-  ).length;
+  const uploadedCount = documents.length;
 
   const pendingCount = [...legalDocumentsList, ...infraList].filter((item) =>
     ["pending", "under review", "under_review", "processing"].includes(
@@ -504,6 +502,12 @@ export default function InvestmentDetail() {
 
   const moreDetails = useMemo(() => {
     return [
+      { label: "Campaign Type", value: getCampaignTypeLabel(campaignType) },
+      {
+        label: "Subcategory",
+        value: campaignType === "business" ? getBusinessSubcategoryLabel(campaignSubcategory) : pickFirst(campaignSubcategory, "General"),
+      },
+      { label: "Entity Name", value: entityName || companyName || "-" },
       { label: "Campaign Category", value: category },
       { label: "Funding Type", value: fundingType },
       {
@@ -517,6 +521,7 @@ export default function InvestmentDetail() {
         label: "Minimum Investment",
         value: minInvestment ? INR(minInvestment) : "Flexible",
       },
+      { label: "Use of Funds", value: useOfFunds || "-" },
       { label: "Days To Raise", value: `${daysToRaise} days` },
       { label: "Location", value: `${city}, ${st}, ${country}` },
       { label: "Uploaded Documents", value: `${documents.length}` },
@@ -536,6 +541,11 @@ export default function InvestmentDetail() {
     country,
     documents.length,
     campaign?.legalIssueStatus,
+    campaignType,
+    campaignSubcategory,
+    entityName,
+    companyName,
+    useOfFunds,
   ]);
 
   const similarProjects = useMemo(() => {
@@ -618,9 +628,6 @@ export default function InvestmentDetail() {
     ];
   }, [
     state?.similarProjects,
-    campaign?.similarProjects,
-    campaign?.relatedProjects,
-    campaign?.relatedCampaigns,
     campaign,
     cover,
     category,
@@ -631,18 +638,23 @@ export default function InvestmentDetail() {
     projectImages,
   ]);
 
-  const openLightbox = (idx) => {
+  const openLightbox = useCallback((idx) => {
     setActiveIndex(idx);
     setLightboxOpen(true);
-  };
+  }, []);
 
-  const nextImg = () => setActiveIndex((p) => (p + 1) % projectImages.length);
-  const prevImg = () =>
-    setActiveIndex((p) => (p - 1 + projectImages.length) % projectImages.length);
+  const nextImg = useCallback(
+    () => setActiveIndex((p) => (p + 1) % projectImages.length),
+    [projectImages.length]
+  );
+  const prevImg = useCallback(
+    () => setActiveIndex((p) => (p - 1 + projectImages.length) % projectImages.length),
+    [projectImages.length]
+  );
 
-  const openDocPreview = (doc) => {
+  const openDocPreview = useCallback((doc) => {
     setSelectedDoc(doc);
-  };
+  }, []);
 
   const closeDocPreview = () => setSelectedDoc(null);
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
@@ -651,7 +663,9 @@ export default function InvestmentDetail() {
   const copyCampaignLink = () => {
     try {
       navigator.clipboard?.writeText(shareUrl);
-    } catch {}
+    } catch (error) {
+      void error;
+    }
     setSharePanelOpen(false);
   };
 
@@ -696,7 +710,7 @@ export default function InvestmentDetail() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [lightboxOpen, projectImages.length]);
+  }, [lightboxOpen, nextImg, prevImg]);
 
   useEffect(() => {
     if (!paymentNoticeOpen) return;
@@ -707,6 +721,51 @@ export default function InvestmentDetail() {
 
     return () => window.clearTimeout(timer);
   }, [paymentNoticeOpen]);
+
+  const handleDonateClick = () => {
+    if (!hasContributorAccess) {
+      setInvestAccessOpen(true);
+      return;
+    }
+
+    setPaymentNoticeOpen(true);
+  };
+
+  if (loadingCampaign) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center px-4">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+          <h1 className="text-lg font-semibold text-slate-900">
+            Loading campaign details...
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Please wait while we fetch the latest campaign data.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!campaignData) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center px-4">
+        <div className="w-full max-w-md rounded-3xl border border-red-200 bg-red-50 p-6 shadow-lg">
+          <h1 className="text-lg font-semibold text-red-700">
+            {campaignError || "No campaign data found."}
+          </h1>
+          <p className="mt-2 text-sm text-red-600">
+            Please go back and open a campaign again.
+          </p>
+          <button
+            className="mt-4 w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+            onClick={() => navigate(-1)}
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section
@@ -917,7 +976,9 @@ export default function InvestmentDetail() {
               onClick={() => {
                 try {
                   navigator.clipboard?.writeText(window.location.href);
-                } catch {}
+                } catch (error) {
+                  void error;
+                }
                 alert("Link copied.");
               }}
             >
@@ -930,7 +991,7 @@ export default function InvestmentDetail() {
         <div className="-mt-1 grid grid-cols-1 gap-4 xl:grid-cols-[1.42fr_0.86fr]">
           {/* MERGED CARD */}
           <SectionCard
-            eyebrow="Project Overview"
+            eyebrow="Campaign Overview"
             title={title}
             className="bg-gradient-to-br from-white via-white to-slate-50"
             right={
@@ -974,7 +1035,7 @@ export default function InvestmentDetail() {
                 <div className="-mt-1">
                   <div className="mb-2 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-slate-900">
-                      Project Media
+                      Campaign Media
                     </h3>
                     {projectImages.length > 0 ? (
                       <button
@@ -1009,7 +1070,7 @@ export default function InvestmentDetail() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      About Company
+                      About Campaign
                     </p>
                     <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-900">
                       {companyName}
@@ -1036,13 +1097,10 @@ export default function InvestmentDetail() {
                 </p>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <InfoCard label="Company Type" value={category} />
-                  <InfoCard label="Founded / Listed" value={createdAt} />
+                  <InfoCard label="Campaign Type" value={getCampaignTypeLabel(campaignType)} />
+                  <InfoCard label="Listed On" value={createdAt} />
                   <InfoCard label="Country" value={country} />
-                  <InfoCard
-                    label="Legal Review"
-                    value={campaign?.legalIssueStatus || "Pending"}
-                  />
+                  <InfoCard label="Docs Uploaded" value={String(uploadedCount)} />
                 </div>
               </div>
             </div>
@@ -1125,7 +1183,7 @@ export default function InvestmentDetail() {
 
             <div className="mt-4 grid grid-cols-1 gap-3">
               <button
-                onClick={() => setPaymentNoticeOpen(true)}
+                onClick={handleDonateClick}
                 className="rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-4 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_12px_24px_rgba(79,70,229,0.22)] transition hover:-translate-y-0.5 hover:brightness-110"
               >
                 Donate / Invest
@@ -1209,13 +1267,13 @@ export default function InvestmentDetail() {
         {/* SECOND ROW */}
         <div className="mt-2 grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.1fr_0.9fr]">
           <SectionCard
-            eyebrow="Project Description"
-            title="About the Project"
+            eyebrow="Campaign Description"
+            title="About the Campaign"
             compact
             className="self-start"
             right={
               <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-semibold text-blue-700">
-                Investor View
+                Supporter View
               </span>
             }
           >
@@ -1312,15 +1370,15 @@ export default function InvestmentDetail() {
           </SectionCard>
         </div>
 
-        {/* LEGAL / CIVIC / APPROVAL STATUS PANEL */}
+        {/* DOCUMENT STATUS PANEL */}
         <div className="mt-5">
           <SectionCard
-            eyebrow="Legal Panel"
-            title="Legal / Civic / Approval Status"
+            eyebrow="Document Panel"
+            title="Campaign Documents Status"
             right={
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold text-emerald-700">
-                  {verifiedCount} verified
+                  {uploadedCount} uploaded
                 </span>
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-semibold text-amber-700">
                   {pendingCount} pending
@@ -1331,7 +1389,7 @@ export default function InvestmentDetail() {
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-slate-900">
-                  Legal Documents
+                  Uploaded Campaign Documents
                 </h3>
                 <div className="space-y-3">
                   {legalDocumentsList.map((item, idx) => (
@@ -1366,34 +1424,21 @@ export default function InvestmentDetail() {
 
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-slate-900">
-                  Infrastructure & Civic
+                  Campaign Notes
                 </h3>
                 <div className="space-y-3">
-                  {infraList.map((item, idx) => (
+                  {[
+                    { label: "Entity Name", value: entityName || "-" },
+                    { label: "Use of Funds", value: useOfFunds || "-" },
+                    { label: "Category", value: category },
+                    { label: "Subcategory", value: campaignSubcategory || "General" },
+                  ].map((item, idx) => (
                     <div
                       key={idx}
                       className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {item.label}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {item.details || "-"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <StatusIcon status={item.status} />
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusTone(
-                              item.status
-                            )}`}
-                          >
-                            {item.status}
-                          </span>
-                        </div>
-                      </div>
+                      <p className="text-sm font-semibold text-slate-800">{item.label}</p>
+                      <p className="mt-1 text-xs text-slate-500">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -1404,7 +1449,7 @@ export default function InvestmentDetail() {
 
         {/* MORE DETAILS */}
         <div className="mt-5">
-          <SectionCard eyebrow="More Details" title="Additional Information">
+          <SectionCard eyebrow="More Details" title="Additional Campaign Information">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {moreDetails.map((item, idx) => (
                 <InfoCard key={idx} label={item.label} value={item.value} />
@@ -1413,14 +1458,14 @@ export default function InvestmentDetail() {
           </SectionCard>
         </div>
 
-        {/* SIMILAR PROJECTS LISTING PANEL */}
+        {/* SIMILAR CAMPAIGNS LISTING PANEL */}
         <div className="mt-5">
           <SectionCard
             eyebrow="Discover More"
-            title="Similar Projects Listing"
+            title="Similar Campaigns Listing"
             right={
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold text-slate-700">
-                {similarProjects.length} projects
+                {similarProjects.length} campaigns
               </span>
             }
           >
@@ -1486,7 +1531,7 @@ export default function InvestmentDetail() {
                         }}
                         className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
                       >
-                        View Project
+                        View Campaign
                       </button>
                     </div>
                   </div>
@@ -1495,6 +1540,14 @@ export default function InvestmentDetail() {
             </div>
           </SectionCard>
         </div>
+      <AccessModeModal
+        open={investAccessOpen}
+        onClose={() => setInvestAccessOpen(false)}
+        onLogin={() => navigate("/login")}
+        title="Contributor account needed"
+        message="You need to login or create a contributor account to donate or invest in this campaign."
+        buttonLabel="Go to Login"
+      />
       </div>
     </section>
   );

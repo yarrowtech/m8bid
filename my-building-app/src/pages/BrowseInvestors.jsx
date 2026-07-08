@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import heroImg from "../assets/investors-hero.jpg";
 import sampleImg from "../assets/fundraising-example.jpg";
 import { getAllCampaigns } from "../api/campaign";
-import AccessModeModal from "../components/AccessModeModal.jsx";
 import SEO from "../components/SEO.jsx";
 
 const INR = (n) => {
@@ -173,24 +172,8 @@ export default function BrowseInvestors() {
     y: 0,
     item: null,
   });
-  const [contributeAccessOpen, setContributeAccessOpen] = useState(false);
 
   const navigate = useNavigate();
-  const needsContributorAccess = useMemo(() => {
-    try {
-      const rawUser =
-        localStorage.getItem("user") || localStorage.getItem("loggedInUser");
-      const rawToken =
-        localStorage.getItem("token") || sessionStorage.getItem("token");
-
-      if (!rawUser || !rawToken) return true;
-
-      const user = JSON.parse(rawUser);
-      return !user?.access?.investor?.enabled;
-    } catch {
-      return true;
-    }
-  }, []);
 
   const fetchAllCampaigns = async () => {
     try {
@@ -213,12 +196,6 @@ export default function BrowseInvestors() {
   }, []);
 
   useEffect(() => {
-    if (needsContributorAccess) {
-      setContributeAccessOpen(true);
-    }
-  }, [needsContributorAccess]);
-
-  useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 60 * 1000);
     return () => clearInterval(id);
   }, []);
@@ -235,7 +212,11 @@ export default function BrowseInvestors() {
   }, [legalPopup.open]);
 
   const handleViewDetails = (campaign) => {
-    navigate(`/investment-detail/:id`, { state: { campaign } });
+    const campaignId = campaign?._id || campaign?.id;
+    navigate(
+      campaignId ? `/investment-detail/${campaignId}` : "/investment-detail",
+      { state: { campaign } }
+    );
   };
 
   const showMore = () => setVisibleCount((prev) => prev + 4);
@@ -928,14 +909,6 @@ export default function BrowseInvestors() {
         </div>
       )}
 
-      <AccessModeModal
-        open={contributeAccessOpen}
-        onClose={() => setContributeAccessOpen(false)}
-        onLogin={() => navigate("/login")}
-        title="Contributor account needed"
-        message="You need to login or create a contributor account to contribute to a campaign."
-        buttonLabel="Go to Login"
-      />
       </section>
     </>
   );
