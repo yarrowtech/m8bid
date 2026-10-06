@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-// Components
+//Components
 import Header from "../src/components/Header.jsx";
 import Hero from "../src/components/Hero.jsx";
 import HowItWorks from "../src/components/HowItWorks.jsx";
@@ -17,9 +17,11 @@ import Plan from "../src/components/Plan.jsx";
 import Footer from "../src/components/Footer.jsx";
 import FeaturedProperties from "./components/FeaturedProperties.jsx";
 import SecurityCompliance from "./components/SecurityCompliance.jsx";
+import HomeFAQ from "./components/HomeFAQ.jsx";
+import { homeFaqs, launchCampaignSteps } from "./data/homeFaq";
 import MoneyGrowth from "./components/MoneyGrowth.jsx";
 import Testimonials from "./components/Testimonials.jsx";
-import FundraisingCauses from "./components/FundraisingCauses.jsx";
+import RaisingCauses from "./components/FundraisingCauses.jsx";
 import WhatWeProvide from "./components/WhatWeProvide.jsx";
 import PageTransition from "./components/PageTransition.jsx";
 import GlobalScrollMotion from "./components/GlobalScrollMotion.jsx";
@@ -28,10 +30,10 @@ import AccessModeModal from "./components/AccessModeModal.jsx";
 import SEO from "./components/SEO.jsx";
 
 // Pages
-import BrowseInvestors from "./pages/BrowseInvestors.jsx";
-import InvestmentDetail from "./pages/InvestmentDetail.jsx";
-import FundraisingPage from "./pages/FundraisingPage.jsx";
-import StartFundraiser from "./pages/StartAFundraiser.jsx";
+import BrowseContributors from "./pages/BrowseInvestors.jsx";
+import ContributionDetail from "./pages/InvestmentFundDetails.jsx";
+import RaisingPage from "./pages/FundraisingPage.jsx";
+import StartRaiser from "./pages/StartAFundraiser.jsx";
 
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage.jsx";
@@ -45,6 +47,7 @@ import AdminAnalytics from "./components/admin/AdminAnalytics";
 import AdminUserDetails from "./components/admin/AdminUserDetails";
 
 import PaymentPage from "./pages/PaymentPage.jsx";
+import PaymentSuccess from "./pages/paymentsucess.jsx";
 
 import SupporterSpace from "./pages/SupporterSpace";
 import ReturnBasedOptions from "./pages/ReturnBasedOptions";
@@ -52,37 +55,37 @@ import VerifiedOpportunities from "./pages/VerifiedOpportunities";
 
 import BusinessCampaigns from "./pages/BusinessCampaigns";
 import CauseBasedFunding from "./pages/CauseBasedFunding";
-import FundraisingIdeas from "./pages/FundraisingIdeas";
-import FundraisingCauseTopicPage from "./pages/FundraisingCauseTopicPage.jsx";
-import HowToStartFundraising from "./pages/HowToStartFundraising.jsx";
-import HowToInvest from "./pages/HowToInvest.jsx";
+import RaisingIdeas from "./pages/FundraisingIdeas.jsx";
+import RaisingCauseTopicPage from "./pages/FundraisingCauseTopicPage.jsx";
+import HowToStartRaising from "./pages/HowToStartFundraising.jsx";
+import HowToContribute from "./pages/HowToInvest.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import About from "./pages/About.jsx";
 import MateBidBrandPage from "./pages/MateBidBrandPage.jsx";
 
 import SelectAccountMode from "./pages/SelectAccountType.jsx";
-import CompanyInvestorDashboard from "./pages/investor/CompanyInvestorDashboard";
-import FundraiserDashboard from "./pages/Fundraiser/FundraiserDashboard";
-import CompanyFundraiserDashboard from "./pages/Fundraiser/CompanyFundraiserDashboard";
+import CompanyContributorDashboard from "./pages/investor/CompanyInvestorDashboard";
+import RaiserDashboard from "./pages/Fundraiser/FundraiserDashboard.jsx";
+import CompanyRaiserDashboard from "./pages/Fundraiser/CompanyFundraiserDashboard.jsx";
 
-import FundraiserCampaigns from "./pages/Fundraiser/FundraiserCampaign.jsx";
-import FundraiserAnalytics from "./pages/Fundraiser/FundraiserAnalytics.jsx";
-import FundraiserWithdrawals from "./pages/Fundraiser/FundraiserWithdrawal.jsx";
-import FundraiserProfile from "./pages/Fundraiser/FundraiserProfile.jsx";
-import FundraiserKYC from "./pages/Fundraiser/FundraiserKyc.jsx";
-import FundraiserBank from "./pages/Fundraiser/FundraiserBank.jsx";
-import FundraiserSidebar from "./pages/Fundraiser/FundraiserSidebar.jsx";
+import RaiserCampaigns from "./pages/Fundraiser/FundraiserCampaign.jsx";
+import RaiserAnalytics from "./pages/Fundraiser/FundraiserAnalytics.jsx";
+import RaiserWithdrawals from "./pages/Fundraiser/FundraiserWithdrawal.jsx";
+import RaiserProfile from "./pages/Fundraiser/FundraiserProfile.jsx";
+import RaiserKYC from "./pages/Fundraiser/FundraiserKyc.jsx";
+import RaiserBank from "./pages/Fundraiser/FundraiserBank.jsx";
+import RaiserSidebar from "./pages/Fundraiser/FundraiserSidebar.jsx";
 
-import InvestorDashboard from "./pages/investor/InvestorDashboard.jsx";
-import InvestorPortfolio from "./pages/investor/InvestorPortfolio.jsx";
-import InvestorAnalytics from "./pages/investor/InvestorAnalytics.jsx";
-import InvestorTransactions from "./pages/investor/InvestorTransactions.jsx";
-import InvestorProfile from "./pages/investor/InvestorProfile.jsx";
-import InvestorKyc from "./pages/investor/InvestorKyc.jsx";
-import InvestorBank from "./pages/investor/InvestorBank.jsx";
-import InvestorSidebar from "./pages/investor/InvestorSidebar.jsx";
+import ContributorDashboard from "./pages/investor/InvestorDashboard.jsx";
+import ContributorPortfolio from "./pages/investor/InvestorPortfolio.jsx";
+import ContributorAnalytics from "./pages/investor/InvestorAnalytics.jsx";
+import ContributorTransactions from "./pages/investor/InvestorTransactions.jsx";
+import ContributorProfile from "./pages/investor/InvestorProfile.jsx";
+import ContributorKyc from "./pages/investor/InvestorKyc.jsx";
+import ContributorBank from "./pages/investor/InvestorBank.jsx";
+import ContributorSidebar from "./pages/investor/InvestorSidebar.jsx";
 // Context
-import { FundraiserProvider } from "./context/FundraiserContext.jsx";
+import { RaiserProvider } from "./context/FundraiserContext.jsx";
 
 function getStoredSession() {
   try {
@@ -105,16 +108,16 @@ function getModeDashboardPath(user, fallbackMode) {
 
   const mode = user?.activeMode || fallbackMode;
 
-  if (mode === "fundraiser") {
-    return user?.access?.fundraiser?.type === "company"
-      ? "/fundraiser/company/dashboard"
-      : "/fundraiser/dashboard";
+  if (mode === "raiser") {
+    return user?.access?.raiser?.type === "company"
+      ? "/raiser/company/dashboard"
+      : "/raiser/dashboard";
   }
 
-  if (mode === "investor") {
-    return user?.access?.investor?.type === "company"
-      ? "/investor/company/dashboard"
-      : "/investor/dashboard";
+  if (mode === "contributor") {
+    return user?.access?.contributor?.type === "company"
+      ? "/contributor/company/dashboard"
+      : "/contributor/dashboard";
   }
 
   return "/";
@@ -123,11 +126,11 @@ function getModeDashboardPath(user, fallbackMode) {
 function RoleAccessBlocker({ mode, user }) {
   const navigate = useNavigate();
   const title =
-    mode === "investor" ? "Investor account needed" : "Fundraiser account needed";
+    mode === "contributor" ? "Contributor account needed" : "Raiser account needed";
   const message =
-    mode === "investor"
-      ? "You need to login or register as an investor to access this page."
-      : "You need to login or register as a fundraiser to access this page.";
+    mode === "contributor"
+      ? "You need to login or register as an contributor to access this page."
+      : "You need to login or register as a raiser to access this page.";
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -162,8 +165,8 @@ function RequireMode({ mode, children }) {
 }
 
 const HOME_ACCESS_ROUTES = {
-  fundraiser: ["/how-to-start-a-fundraising"],
-  investor: ["/how-to-invest"],
+  raiser: ["/how-to-start-a-raising"],
+  contributor: ["/how-to-contribute"],
 };
 
 function RequireAccountMode({ mode, children }) {
@@ -184,7 +187,7 @@ function RequireAccountMode({ mode, children }) {
   return children;
 }
 
-function getFundraiserSidebarActive(pathname) {
+function getRaiserSidebarActive(pathname) {
   if (pathname.includes("/campaigns")) return "campaigns";
   if (pathname.includes("/analytics")) return "analytics";
   if (pathname.includes("/withdrawals")) return "withdrawals";
@@ -192,7 +195,7 @@ function getFundraiserSidebarActive(pathname) {
   return "dashboard";
 }
 
-function getInvestorSidebarActive(pathname) {
+function getContributorSidebarActive(pathname) {
   if (pathname.includes("/portfolio")) return "portfolio";
   if (pathname.includes("/analytics")) return "analytics";
   if (pathname.includes("/transactions")) return "transactions";
@@ -200,31 +203,31 @@ function getInvestorSidebarActive(pathname) {
   return "dashboard";
 }
 
-function FundraiserWorkspaceRoutes() {
+function RaiserWorkspaceRoutes() {
   const location = useLocation();
   const routeKey = `${location.pathname}${location.search}${location.hash}`;
 
   return (
     <div className="h-screen w-full bg-[#e3e8f0] text-slate-900">
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active={getFundraiserSidebarActive(location.pathname)} />
+        <RaiserSidebar active={getRaiserSidebarActive(location.pathname)} />
 
         <PageTransition
           routeKey={routeKey}
-          className="fundraiser-workspace-content flex min-w-0 flex-1"
+          className="raiser-workspace-content flex min-w-0 flex-1"
         >
           <Routes>
-            <Route path="dashboard" element={<FundraiserDashboard embedded />} />
+            <Route path="dashboard" element={<RaiserDashboard embedded />} />
             <Route
               path="company/dashboard"
-              element={<CompanyFundraiserDashboard embedded />}
+              element={<CompanyRaiserDashboard embedded />}
             />
-            <Route path="campaigns" element={<FundraiserCampaigns embedded />} />
-            <Route path="analytics" element={<FundraiserAnalytics embedded />} />
-            <Route path="withdrawals" element={<FundraiserWithdrawals embedded />} />
-            <Route path="profile" element={<FundraiserProfile embedded />} />
-            <Route path="profile/kyc" element={<FundraiserKYC embedded />} />
-            <Route path="profile/bank" element={<FundraiserBank embedded />} />
+            <Route path="campaigns" element={<RaiserCampaigns embedded />} />
+            <Route path="analytics" element={<RaiserAnalytics embedded />} />
+            <Route path="withdrawals" element={<RaiserWithdrawals embedded />} />
+            <Route path="profile" element={<RaiserProfile embedded />} />
+            <Route path="profile/kyc" element={<RaiserKYC embedded />} />
+            <Route path="profile/bank" element={<RaiserBank embedded />} />
           </Routes>
         </PageTransition>
       </div>
@@ -232,28 +235,28 @@ function FundraiserWorkspaceRoutes() {
   );
 }
 
-function InvestorWorkspaceRoutes() {
+function ContributorWorkspaceRoutes() {
   const location = useLocation();
   const routeKey = `${location.pathname}${location.search}${location.hash}`;
 
   return (
     <div className="h-screen w-full bg-[#e3e8f0] text-slate-900">
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <InvestorSidebar active={getInvestorSidebarActive(location.pathname)} />
+        <ContributorSidebar active={getContributorSidebarActive(location.pathname)} />
 
         <PageTransition
           routeKey={routeKey}
-          className="investor-workspace-content flex min-w-0 flex-1"
+          className="contributor-workspace-content flex min-w-0 flex-1"
         >
           <Routes>
-            <Route path="dashboard" element={<InvestorDashboard />} />
-            <Route path="company/dashboard" element={<CompanyInvestorDashboard />} />
-            <Route path="portfolio" element={<InvestorPortfolio />} />
-            <Route path="analytics" element={<InvestorAnalytics />} />
-            <Route path="transactions" element={<InvestorTransactions />} />
-            <Route path="profile" element={<InvestorProfile />} />
-            <Route path="profile/kyc" element={<InvestorKyc />} />
-            <Route path="profile/bank" element={<InvestorBank />} />
+            <Route path="dashboard" element={<ContributorDashboard />} />
+            <Route path="company/dashboard" element={<CompanyContributorDashboard />} />
+            <Route path="portfolio" element={<ContributorPortfolio />} />
+            <Route path="analytics" element={<ContributorAnalytics />} />
+            <Route path="transactions" element={<ContributorTransactions />} />
+            <Route path="profile" element={<ContributorProfile />} />
+            <Route path="profile/kyc" element={<ContributorKyc />} />
+            <Route path="profile/bank" element={<ContributorBank />} />
           </Routes>
         </PageTransition>
       </div>
@@ -265,32 +268,32 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
   const location = useLocation();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isFundraiserWorkspaceRoute = location.pathname.startsWith("/fundraiser/");
-  const isInvestorWorkspaceRoute = location.pathname.startsWith("/investor/");
-  const appTransitionKey = isFundraiserWorkspaceRoute
-    ? "fundraiser-workspace"
-    : isInvestorWorkspaceRoute
-    ? "investor-workspace"
+  const isRaiserWorkspaceRoute = location.pathname.startsWith("/raiser/");
+  const isContributorWorkspaceRoute = location.pathname.startsWith("/contributor/");
+  const appTransitionKey = isRaiserWorkspaceRoute
+    ? "raiser-workspace"
+    : isContributorWorkspaceRoute
+    ? "contributor-workspace"
     : `${location.pathname}${location.search}${location.hash}`;
 
   const hideHeaderRoutes = [
-    "/fundraiser/dashboard",
-    "/fundraiser/campaigns",
-    "/fundraiser/analytics",
-    "/fundraiser/withdrawals",
-    "/fundraiser/profile",
-    "/fundraiser/profile/kyc",
-    "/fundraiser/profile/bank",
-    "/fundraiser/company/dashboard",
-    "/investor/dashboard",
-    "/investor/company/dashboard",
-    "/investor/portfolio",
-    "/investor/analytics",
+    "/raiser/dashboard",
+    "/raiser/campaigns",
+    "/raiser/analytics",
+    "/raiser/withdrawals",
+    "/raiser/profile",
+    "/raiser/profile/kyc",
+    "/raiser/profile/bank",
+    "/raiser/company/dashboard",
+    "/contributor/dashboard",
+    "/contributor/company/dashboard",
+    "/contributor/portfolio",
+    "/contributor/analytics",
     
-    "/investor/transactions",
-    "/investor/profile",
-    "/investor/profile/kyc",
-    "/investor/profile/bank",
+    "/contributor/transactions",
+    "/contributor/profile",
+    "/contributor/profile/kyc",
+    "/contributor/profile/bank",
   ];
 
   const shouldHideHeader =
@@ -318,7 +321,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
               <SEO
                 title="MateBid / M8BID Crowdfunding Platform for Startups, Businesses & Causes"
                 description="MateBid, also known as M8BID, is India's professional crowdfunding platform for raising, funding, and contributing to verified startup, business, NGO, and cause campaigns."
-                keywords="MateBid, matebid, M8BID, m8bid, MateBid raising, MateBid contributing, MateBid funding, crowdfunding platform India, startup fundraising, raise funds online, business crowdfunding, NGO fundraising, donation crowdfunding, contribute to campaigns, verified campaigns, campaign funding, crowdfunding for education, medical crowdfunding"
+                keywords="MateBid, matebid, M8BID, m8bid, MateBid raising, MateBid contributing, MateBid funding, crowdfunding platform India, startup raising, raise funds online, business crowdfunding, NGO raising, donation crowdfunding, contribute to campaigns, verified campaigns, campaign funding, crowdfunding for education, medical crowdfunding"
                 canonical="/"
                 jsonLd={{
                   "@context": "https://schema.org",
@@ -330,7 +333,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
                       url: "https://www.matebid.com",
                       logo: "https://www.matebid.com/logo.png",
                       description:
-                        "M8BID is a professional crowdfunding platform connecting fundraisers and contributors across startups, NGOs, education, businesses, and social causes.",
+                        "M8BID is a professional crowdfunding platform connecting raisers and contributors across startups, NGOs, education, businesses, and social causes.",
                       sameAs: [],
                     },
                     {
@@ -341,7 +344,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
                       publisher: { "@id": "https://www.matebid.com/#organization" },
                       potentialAction: {
                         "@type": "SearchAction",
-                        target: "https://www.matebid.com/browse-investors?q={search_term_string}",
+                        target: "https://www.matebid.com/browse-contributors?q={search_term_string}",
                         "query-input": "required name=search_term_string",
                       },
                     },
@@ -355,6 +358,26 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
                       description:
                         "Launch a raising campaign for your startup, NGO, business, or cause — or contribute to verified campaigns securely. KYC-backed, transparent, and trusted.",
                     },
+                    {
+                      "@type": "FAQPage",
+                      "@id": "https://www.matebid.com/#faq",
+                      mainEntity: homeFaqs.map((faq) => ({
+                        "@type": "Question",
+                        name: faq.question,
+                        acceptedAnswer: { "@type": "Answer", text: faq.answer },
+                      })),
+                    },
+                    {
+                      "@type": "HowTo",
+                      "@id": "https://www.matebid.com/#how-it-works",
+                      name: "Launch a Campaign on M8Bid",
+                      step: launchCampaignSteps.map((s, i) => ({
+                        "@type": "HowToStep",
+                        position: i + 1,
+                        name: s.name,
+                        text: s.text,
+                      })),
+                    },
                   ],
                 }}
               />
@@ -365,7 +388,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
                 <WhatWeProvide />
               </section>
               <section data-motion data-motion-delay="120">
-                <FundraisingCauses />
+                <RaisingCauses />
               </section>
               <section data-motion data-motion-delay="160">
                 <HowItWorks />
@@ -378,6 +401,9 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
               </section>
               <section data-motion data-motion-delay="280">
                 <SecurityCompliance />
+              </section>
+              <section data-motion data-motion-delay="300">
+                <HomeFAQ />
               </section>
               <section data-motion data-motion-delay="320">
                 <Footer />
@@ -395,25 +421,25 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
 
         {/* Public pages */}
         <Route
-          path="/browse-investors"
+          path="/browse-contributors"
           element={
             <>
-              <BrowseInvestors />
+              <BrowseContributors />
               <Footer />
             </>
           }
         />
 
         <Route
-          path="/investment-detail/:id"
-          element={<InvestmentDetail />}
+          path="/contribution-detail/:id"
+          element={<ContributionDetail />}
         />
 
         <Route
-          path="/fundraising"
+          path="/raising"
           element={
             <>
-              <FundraisingPage />
+              <RaisingPage />
               <Footer />
             </>
           }
@@ -423,10 +449,10 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
 
         
         <Route
-          path="/fundraiser/*"
+          path="/raiser/*"
           element={
-            <RequireMode mode="fundraiser">
-              <FundraiserWorkspaceRoutes />
+            <RequireMode mode="raiser">
+              <RaiserWorkspaceRoutes />
             </RequireMode>
           }
         />
@@ -434,7 +460,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/supporter-space"
           element={
-            <RequireAccountMode mode="investor">
+            <RequireAccountMode mode="contributor">
               <SupporterSpace />
             </RequireAccountMode>
           }
@@ -469,7 +495,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/return-based-options"
           element={
-            <RequireAccountMode mode="investor">
+            <RequireAccountMode mode="contributor">
               <ReturnBasedOptions />
             </RequireAccountMode>
           }
@@ -477,7 +503,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/verified-opportunities"
           element={
-            <RequireAccountMode mode="investor">
+            <RequireAccountMode mode="contributor">
               <VerifiedOpportunities />
             </RequireAccountMode>
           }
@@ -485,7 +511,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/business-campaigns"
           element={
-            <RequireAccountMode mode="investor">
+            <RequireAccountMode mode="contributor">
               <BusinessCampaigns />
             </RequireAccountMode>
           }
@@ -493,66 +519,68 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/cause-based-funding"
           element={
-            <RequireAccountMode mode="fundraiser">
+            <RequireAccountMode mode="raiser">
               <CauseBasedFunding />
             </RequireAccountMode>
           }
         />
         <Route
-          path="/fundraising-ideas"
+          path="/raising-ideas"
           element={
-            <RequireAccountMode mode="fundraiser">
-              <FundraisingIdeas />
+            <RequireAccountMode mode="raiser">
+              <RaisingIdeas />
             </RequireAccountMode>
           }
         />
         <Route
-          path="/how-to-start-a-fundraising"
+          path="/how-to-start-a-raising"
           element={
             <>
-              <HowToStartFundraising />
+              <HowToStartRaising />
               <Footer />
             </>
           }
         />
         <Route
-          path="/how-to-invest"
+          path="/how-to-contribute"
           element={
             <>
-              <HowToInvest />
+              <HowToContribute />
               <Footer />
             </>
           }
         />
         <Route
-          path="/fundraising-causes/:causeSlug"
+          path="/raising-causes/:causeSlug"
           element={
-            <RequireAccountMode mode="fundraiser">
-              <FundraisingCauseTopicPage />
+            <RequireAccountMode mode="raiser">
+              <RaisingCauseTopicPage />
               <Footer />
             </RequireAccountMode>
           }
         />
 
         <Route
-          path="/start-fundraiser"
+          path="/start-raiser"
           element={
-            <RequireAccountMode mode="fundraiser">
-              <StartFundraiser />
+            <RequireAccountMode mode="raiser">
+              <StartRaiser />
             </RequireAccountMode>
           }
         />
         <Route
           path="/payment"
           element={
-            <RequireAccountMode mode="investor">
+            <RequireAccountMode mode="contributor">
               <PaymentPage />
             </RequireAccountMode>
           }
         />
 
+        <Route path="/payment-success" element={<PaymentSuccess />} />
 
-<Route path="/investor/*" element={<RequireMode mode="investor"><InvestorWorkspaceRoutes /></RequireMode>} />
+
+<Route path="/contributor/*" element={<RequireMode mode="contributor"><ContributorWorkspaceRoutes /></RequireMode>} />
 
         {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>
@@ -589,13 +617,15 @@ export default function App() {
   }, []);
 
   return (
-    <FundraiserProvider>
+    <RaiserProvider>
       <Router>
         <AppRoutes
           loggedInUser={loggedInUser}
           setLoggedInUser={setLoggedInUser}
         />
       </Router>
-    </FundraiserProvider>
+    </RaiserProvider>
   );
 }
+
+

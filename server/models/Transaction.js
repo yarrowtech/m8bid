@@ -191,9 +191,6 @@ transactionSchema.index({ user: 1, createdAt: -1 });
 transactionSchema.index({ campaign: 1, createdAt: -1 });
 transactionSchema.index({ investment: 1, createdAt: -1 });
 transactionSchema.index({ status: 1, type: 1 });
-transactionSchema.index({ paymentGatewayId: 1 });
-transactionSchema.index({ orderId: 1 });
-transactionSchema.index({ transferId: 1 });
 
 transactionSchema.pre("save", function (next) {
   if (this.netAmount === undefined || this.netAmount === null) {

@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import FundraiserSidebar from "./FundraiserSidebar";
+import RaiserSidebar from "./FundraiserSidebar";
 import {
   getDashboardData,
   getFundraiserProfile,
@@ -41,7 +41,7 @@ const maskAccountNumber = (accountNumber) => {
   return `XXXXXX${String(accountNumber).slice(-4)}`;
 };
 
-export default function FundraiserWithdrawals() {
+export default function RaiserWithdrawals() {
   const navigate = useNavigate();
 
   const [campaigns, setCampaigns] = useState([]);
@@ -80,8 +80,8 @@ export default function FundraiserWithdrawals() {
         setCampaigns(
           Array.isArray(campaignRes?.data)
             ? campaignRes.data
-            : Array.isArray(campaignRes?.fundraisers)
-            ? campaignRes.fundraisers
+            : Array.isArray(campaignRes?.raisers)
+            ? campaignRes.raisers
             : []
         );
         setProfile(profileRes?.data || null);
@@ -125,7 +125,7 @@ export default function FundraiserWithdrawals() {
   return (
     <div className="h-screen w-full bg-[#e3e8f0]">
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active="withdrawals" />
+        <RaiserSidebar active="withdrawals" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -140,7 +140,7 @@ export default function FundraiserWithdrawals() {
             </div>
 
             <button
-              onClick={() => navigate("/fundraiser/profile/bank")}
+              onClick={() => navigate("/raiser/profile/bank")}
               className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700"
             >
               {withdrawalData.bankLinked ? "Update Bank Account" : "Link Bank Account"}
@@ -216,7 +216,7 @@ export default function FundraiserWithdrawals() {
                       No withdrawal history available
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
-                      This page is now using real backend fundraiser and bank data, but a dedicated withdrawal history API is not available yet.
+                      This page is now using real backend raiser and bank data, but a dedicated withdrawal history API is not available yet.
                     </p>
                   </div>
                 )}

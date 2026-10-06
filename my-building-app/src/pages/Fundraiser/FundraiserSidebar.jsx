@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import {
@@ -36,7 +36,7 @@ function SidebarItem({ icon: Icon, label, active = false, onClick }) {
   );
 }
 
-export default function FundraiserSidebar({
+export default function RaiserSidebar({
   active = "dashboard",
   setLoggedInUser,
 }) {
@@ -80,31 +80,31 @@ export default function FundraiserSidebar({
             icon={LayoutDashboard}
             label="Dashboard"
             active={active === "dashboard"}
-            onClick={() => navigate("/fundraiser/dashboard")}
+            onClick={() => navigate("/raiser/dashboard")}
           />
           <SidebarItem
             icon={FolderKanban}
             label="Campaigns"
             active={active === "campaigns"}
-            onClick={() => navigate("/fundraiser/campaigns")}
+            onClick={() => navigate("/raiser/campaigns")}
           />
           <SidebarItem
             icon={BarChart3}
             label="Analytics"
             active={active === "analytics"}
-            onClick={() => navigate("/fundraiser/analytics")}
+            onClick={() => navigate("/raiser/analytics")}
           />
           <SidebarItem
             icon={Wallet}
             label="Withdrawals"
             active={active === "withdrawals"}
-            onClick={() => navigate("/fundraiser/withdrawals")}
+            onClick={() => navigate("/raiser/withdrawals")}
           />
           <SidebarItem
             icon={User}
             label="Profile"
             active={active === "profile"}
-            onClick={() => navigate("/fundraiser/profile")}
+            onClick={() => navigate("/raiser/profile")}
           />
         </div>
       </div>

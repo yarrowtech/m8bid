@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   ResponsiveContainer,
@@ -133,13 +133,13 @@ export default function AdminDashboard() {
   const totalUsers = overview.totalUsers ?? dashboard?.totalUsers ?? 0;
   const totalCampaigns =
     overview.totalCampaigns ??
-    dashboard?.totalFundraisers ??
+    dashboard?.totalRaisers ??
     dashboard?.totalCampaigns ??
     0;
-  const totalInvestments =
-    overview.totalInvestments ??
-    dashboard?.totalInvestments ??
-    dashboard?.totalInvestment ??
+  const totalContributions =
+    overview.totalContributions ??
+    dashboard?.totalContributions ??
+    dashboard?.totalContribution ??
     0;
   const totalRevenue =
     overview.totalRevenue ??
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
   const activeUsers = growth?.activeUsers ?? dashboard?.activeUsers ?? 0;
 
   const recentCampaigns =
-    recentActivities.campaigns || dashboard?.recentFundraisers || [];
+    recentActivities.campaigns || dashboard?.recentRaisers || [];
 
   const monthlyRaised = dashboard?.monthlyRaised || [];
   const monthlyUsers = dashboard?.monthlyUsers || growth?.monthlyUsers || [];
@@ -194,21 +194,21 @@ export default function AdminDashboard() {
   }, [monthlyUsers]);
 
   const pieData = useMemo(() => {
-    const investments = Number(totalInvestments || 0);
-    const fundraising = Number(totalRevenue || 0);
+    const contributions = Number(totalContributions || 0);
+    const raising = Number(totalRevenue || 0);
 
-    if (investments === 0 && fundraising === 0) {
+    if (contributions === 0 && raising === 0) {
       return [
-        { name: "Investments", value: 1 },
-        { name: "Fundraising", value: 1 },
+        { name: "Contributions", value: 1 },
+        { name: "Raising", value: 1 },
       ];
     }
 
     return [
-      { name: "Investments", value: investments },
-      { name: "Fundraising", value: fundraising },
+      { name: "Contributions", value: contributions },
+      { name: "Raising", value: raising },
     ];
-  }, [totalInvestments, totalRevenue]);
+  }, [totalContributions, totalRevenue]);
 
   const filteredUsers = useMemo(() => {
     const nonAdminUsers = allUsers.filter((user) => {
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
                 Admin Dashboard
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Monitor users, campaigns, investments and platform performance
+                Monitor users, campaigns, contributions and platform performance
               </p>
             </div>
           </div>
@@ -344,9 +344,9 @@ export default function AdminDashboard() {
           theme="sky"
         />
         <KpiCard
-          title="Investments"
-          value={formatNumber(totalInvestments)}
-          subtitle="Recorded investments"
+          title="Contributions"
+          value={formatNumber(totalContributions)}
+          subtitle="Recorded contributions"
           icon={FaCoins}
           theme="emerald"
         />
@@ -607,7 +607,7 @@ export default function AdminDashboard() {
                 Monthly Raised
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Fundraising amount trend month by month
+                Raising amount trend month by month
               </p>
             </div>
             <FaBullhorn className="text-slate-400 text-lg" />
@@ -656,7 +656,7 @@ export default function AdminDashboard() {
           <div className="mb-5 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold tracking-tight text-slate-900">
-                Investments vs Fundraising
+                Contributions vs Raising
               </h3>
               <p className="mt-1 text-sm text-slate-500">
                 Distribution overview

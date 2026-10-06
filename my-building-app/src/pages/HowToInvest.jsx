@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   ArrowRight,
   ClipboardCheck,
@@ -134,13 +134,13 @@ function StepSection({ title, intro, steps }) {
   );
 }
 
-export default function HowToInvest() {
+export default function HowToContribute() {
   const navigate = useNavigate();
-  const [investorAccessOpen, setInvestorAccessOpen] = useState(false);
-  const investingSteps = [
+  const [contributorAccessOpen, setContributorAccessOpen] = useState(false);
+  const contributingSteps = [
     {
-      title: "Login As Investor",
-      text: "Use an investor account so campaign browsing and transactions are connected to your profile.",
+      title: "Login As Contributor",
+      text: "Use an contributor account so campaign browsing and transactions are connected to your profile.",
       icon: LogIn,
       bg: "bg-blue-100",
       iconColor: "text-blue-700",
@@ -190,23 +190,23 @@ export default function HowToInvest() {
     }
   };
 
-  const handleInvestorAction = (path) => {
+  const handleContributorAction = (path) => {
     const user = getSessionUser();
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const hasInvestorAccount = Boolean(
-      user?.access?.investor?.enabled && user?.activeMode === "investor"
+    const hasContributorAccount = Boolean(
+      user?.access?.contributor?.enabled && user?.activeMode === "contributor"
     );
 
-    if (!user || !token || !hasInvestorAccount) {
-      setInvestorAccessOpen(true);
+    if (!user || !token || !hasContributorAccount) {
+      setContributorAccessOpen(true);
       return;
     }
 
     navigate(path);
   };
 
-  const handleBrowseInvestors = () => {
-    handleInvestorAction("/browse-investors");
+  const handleBrowseContributors = () => {
+    handleContributorAction("/browse-contributors");
   };
 
   return (
@@ -214,27 +214,27 @@ export default function HowToInvest() {
       <main className="bg-gradient-to-b from-white to-slate-50 text-slate-800">
         <section className="mx-auto max-w-6xl px-6 pb-10 pt-12 md:px-10 md:pb-14 md:pt-16">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-700">
-            Investor Guide
+            Contributor Guide
           </p>
           <h1 className="mt-3 max-w-4xl text-3xl font-extrabold leading-tight text-slate-900 md:text-5xl">
-            How To Invest In Campaigns
+            How To Contribute In Campaigns
           </h1>
           <p className="mt-5 max-w-4xl text-base leading-8 text-slate-600 md:text-lg">
-            A clear walkthrough for investors: what investing means on this
+            A clear walkthrough for contributors: what contributing means on this
             platform, how to review campaigns, what details to check, and how to
-            invest with confidence.
+            contribute with confidence.
           </p>
         </section>
 
         <ZigSection
-          title="What Does Investing Mean Here?"
-          text="Investing means supporting selected campaigns after reviewing their idea, goal, documents, progress, and creator details. The purpose is to help users make informed decisions instead of clicking into campaigns without context."
+          title="What Does Contributing Mean Here?"
+          text="Contributing means supporting selected campaigns after reviewing their idea, goal, documents, progress, and creator details. The purpose is to help users make informed decisions instead of clicking into campaigns without context."
           image={heroImage}
-          alt="Investor reviewing campaign opportunities"
+          alt="Contributor reviewing campaign opportunities"
         >
           <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-          On this platform, investors browse campaign pages, compare important
-          information, understand the fundraising purpose, and contribute
+          On this platform, contributors browse campaign pages, compare important
+          information, understand the raising purpose, and contribute
           through a guided payment flow.
         </p>
           <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
@@ -245,23 +245,23 @@ export default function HowToInvest() {
         </ZigSection>
 
         <StepSection
-          title="How Investing Works: Step By Step"
-          intro="Use this visual flow to understand the investor journey before you browse campaigns. Each step helps you move from discovery to a more informed decision."
-          steps={investingSteps}
+          title="How Contributing Works: Step By Step"
+          intro="Use this visual flow to understand the contributor journey before you browse campaigns. Each step helps you move from discovery to a more informed decision."
+          steps={contributingSteps}
         />
 
         <ZigSection
-          title="How Investing Helps"
-          text="Investing helps promising campaigns receive support while giving investors a structured way to discover projects, businesses, and causes that match their interests."
+          title="How Contributing Helps"
+          text="Contributing helps promising campaigns receive support while giving contributors a structured way to discover projects, businesses, and causes that match their interests."
           image={compareImage}
-          alt="Investment growth and comparison chart"
+          alt="Contribution growth and comparison chart"
           reverse
         >
           <ul className="mt-4 list-disc space-y-2 pl-6 text-sm leading-8 text-slate-700 md:text-base">
             <li>Discover campaigns with clear goals and public details.</li>
             <li>Compare campaign purpose, target amount, and progress.</li>
             <li>Support founders, projects, causes, or business growth.</li>
-            <li>Track your investment activity from your dashboard.</li>
+            <li>Track your contribution activity from your dashboard.</li>
             <li>Build a personal history of campaigns you have reviewed.</li>
             <li>Use verification signals to avoid poorly explained campaigns.</li>
           </ul>
@@ -269,10 +269,10 @@ export default function HowToInvest() {
 
         <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Before You Invest
+            Before You Contribute
           </h2>
           <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-            A good investor slows down for a few minutes before paying. Read the
+            A good contributor slows down for a few minutes before paying. Read the
             campaign, compare the numbers, and check whether the organizer has
             explained the important details clearly.
           </p>
@@ -280,7 +280,7 @@ export default function HowToInvest() {
             items={[
               {
                 title: "Account Readiness",
-                text: "Login with an investor account and complete any required profile, KYC, or bank details before investing.",
+                text: "Login with an contributor account and complete any required profile, KYC, or bank details before contributing.",
               },
               {
                 title: "Campaign Fit",
@@ -288,7 +288,7 @@ export default function HowToInvest() {
               },
               {
                 title: "Amount Comfort",
-                text: "Only invest an amount you are comfortable contributing after reviewing the campaign details.",
+                text: "Only contribute an amount you are comfortable contributing after reviewing the campaign details.",
               },
               {
                 title: "Organizer Clarity",
@@ -308,11 +308,11 @@ export default function HowToInvest() {
 
         <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            What To Check Before Investing
+            What To Check Before Contributing
           </h2>
           <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-            A good investment decision starts with reading the campaign carefully.
-            These are the main details an investor should review before moving
+            A good contribution decision starts with reading the campaign carefully.
+            These are the main details an contributor should review before moving
             forward.
           </p>
 
@@ -350,7 +350,7 @@ export default function HowToInvest() {
             items={[
               {
                 title: "Story First",
-                text: "Understand the problem, goal, and reason the fundraiser exists before looking at the payment button.",
+                text: "Understand the problem, goal, and reason the raiser exists before looking at the payment button.",
               },
               {
                 title: "Money Second",
@@ -366,11 +366,11 @@ export default function HowToInvest() {
               },
               {
                 title: "Updates Fifth",
-                text: "A campaign with regular updates usually gives investors better visibility into progress.",
+                text: "A campaign with regular updates usually gives contributors better visibility into progress.",
               },
               {
                 title: "Decision Last",
-                text: "Invest only after the campaign purpose, amount, trust signals, and risk level are clear to you.",
+                text: "Contribute only after the campaign purpose, amount, trust signals, and risk level are clear to you.",
               },
             ]}
           />
@@ -389,7 +389,7 @@ export default function HowToInvest() {
                 </h3>
                 <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
                   These campaigns usually focus on business expansion, product
-                  launch, team hiring, production, or market growth. Investors
+                  launch, team hiring, production, or market growth. Contributors
                   should check milestones, use of funds, and execution clarity.
                 </p>
                 <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
@@ -399,7 +399,7 @@ export default function HowToInvest() {
               </div>
               <img
                 src={campaignImage}
-                alt="Campaign card preview for investors"
+                alt="Campaign card preview for contributors"
                 className="h-[210px] w-full rounded-2xl object-cover shadow-md md:h-[250px]"
               />
             </div>
@@ -407,7 +407,7 @@ export default function HowToInvest() {
             <div className="grid items-center gap-8 lg:grid-cols-2">
               <img
                 src={secureImage}
-                alt="Secure investment process"
+                alt="Secure contribution process"
                 className="order-1 h-[210px] w-full rounded-2xl object-cover shadow-md md:h-[250px] lg:order-2"
               />
               <div className="order-2 lg:order-1">
@@ -416,7 +416,7 @@ export default function HowToInvest() {
                 </h3>
                 <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
                   These campaigns focus on support, impact, or community needs.
-                  Investors and supporters should review the story, proof,
+                  Contributors and supporters should review the story, proof,
                   beneficiary details, and transparency of updates.
                 </p>
                 <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
@@ -465,10 +465,10 @@ export default function HowToInvest() {
 
         <section className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            After You Invest
+            After You Contribute
           </h2>
           <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-            The investment journey does not end after payment. Use your dashboard
+            The contribution journey does not end after payment. Use your dashboard
             and campaign updates to keep track of your activity and understand
             how the campaign is progressing.
           </p>
@@ -476,11 +476,11 @@ export default function HowToInvest() {
             items={[
               {
                 title: "Check Dashboard",
-                text: "Review your investment history, transaction status, and any campaign activity connected to your account.",
+                text: "Review your contribution history, transaction status, and any campaign activity connected to your account.",
               },
               {
                 title: "Follow Updates",
-                text: "Look for progress notes from the fundraiser, especially after milestones or major campaign changes.",
+                text: "Look for progress notes from the raiser, especially after milestones or major campaign changes.",
               },
               {
                 title: "Keep Records",
@@ -492,7 +492,7 @@ export default function HowToInvest() {
               },
               {
                 title: "Avoid Pressure",
-                text: "Do not invest only because a campaign looks urgent. Make sure the details are understandable.",
+                text: "Do not contribute only because a campaign looks urgent. Make sure the details are understandable.",
               },
               {
                 title: "Support Responsibly",
@@ -507,18 +507,18 @@ export default function HowToInvest() {
             Common Mistakes To Avoid
           </h2>
           <ul className="mt-5 list-disc space-y-3 pl-6 text-sm leading-8 text-slate-700 md:text-base">
-            <li>Investing without opening the full campaign details page.</li>
+            <li>Contributing without opening the full campaign details page.</li>
             <li>Looking only at the title and ignoring use of funds.</li>
             <li>Assuming every campaign has the same risk level.</li>
             <li>Ignoring missing documents, unclear updates, or weak proof.</li>
-            <li>Investing more than you are comfortable contributing.</li>
+            <li>Contributing more than you are comfortable contributing.</li>
             <li>Forgetting to check transaction status after payment.</li>
           </ul>
         </section>
 
         <section className="mx-auto max-w-6xl px-6 pb-16 pt-8 md:px-10">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Practical Investment Example
+            Practical Contribution Example
           </h2>
           <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
             Suppose a food brand is raising Rs 500,000 for equipment, packaging,
@@ -527,7 +527,7 @@ export default function HowToInvest() {
             matches your interest.
           </p>
           <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-            This makes the investment process easier to understand and helps you
+            This makes the contribution process easier to understand and helps you
             support campaigns with more confidence.
           </p>
           <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -541,7 +541,7 @@ export default function HowToInvest() {
               <div className="rounded-xl bg-slate-50 p-3">Updates: weekly progress</div>
             </div>
             <p className="mt-4 text-sm leading-8 text-slate-700">
-              Simple notes like these help an investor compare campaigns without
+              Simple notes like these help an contributor compare campaigns without
               relying only on emotion or urgency.
             </p>
           </div>
@@ -549,15 +549,15 @@ export default function HowToInvest() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={handleBrowseInvestors}
+              onClick={handleBrowseContributors}
               className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800"
             >
-              Browse Investors Now
+              Browse Contributors Now
               <ArrowRight className="ml-2 h-4 w-4" />
             </button>
             <button
               type="button"
-              onClick={() => handleInvestorAction("/verified-opportunities")}
+              onClick={() => handleContributorAction("/verified-opportunities")}
               className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
             >
               View Verified Opportunities
@@ -566,14 +566,14 @@ export default function HowToInvest() {
         </section>
       </main>
       <AccessModeModal
-        open={investorAccessOpen}
-        onClose={() => setInvestorAccessOpen(false)}
+        open={contributorAccessOpen}
+        onClose={() => setContributorAccessOpen(false)}
         onLogin={() => {
-          setInvestorAccessOpen(false);
+          setContributorAccessOpen(false);
           navigate("/login");
         }}
-        title="Investor account needed"
-        message="You need an investor account to browse and invest in campaigns. Please login with an investor account or create one first."
+        title="Contributor account needed"
+        message="You need an contributor account to browse and contribute in campaigns. Please login with an contributor account or create one first."
         buttonLabel="Go to Login"
       />
     </>

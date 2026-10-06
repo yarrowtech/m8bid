@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import heroImage from "../assets/fundraising-hero.jpg";
 import helpsImage from "../assets/startup-sample.jpg";
 import donationImage from "../assets/donation.jpg";
-import investmentImage from "../assets/investors-hero.jpg";
+import contributionImage from "../assets/investors-hero.jpg";
 import AccessModeModal from "../components/AccessModeModal.jsx";
 import SEO from "../components/SEO.jsx";
 
@@ -131,7 +131,7 @@ function StepSection({ title, intro, steps }) {
   );
 }
 
-export default function HowToStartFundraising() {
+export default function HowToStartRaising() {
   const navigate = useNavigate();
   const [raiserAccessOpen, setRaiserAccessOpen] = useState(false);
   const raisingSteps = [
@@ -191,7 +191,7 @@ export default function HowToStartFundraising() {
     const user = getSessionUser();
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     const hasRaiserAccount = Boolean(
-      user?.access?.fundraiser?.enabled && user?.activeMode === "fundraiser"
+      user?.access?.raiser?.enabled && user?.activeMode === "raiser"
     );
 
     if (!user || !token || !hasRaiserAccount) {
@@ -203,7 +203,7 @@ export default function HowToStartFundraising() {
   };
 
   const handleStartRaiser = () => {
-    handleRaiserAction("/fundraising");
+    handleRaiserAction("/raising");
   };
 
   return (
@@ -212,14 +212,14 @@ export default function HowToStartFundraising() {
         title="How to Start Raising — Complete Step-by-Step Guide for Founders"
         description="Learn how to start a raising campaign on MateBid. Define your goal, build your raiser page, share with supporters, and collect contributions securely. A complete guide for founders and businesses."
         keywords="how to start raising, start a raiser, raising guide India, raising campaign steps, raiser page tips, MateBid raising, donation based raising, contribution based raising, raising for startups, how to raise funds online, crowdfunding guide"
-        canonical="/how-to-start-a-fundraising"
+        canonical="/how-to-start-a-raising"
         jsonLd={{
           "@context": "https://schema.org",
           "@graph": [
             {
               "@type": "WebPage",
-              "@id": "https://www.matebid.com/how-to-start-a-fundraising",
-              url: "https://www.matebid.com/how-to-start-a-fundraising",
+              "@id": "https://www.matebid.com/how-to-start-a-raising",
+              url: "https://www.matebid.com/how-to-start-a-raising",
               name: "How to Start Raising — Complete Step-by-Step Guide for Founders | M8BID",
               description:
                 "A complete guide on how to start a raising campaign — define your goal, build your raiser page, share with supporters, and collect contributions securely.",
@@ -228,7 +228,7 @@ export default function HowToStartFundraising() {
                 "@type": "BreadcrumbList",
                 itemListElement: [
                   { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
-                  { "@type": "ListItem", position: 2, name: "How to Start Raising", item: "https://www.matebid.com/how-to-start-a-fundraising" },
+                  { "@type": "ListItem", position: 2, name: "How to Start Raising", item: "https://www.matebid.com/how-to-start-a-raising" },
                 ],
               },
             },
@@ -457,15 +457,15 @@ export default function HowToStartFundraising() {
             </div>
             <img
               src={donationImage}
-              alt="Donation model for fundraising"
+              alt="Donation model for raising"
               className="h-[210px] w-full rounded-2xl object-cover shadow-md md:h-[250px]"
             />
           </div>
 
           <div className="grid items-center gap-8 lg:grid-cols-2">
             <img
-              src={investmentImage}
-              alt="Investment model for fundraising"
+              src={contributionImage}
+              alt="Contribution model for raising"
               className="order-1 h-[210px] w-full rounded-2xl object-cover shadow-md md:h-[250px] lg:order-2"
             />
             <div className="order-2 lg:order-1">
@@ -564,7 +564,7 @@ export default function HowToStartFundraising() {
           </button>
           <button
             type="button"
-            onClick={() => handleRaiserAction("/fundraising-ideas")}
+            onClick={() => handleRaiserAction("/raising-ideas")}
             className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
           >
             Explore Raising Ideas

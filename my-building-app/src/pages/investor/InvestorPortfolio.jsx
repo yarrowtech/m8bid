@@ -8,7 +8,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import InvestorSidebar from './InvestorSidebar';
+import ContributorSidebar from './InvestorSidebar';
 import { getMyInvestments } from '../../api/investmentapi';
 
 const formatINR = (amount) => {
@@ -16,27 +16,27 @@ const formatINR = (amount) => {
   return 'Rs ' + value.toLocaleString('en-IN');
 };
 
-const getExpectedReturn = (investment, campaign) => {
+const getExpectedReturn = (contribution, campaign) => {
   const profitPercent = Number(campaign?.profitPercentage || 0);
-  const amount = Number(investment?.amount || 0);
+  const amount = Number(contribution?.amount || 0);
   return Math.round(amount * profitPercent / 100);
 };
 
-const getCurrentValue = (investment, campaign) => {
-  const amount = Number(investment?.amount || 0);
-  const expectedReturn = getExpectedReturn(investment, campaign);
+const getCurrentValue = (contribution, campaign) => {
+  const amount = Number(contribution?.amount || 0);
+  const expectedReturn = getExpectedReturn(contribution, campaign);
   return amount + expectedReturn;
 };
 
-const getReturnRate = (investment, campaign) => {
+const getReturnRate = (contribution, campaign) => {
   const profitPercent = Number(campaign?.profitPercentage || 0);
   return profitPercent > 0 ? `+${profitPercent}%` : 'N/A';
 };
 
-const getInvestmentStatus = (investment) => {
-  const paymentStatus = String(investment?.paymentStatus || '').toLowerCase();
-  const status = String(investment?.status || '').toLowerCase();
-  const campaignStatus = String(investment?.campaign?.status || '').toLowerCase();
+const getContributionStatus = (contribution) => {
+  const paymentStatus = String(contribution?.paymentStatus || '').toLowerCase();
+  const status = String(contribution?.status || '').toLowerCase();
+  const campaignStatus = String(contribution?.campaign?.status || '').toLowerCase();
 
   if (paymentStatus === 'completed' || status === 'confirmed') return 'Active';
   if (status === 'failed' || paymentStatus === 'failed') return 'Failed';
@@ -74,7 +74,7 @@ function PortfolioRow({
   id,
   title,
   category,
-  invested,
+  contributeed,
   currentValue,
   returnRate,
   status,
@@ -85,7 +85,7 @@ function PortfolioRow({
     <div className='grid grid-cols-6 items-center gap-3 border-t border-slate-100 px-4 py-4 text-sm'>
       <div className='font-semibold text-slate-900'>{title}</div>
       <div className='text-slate-600'>{category}</div>
-      <div className='text-slate-900'>{invested}</div>
+      <div className='text-slate-900'>{contributeed}</div>
       <div className='text-slate-900'>{currentValue}</div>
       <div className='font-semibold text-emerald-600'>{returnRate}</div>
       <div className='flex items-center justify-between'>
@@ -103,9 +103,9 @@ function PortfolioRow({
   );
 }
 
-export default function InvestorPortfolio() {
+export default function ContributorPortfolio() {
   const navigate = useNavigate();
-  const [investments, setInvestments] = useState([]);
+  const [contributions, setContributions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -115,10 +115,10 @@ export default function InvestorPortfolio() {
         setLoading(true);
         setError('');
         const response = await getMyInvestments();
-        const investmentList = Array.isArray(response?.investments)
-          ? response.investments
+        const contributionList = Array.isArray(response?.contributions)
+          ? response.contributions
           : [];
-        setInvestments(investmentList);
+        setContributions(contributionList);
       } catch (err) {
         setError(err?.message || 'Failed to load portfolio');
       } finally {
@@ -130,39 +130,39 @@ export default function InvestorPortfolio() {
   }, []);
 
   const portfolioStats = useMemo(() => {
-    const totalInvested = investments.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
-    const totalCurrentValue = investments.reduce((sum, inv) => {
+    const totalContributeed = contributions.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
+    const totalCurrentValue = contributions.reduce((sum, inv) => {
       const campaign = inv?.campaign || inv?.campaignId;
       return sum + getCurrentValue(inv, campaign);
     }, 0);
-    const netReturns = totalCurrentValue - totalInvested;
+    const netReturns = totalCurrentValue - totalContributeed;
 
     return {
-      totalInvested,
+      totalContributeed,
       totalCurrentValue,
       netReturns,
     };
-  }, [investments]);
+  }, [contributions]);
 
   const portfolioItems = useMemo(() => {
-    return investments.map((investment) => {
-      const campaign = investment?.campaign || investment?.campaignId;
+    return contributions.map((contribution) => {
+      const campaign = contribution?.campaign || contribution?.campaignId;
       return {
-        id: investment._id,
+        id: contribution._id,
         title: campaign?.projectTitle || 'Unknown Campaign',
         category: campaign?.projectCategory || 'General',
-        invested: formatINR(investment.amount),
-        currentValue: formatINR(getCurrentValue(investment, campaign)),
-        returnRate: getReturnRate(investment, campaign),
-        status: getInvestmentStatus(investment),
+        contributeed: formatINR(contribution.amount),
+        currentValue: formatINR(getCurrentValue(contribution, campaign)),
+        returnRate: getReturnRate(contribution, campaign),
+        status: getContributionStatus(contribution),
         campaignId: campaign?._id,
       };
     });
-  }, [investments]);
+  }, [contributions]);
 
-  const handleViewInvestment = (campaignId) => {
+  const handleViewContribution = (campaignId) => {
     if (campaignId) {
-      navigate(`/investment-detail/${campaignId}`);
+      navigate(`/contribution-detail/${campaignId}`);
     }
   };
 
@@ -175,7 +175,7 @@ export default function InvestorPortfolio() {
       }}
     >
       <div className='flex h-screen w-full overflow-hidden bg-[#f7f7fb]'>
-        <InvestorSidebar active='portfolio' />
+        <ContributorSidebar active='portfolio' />
 
         <main
           className='scrollbar-hide flex-1 overflow-y-auto px-6 py-6'
@@ -185,12 +185,12 @@ export default function InvestorPortfolio() {
             <div>
               <h1 className='text-3xl font-bold text-slate-900'>Portfolio</h1>
               <p className='mt-1 text-sm text-slate-500'>
-                Track all your active and past investments.
+                Track all your active and past contributions.
               </p>
             </div>
 
             <button
-              onClick={() => navigate('/browse-investors')}
+              onClick={() => navigate('/browse-contributors')}
               className='rounded-2xl bg-[#6f5cf2] px-5 py-3 text-sm font-semibold text-white hover:bg-[#5f4ae6]'
             >
               Explore More Opportunities
@@ -216,8 +216,8 @@ export default function InvestorPortfolio() {
             <div>
               <div className='mt-6 grid gap-4 md:grid-cols-3'>
                 <PortfolioStat
-                  title='Total Invested'
-                  value={formatINR(portfolioStats.totalInvested)}
+                  title='Total Contributeed'
+                  value={formatINR(portfolioStats.totalContributeed)}
                   sub='Total deployed capital'
                   icon={IndianRupee}
                   tone='sky'
@@ -240,9 +240,9 @@ export default function InvestorPortfolio() {
 
               <div className='mt-6 rounded-[28px] border border-slate-100 bg-white shadow-sm'>
                 <div className='grid grid-cols-6 gap-3 px-4 py-4 text-[11px] font-semibold uppercase tracking-wide text-slate-400'>
-                  <div>Investment</div>
+                  <div>Contribution</div>
                   <div>Category</div>
-                  <div>Invested</div>
+                  <div>Contributeed</div>
                   <div>Current Value</div>
                   <div>Return</div>
                   <div>Status</div>
@@ -251,15 +251,15 @@ export default function InvestorPortfolio() {
                 {portfolioItems.length === 0 ? (
                   <div className='px-4 py-8 text-center text-slate-500'>
                     <BriefcaseBusiness className='mx-auto h-12 w-12 text-slate-300' />
-                    <p className='mt-3 text-sm'>No investments found</p>
-                    <p className='text-xs'>Start investing to build your portfolio</p>
+                    <p className='mt-3 text-sm'>No contributions found</p>
+                    <p className='text-xs'>Start contributing to build your portfolio</p>
                   </div>
                 ) : (
                   portfolioItems.map((item) => (
                     <PortfolioRow
                       key={item.id}
                       {...item}
-                      onView={handleViewInvestment}
+                      onView={handleViewContribution}
                     />
                   ))
                 )}

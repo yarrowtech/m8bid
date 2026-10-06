@@ -1,26 +1,26 @@
-// src/context/FundraiserContext.jsx
+﻿// src/context/RaiserContext.jsx
 import React, { createContext, useContext, useState } from "react";
 
-const FundraiserContext = createContext();
+const RaiserContext = createContext();
 
-export const useFundraisers = () => {
-  const context = useContext(FundraiserContext);
+export const useRaisers = () => {
+  const context = useContext(RaiserContext);
   if (!context) {
-    throw new Error("useFundraisers must be used within a FundraiserProvider");
+    throw new Error("useRaisers must be used within a RaiserProvider");
   }
   return context;
 };
 
-export function FundraiserProvider({ children }) {
-  const [fundraisers, setFundraisers] = useState([]);
+export function RaiserProvider({ children }) {
+  const [raisers, setRaisers] = useState([]);
 
-  const addFundraiser = (fundraiser) => {
-    setFundraisers((prev) => [...prev, fundraiser]);
+  const addRaiser = (raiser) => {
+    setRaisers((prev) => [...prev, raiser]);
   };
 
   return (
-    <FundraiserContext.Provider value={{ fundraisers, addFundraiser }}>
+    <RaiserContext.Provider value={{ raisers, addRaiser }}>
       {children}
-    </FundraiserContext.Provider>
+    </RaiserContext.Provider>
   );
 }

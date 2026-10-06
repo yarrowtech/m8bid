@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
   FileCheck,
@@ -413,7 +413,7 @@ export default function VerifiedOpportunities() {
             </div>
 
             <Link
-              to="/browse-investors"
+              to="/browse-contributors"
               className="text-sm font-semibold text-green-700 hover:text-green-900"
             >
               View all campaigns →
@@ -458,7 +458,7 @@ export default function VerifiedOpportunities() {
                   key={campaign._id || campaign.id || campaign.title}
                   campaign={campaign}
                   onOpen={(selectedCampaign) =>
-                    navigate("/investment-detail", {
+                    navigate("/contribution-detail", {
                       state: { campaign: selectedCampaign },
                     })
                   }
@@ -531,7 +531,7 @@ export default function VerifiedOpportunities() {
           </div>
 
           <Link
-            to="/browse-investors"
+            to="/browse-contributors"
             className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
           >
             Explore now

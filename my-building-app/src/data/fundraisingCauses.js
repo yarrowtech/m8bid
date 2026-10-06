@@ -1,4 +1,4 @@
-export const fundraisingCauses = [
+﻿export const raisingCauses = [
   {
     slug: "projects",
     title: "Projects",
@@ -12,6 +12,7 @@ export const fundraisingCauses = [
       "Why this project needs support right now",
     ],
   },
+  /*
   {
     slug: "ngo",
     title: "NGO",
@@ -25,6 +26,7 @@ export const fundraisingCauses = [
       "Proof of trust: registrations, field updates, and testimonials",
     ],
   },
+  */
   {
     slug: "education",
     title: "Education",
@@ -51,6 +53,7 @@ export const fundraisingCauses = [
       "Founder background and execution strategy",
     ],
   },
+  /*
   {
     slug: "medical-emergency",
     title: "Medical Emergency",
@@ -64,6 +67,7 @@ export const fundraisingCauses = [
       "Frequent updates on treatment progress and fund utilization",
     ],
   },
+  */
   {
     slug: "companies",
     title: "Companies",
@@ -92,6 +96,6 @@ export const fundraisingCauses = [
   },
 ];
 
-export function getFundraisingCauseBySlug(causeSlug) {
-  return fundraisingCauses.find((cause) => cause.slug === causeSlug) || null;
+export function getRaisingCauseBySlug(causeSlug) {
+  return raisingCauses.find((cause) => cause.slug === causeSlug) || null;
 }

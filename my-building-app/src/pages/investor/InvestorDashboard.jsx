@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
+﻿import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -22,7 +22,7 @@ import {
   User,
   FileCheck,
 } from "lucide-react";
-import InvestorSidebar from "./InvestorSidebar";
+import ContributorSidebar from "./InvestorSidebar";
 import { getMyInvestments } from "../../api/investmentapi";
 import { getProfile } from "../../api/user";
 
@@ -76,10 +76,10 @@ function StatCard({ icon: Icon, title, value, subtitle, iconWrapClass }) {
   );
 }
 
-function InvestmentCard({
+function ContributionCard({
   tag,
   title,
-  invested,
+  contributeed,
   target,
   status,
   expectedReturn,
@@ -102,8 +102,8 @@ function InvestmentCard({
       </h3>
 
       <div className="mt-3 flex items-center justify-between text-[12px]">
-        <span className="text-slate-500">Invested</span>
-        <span className="font-semibold text-slate-900">{invested}</span>
+        <span className="text-slate-500">Contributeed</span>
+        <span className="font-semibold text-slate-900">{contributeed}</span>
       </div>
 
       <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
@@ -141,7 +141,7 @@ function InvestmentCard({
         onClick={onView}
         className="mt-3 w-full rounded-xl bg-slate-900 py-2 text-[12px] font-semibold text-white transition hover:bg-slate-800"
       >
-        View Investment
+        View Contribution
       </button>
     </div>
   );
@@ -203,7 +203,7 @@ function ProfileDropdown({ user, navigate }) {
 
         <div className="hidden md:block text-left">
           <p className="text-[13px] font-medium text-slate-900">
-            {user?.name || "Investor"}
+            {user?.name || "Contributor"}
           </p>
         </div>
 
@@ -213,7 +213,7 @@ function ProfileDropdown({ user, navigate }) {
       {open ? (
         <div className="absolute right-0 top-[110%] z-30 w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
           <button
-            onClick={() => navigate("/investor/profile/kyc")}
+            onClick={() => navigate("/contributor/profile/kyc")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f1edff] text-[#6f5cf2]">
@@ -230,7 +230,7 @@ function ProfileDropdown({ user, navigate }) {
           </button>
 
           <button
-            onClick={() => navigate("/investor/profile/bank")}
+            onClick={() => navigate("/contributor/profile/bank")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
@@ -247,7 +247,7 @@ function ProfileDropdown({ user, navigate }) {
           </button>
 
           <button
-            onClick={() => navigate("/investor/profile")}
+            onClick={() => navigate("/contributor/profile")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f3efff] text-[#7b68f4]">
@@ -273,11 +273,11 @@ const formatINR = (amount) => {
   return `Rs ${value.toLocaleString("en-IN")}`;
 };
 
-const normalizeInvestmentStatus = (investment) => {
-  const paymentStatus = String(investment?.paymentStatus || "").toLowerCase();
-  const status = String(investment?.status || "").toLowerCase();
+const normalizeContributionStatus = (contribution) => {
+  const paymentStatus = String(contribution?.paymentStatus || "").toLowerCase();
+  const status = String(contribution?.status || "").toLowerCase();
   const campaignStatus = String(
-    investment?.campaign?.status || investment?.campaignId?.status || ""
+    contribution?.campaign?.status || contribution?.campaignId?.status || ""
   ).toLowerCase();
 
   if (paymentStatus === "completed" || status === "confirmed") return "Confirmed";
@@ -286,8 +286,8 @@ const normalizeInvestmentStatus = (investment) => {
   return "Pending";
 };
 
-const getCampaignData = (investment) =>
-  investment?.campaign || investment?.campaignId || null;
+const getCampaignData = (contribution) =>
+  contribution?.campaign || contribution?.campaignId || null;
 
 const getCampaignTarget = (campaign) =>
   Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
@@ -309,7 +309,7 @@ const getProfileCompletion = (user) => {
   if (user?.profile?.photo) score += 15;
   if (
     ["VERIFIED", "APPROVED"].includes(
-      String(user?.access?.investor?.kycStatus || "").toUpperCase()
+      String(user?.access?.contributor?.kycStatus || "").toUpperCase()
     )
   ) {
     score += 15;
@@ -338,12 +338,12 @@ const normalizeStatusLabel = (value, type) => {
   return value || "-";
 };
 
-export default function InvestorDashboard() {
+export default function ContributorDashboard() {
   const navigate = useNavigate();
   const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [user, setUser] = useState(localUser || null);
-  const [investments, setInvestments] = useState([]);
+  const [contributions, setContributions] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -354,15 +354,15 @@ export default function InvestorDashboard() {
         setLoading(true);
         setError("");
 
-        const [investmentRes, profileRes] = await Promise.all([
+        const [contributionRes, profileRes] = await Promise.all([
           getMyInvestments(),
           getProfile(),
         ]);
 
-        const investmentList = Array.isArray(investmentRes?.investments)
-          ? investmentRes.investments
+        const contributionList = Array.isArray(contributionRes?.contributions)
+          ? contributionRes.contributions
           : [];
-        setInvestments(investmentList);
+        setContributions(contributionList);
 
         const liveUser = profileRes?.user || null;
         if (liveUser) {
@@ -379,60 +379,60 @@ export default function InvestorDashboard() {
     loadDashboard();
   }, []);
 
-  const filteredInvestments = useMemo(() => {
+  const filteredContributions = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return investments;
+    if (!query) return contributions;
 
-    return investments.filter((investment) => {
-      const campaign = getCampaignData(investment);
+    return contributions.filter((contribution) => {
+      const campaign = getCampaignData(contribution);
       return (
         String(campaign?.projectTitle || "").toLowerCase().includes(query) ||
         String(campaign?.projectCategory || "").toLowerCase().includes(query) ||
-        String(investment?.status || "").toLowerCase().includes(query) ||
-        String(investment?.paymentStatus || "").toLowerCase().includes(query)
+        String(contribution?.status || "").toLowerCase().includes(query) ||
+        String(contribution?.paymentStatus || "").toLowerCase().includes(query)
       );
     });
-  }, [investments, search]);
+  }, [contributions, search]);
 
-  const totalInvested = useMemo(
-    () => investments.reduce((sum, item) => sum + Number(item?.amount || 0), 0),
-    [investments]
+  const totalContributeed = useMemo(
+    () => contributions.reduce((sum, item) => sum + Number(item?.amount || 0), 0),
+    [contributions]
   );
 
-  const activeInvestments = useMemo(
+  const activeContributions = useMemo(
     () =>
-      investments.filter((item) => {
+      contributions.filter((item) => {
         const status = String(item?.status || "").toLowerCase();
         const paymentStatus = String(item?.paymentStatus || "").toLowerCase();
         return !["failed", "cancelled"].includes(status) && paymentStatus !== "failed";
       }).length,
-    [investments]
+    [contributions]
   );
 
   const estimatedReturns = useMemo(
     () =>
-      investments.reduce((sum, item) => {
+      contributions.reduce((sum, item) => {
         const campaign = getCampaignData(item);
         const percent = Number(campaign?.profitPercentage || 0);
         if (!percent) return sum;
         return sum + (Number(item?.amount || 0) * percent) / 100;
       }, 0),
-    [investments]
+    [contributions]
   );
 
-  const portfolioValue = totalInvested + estimatedReturns;
+  const portfolioValue = totalContributeed + estimatedReturns;
   const savedDeals = 0;
   const profileCompletion = getProfileCompletion(user);
-  const kycStatus = normalizeStatusLabel(user?.access?.investor?.kycStatus, "kyc");
+  const kycStatus = normalizeStatusLabel(user?.access?.contributor?.kycStatus, "kyc");
   const bankStatus = user?.bankDetails?.accountNumber
     ? "Linked"
-    : normalizeStatusLabel(user?.access?.investor?.bankStatus, "bank");
+    : normalizeStatusLabel(user?.access?.contributor?.bankStatus, "bank");
 
   const chartBars = useMemo(() => {
     const monthly = Array(5).fill(0);
     const now = new Date();
 
-    investments.forEach((item) => {
+    contributions.forEach((item) => {
       const createdAt = new Date(item?.createdAt || item?.date || item?.updatedAt);
       if (Number.isNaN(createdAt.getTime())) return;
 
@@ -448,22 +448,22 @@ export default function InvestorDashboard() {
 
     const max = Math.max(...monthly, 1);
     return monthly.map((value) => Math.max(18, Math.round((value / max) * 84)));
-  }, [investments]);
+  }, [contributions]);
 
   const statCards = useMemo(
     () => [
       {
         icon: Wallet,
-        title: "Total Investments",
-        value: formatINR(totalInvested),
-        subtitle: "Amount invested from backend records",
+        title: "Total Contributions",
+        value: formatINR(totalContributeed),
+        subtitle: "Amount contributeed from backend records",
         iconWrapClass: "bg-[#f1edff]",
       },
       {
         icon: BriefcaseBusiness,
-        title: "Active Investments",
-        value: String(activeInvestments).padStart(2, "0"),
-        subtitle: "Live and tracked investments",
+        title: "Active Contributions",
+        value: String(activeContributions).padStart(2, "0"),
+        subtitle: "Live and tracked contributions",
         iconWrapClass: "bg-emerald-100",
       },
       {
@@ -481,10 +481,10 @@ export default function InvestorDashboard() {
         iconWrapClass: "bg-amber-100",
       },
     ],
-    [activeInvestments, estimatedReturns, totalInvested]
+    [activeContributions, estimatedReturns, totalContributeed]
   );
 
-  const firstName = user?.name?.split(" ")[0] || "Investor";
+  const firstName = user?.name?.split(" ")[0] || "Contributor";
 
   if (loading) {
     return (
@@ -503,7 +503,7 @@ export default function InvestorDashboard() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f5f8fc]">
-        <InvestorSidebar active="dashboard" />
+        <ContributorSidebar active="dashboard" />
 
         <div className="flex min-w-0 flex-1">
           <main
@@ -520,7 +520,7 @@ export default function InvestorDashboard() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search your investments..."
+                  placeholder="Search your contributions..."
                   className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-[#8d7bff] focus:bg-white"
                 />
               </div>
@@ -554,26 +554,26 @@ export default function InvestorDashboard() {
                 </p>
 
                 <h1 className="mt-2 text-[22px] font-semibold leading-tight md:text-[24px]">
-                  Track your real investments, portfolio value, returns and account readiness.
+                  Track your real contributions, portfolio value, returns and account readiness.
                 </h1>
 
                 <div className="mt-2 text-sm text-[#ebe6ff]">
-                  Hello {firstName}, your dashboard is now connected to backend investment data.
+                  Hello {firstName}, your dashboard is now connected to backend contribution data.
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <button
-                    onClick={() => navigate("/browse-investors")}
+                    onClick={() => navigate("/browse-contributors")}
                     className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-md transition hover:bg-slate-100 active:scale-[0.98]"
                   >
-                    Invest Now
+                    Contribute Now
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-white">
                       <ArrowRight size={13} />
                     </span>
                   </button>
 
                   <button
-                    onClick={() => navigate("/investor/portfolio")}
+                    onClick={() => navigate("/contributor/portfolio")}
                     className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 active:scale-[0.98]"
                   >
                     View Portfolio -
@@ -597,11 +597,11 @@ export default function InvestorDashboard() {
             <section className="mt-5 rounded-[24px] bg-[#f5f8fc]">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-[22px] font-semibold tracking-tight text-slate-900">
-                  My Investments
+                  My Contributions
                 </h2>
 
                 <button
-                  onClick={() => navigate("/investor/portfolio")}
+                  onClick={() => navigate("/contributor/portfolio")}
                   className="text-sm font-semibold text-[#6f5cf2] hover:text-[#5f4ae6]"
                 >
                   See all
@@ -609,16 +609,16 @@ export default function InvestorDashboard() {
               </div>
 
               <div className="mt-3 pr-2">
-                {filteredInvestments.length === 0 ? (
+                {filteredContributions.length === 0 ? (
                   <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-8 text-center">
                     <p className="text-lg font-semibold text-slate-800">
-                      No investments found
+                      No contributions found
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
-                      Your confirmed and pending investments will appear here.
+                      Your confirmed and pending contributions will appear here.
                     </p>
                     <button
-                      onClick={() => navigate("/browse-investors")}
+                      onClick={() => navigate("/browse-contributors")}
                       className="mt-4 rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
                       Explore Opportunities
@@ -626,8 +626,8 @@ export default function InvestorDashboard() {
                   </div>
                 ) : (
                   <div className="grid gap-3 xl:grid-cols-3">
-                    {filteredInvestments.slice(0, 6).map((investment) => {
-                      const campaign = getCampaignData(investment);
+                    {filteredContributions.slice(0, 6).map((contribution) => {
+                      const campaign = getCampaignData(contribution);
                       const target = getCampaignTarget(campaign);
                       const raised = getCampaignRaised(campaign);
                       const progress = target
@@ -635,18 +635,18 @@ export default function InvestorDashboard() {
                         : 0;
 
                       return (
-                        <InvestmentCard
-                          key={investment?._id}
+                        <ContributionCard
+                          key={contribution?._id}
                           tag={campaign?.projectCategory || "General"}
                           title={campaign?.projectTitle || "Campaign"}
-                          invested={formatINR(investment?.amount)}
+                          contributeed={formatINR(contribution?.amount)}
                           target={formatINR(target)}
-                          status={normalizeInvestmentStatus(investment)}
+                          status={normalizeContributionStatus(contribution)}
                           expectedReturn={getExpectedReturnText(campaign)}
                           progress={progress}
                           onView={() =>
                             campaign?._id
-                              ? navigate(`/investment-detail/${campaign._id}`, {
+                              ? navigate(`/contribution-detail/${campaign._id}`, {
                                   state: { campaign },
                                 })
                               : null
@@ -668,7 +668,7 @@ export default function InvestorDashboard() {
             </div>
 
             <div
-              onClick={() => navigate("/investor/profile")}
+              onClick={() => navigate("/contributor/profile")}
               className="mt-5 flex cursor-pointer flex-col items-center rounded-[24px] border border-slate-100 bg-[#fafcff] p-4 transition hover:bg-slate-50 hover:shadow-sm"
             >
               <div className="relative flex h-[122px] w-[122px] items-center justify-center rounded-full border-[8px] border-[#f1edff]">
@@ -704,7 +704,7 @@ export default function InvestorDashboard() {
               <RightMetricCard
                 title="KYC Status"
                 value={kycStatus}
-                sub="Live status from your investor access"
+                sub="Live status from your contributor access"
                 icon={ShieldCheck}
                 tone={kycStatus === "Verified" ? "emerald" : "amber"}
               />
@@ -744,7 +744,7 @@ export default function InvestorDashboard() {
               <RightMetricCard
                 title="Portfolio Value"
                 value={formatINR(portfolioValue)}
-                sub="Invested amount plus estimated returns"
+                sub="Contributeed amount plus estimated returns"
                 icon={BriefcaseBusiness}
                 tone="sky"
               />
@@ -765,7 +765,7 @@ export default function InvestorDashboard() {
             </div>
 
             <div
-              onClick={() => navigate("/investor/analytics")}
+              onClick={() => navigate("/contributor/analytics")}
               className="mt-5 cursor-pointer rounded-[22px] border border-slate-100 bg-[#fafcff] p-3 transition hover:bg-slate-50 hover:shadow-sm"
             >
               <div className="space-y-3">
@@ -776,15 +776,15 @@ export default function InvestorDashboard() {
                     </div>
                     <div>
                       <p className="text-[12px] font-medium text-slate-900">
-                        Total Investments
+                        Total Contributions
                       </p>
                       <p className="text-[10px] text-slate-500">
-                        Backend investment records
+                        Backend contribution records
                       </p>
                     </div>
                   </div>
                   <span className="text-[12px] font-semibold text-slate-900">
-                    {String(investments.length).padStart(2, "0")}
+                    {String(contributions.length).padStart(2, "0")}
                   </span>
                 </div>
 
@@ -804,8 +804,8 @@ export default function InvestorDashboard() {
                   </div>
                   <span className="text-[12px] font-semibold text-slate-900">
                     {
-                      investments.filter(
-                        (item) => normalizeInvestmentStatus(item) === "Pending"
+                      contributions.filter(
+                        (item) => normalizeContributionStatus(item) === "Pending"
                       ).length
                     }
                   </span>
@@ -821,13 +821,13 @@ export default function InvestorDashboard() {
                         Portfolio Growth
                       </p>
                       <p className="text-[10px] text-slate-500">
-                        Estimated against invested capital
+                        Estimated against contributeed capital
                       </p>
                     </div>
                   </div>
                   <span className="text-[12px] font-semibold text-emerald-600">
-                    {totalInvested > 0
-                      ? `+${Math.round((estimatedReturns / totalInvested) * 100)}%`
+                    {totalContributeed > 0
+                      ? `+${Math.round((estimatedReturns / totalContributeed) * 100)}%`
                       : "0%"}
                   </span>
                 </div>
@@ -836,14 +836,14 @@ export default function InvestorDashboard() {
 
             <div className="mt-5 space-y-3">
               <PrimaryBlueButton
-                onClick={() => navigate("/browse-investors")}
+                onClick={() => navigate("/browse-contributors")}
                 fullWidth
               >
                 Explore More Opportunities
               </PrimaryBlueButton>
 
               <PrimaryBlueButton
-                onClick={() => navigate("/investor/portfolio")}
+                onClick={() => navigate("/contributor/portfolio")}
                 fullWidth
               >
                 View My Portfolio

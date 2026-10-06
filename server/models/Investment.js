@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const investmentSchema = new mongoose.Schema({
   investor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' },
+  campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'Fundraiser' },
   amount: { type: Number, required: true },
   date: { type: Date, default: Date.now },
   orderId: { type: String },

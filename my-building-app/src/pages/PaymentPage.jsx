@@ -1,17 +1,19 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { createInvestment, confirmInvestment } from "../api/investmentapi";
+import { createContribution, confirmContribution } from "../api/investmentapi";
 import { loadRazorpayScript } from "../../utils/loadRazorpay";
+import Cookies from "js-cookie";
 
-const PRESETS = [1000, 2500, 4000];
+const PRESETS = [2, 10, 50];
 
 const PaymentPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const campaign = state?.campaign;
+  const routeToken = state?.authToken || "";
+  const initialAmount = Number(state?.amount || state?.suggestedAmount || campaign?.minContribution || 2);
 
-  const [amount, setAmount] = useState(1000);
-  const [tipPercentage] = useState(18);
+  const [amount, setAmount] = useState(Number.isFinite(initialAmount) && initialAmount > 0 ? initialAmount : 2);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -21,7 +23,32 @@ const PaymentPage = () => {
   const [error, setError] = useState("");
 
   const totalAmount = useMemo(() => Number(amount || 0), [amount]);
+  const platformFeePercent = useMemo(() => {
+    const rawPercent =
+      state?.platformFeePercent ??
+      campaign?.platformFeePercent ??
+      campaign?.feePercent ??
+      5;
+
+    const parsed = Number(rawPercent);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 5;
+  }, [campaign?.feePercent, campaign?.platformFeePercent, state?.platformFeePercent]);
+  const platformFeeAmount = useMemo(() => {
+    return Math.round((totalAmount * platformFeePercent) / 100);
+  }, [platformFeePercent, totalAmount]);
+  const recipientAmount = useMemo(() => {
+    return Math.max(totalAmount - platformFeeAmount, 0);
+  }, [platformFeeAmount, totalAmount]);
   const campaignId = campaign?._id || campaign?.id || "";
+  const authToken = useMemo(() => {
+    return (
+      routeToken ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem("token") : "") ||
+      (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("token") : "") ||
+      Cookies.get("token") ||
+      ""
+    );
+  }, [routeToken]);
 
   const validate = () => {
     if (!campaignId) {
@@ -55,8 +82,8 @@ const PaymentPage = () => {
       return false;
     }
 
-    if (!Number(totalAmount) || Number(totalAmount) < 1000) {
-      setError("Minimum contribution amount is ₹1000.");
+    if (!Number(totalAmount) || Number(totalAmount) < 1) {
+      setError("Minimum contribution amount is Rs 1 for testing.");
       return false;
     }
 
@@ -79,26 +106,35 @@ const PaymentPage = () => {
         throw new Error("Razorpay SDK failed to load.");
       }
 
-      const createRes = await createInvestment({
+      const createRes = await createContribution({
         campaignId,
         amount: totalAmount,
         paymentMethod: "razorpay",
+        paymentRoute: "razorpay_route",
+        authToken,
         contributorName: name.trim(),
         contributorEmail: email.trim(),
         contributorPhone: phone.trim(),
         anonymous,
+        split: {
+          platformFeePercent,
+          platformFeeAmount,
+          recipientAmount,
+          totalAmount,
+        },
       });
 
-      console.log("Create investment response:", createRes);
+      console.log("Create contribution response:", createRes);
 
       const order = createRes?.order;
       const key = createRes?.key;
-      const investmentId = createRes?.investmentId;
+      const contributionId = createRes?.contributionId;
       const breakdown = createRes?.breakdown;
       const campaignData = createRes?.campaign;
       const prefill = createRes?.prefill;
+      const payoutConfigured = Boolean(createRes?.payoutConfigured);
 
-      if (!order?.id || !key || !investmentId) {
+      if (!order?.id || !key || !contributionId) {
         throw new Error("Invalid payment initialization response from server.");
       }
 
@@ -107,7 +143,7 @@ const PaymentPage = () => {
         amount: order.amount,
         currency: order.currency || "INR",
         name: "Your Platform Name",
-        description: `Investment in ${
+        description: `Contribution in ${
           campaignData?.title || campaign?.title || "Campaign"
         }`,
         order_id: order.id,
@@ -115,14 +151,14 @@ const PaymentPage = () => {
           try {
             console.log("Razorpay success response:", response);
 
-            const confirmRes = await confirmInvestment(investmentId, response);
+            const confirmRes = await confirmContribution(contributionId, response);
 
-            console.log("Confirm investment response:", confirmRes);
+            console.log("Confirm contribution response:", confirmRes);
 
             navigate("/payment-success", {
               state: {
                 campaign,
-                investmentId,
+                contributionId,
                 paymentId: response?.razorpay_payment_id,
                 orderId: response?.razorpay_order_id,
                 transferId:
@@ -130,11 +166,18 @@ const PaymentPage = () => {
                   confirmRes?.transfer?.items?.[0]?.id ||
                   null,
                 amount: totalAmount,
-                breakdown,
+                breakdown: {
+                  ...(breakdown || {}),
+                  totalAmount,
+                  platformFeePercent,
+                  platformFeeAmount,
+                  recipientAmount,
+                },
+                payoutConfigured,
               },
             });
           } catch (err) {
-            console.error("confirmInvestment failed:", err);
+            console.error("confirmContribution failed:", err);
             setError(err.message || "Payment verification failed.");
           } finally {
             setLoading(false);
@@ -149,6 +192,8 @@ const PaymentPage = () => {
           campaignId,
           campaignTitle: campaign?.title || "",
           anonymous: anonymous ? "yes" : "no",
+          platformFeePercent: String(platformFeePercent),
+          platformFeeAmount: String(platformFeeAmount),
         },
         theme: {
           color: "#111827",
@@ -199,11 +244,11 @@ const PaymentPage = () => {
 
       <p className="text-center text-gray-500 mb-2">
         Most contributors contribute approx{" "}
-        <span className="text-blue-500 font-semibold">₹2500</span>
+        <span className="text-blue-500 font-semibold">â‚¹2500</span>
       </p>
 
       <p className="text-center text-sm text-gray-400 mb-6">
-        You’ll pay securely via Razorpay. UPI, Cards, Net Banking and Wallets
+        Youâ€™ll pay securely via Razorpay. UPI, Cards, Net Banking and Wallets
         are available there.
       </p>
 
@@ -219,13 +264,13 @@ const PaymentPage = () => {
                 : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
             }`}
           >
-            ₹{amt}
+            â‚¹{amt}
           </button>
         ))}
       </div>
 
       <div className="flex mb-4 rounded overflow-hidden border border-gray-300">
-        <span className="bg-gray-100 px-4 py-2 font-medium text-gray-700">₹</span>
+        <span className="bg-gray-100 px-4 py-2 font-medium text-gray-700">â‚¹</span>
         <input
           type="number"
           min="1"
@@ -262,7 +307,7 @@ const PaymentPage = () => {
         />
 
         <div className="flex items-center border rounded">
-          <span className="px-4 py-2 border-r">🇮🇳</span>
+          <span className="px-4 py-2 border-r">ðŸ‡®ðŸ‡³</span>
           <input
             type="tel"
             placeholder="Your Mobile Number *"
@@ -279,15 +324,19 @@ const PaymentPage = () => {
         <div className="rounded-xl bg-gray-50 border p-4 text-sm">
           <div className="flex justify-between mb-2">
             <span>Contribution</span>
-            <span>₹{Number(totalAmount).toLocaleString("en-IN")}</span>
+            <span>â‚¹{Number(totalAmount).toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between mb-2 text-gray-500">
-            <span>Suggested tip</span>
-            <span>{tipPercentage}%</span>
+            <span>Platform fee</span>
+            <span>{platformFeePercent}%</span>
+          </div>
+          <div className="flex justify-between mb-2 text-gray-500">
+            <span>Campaign payout</span>
+            <span>â‚¹{Number(recipientAmount).toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between font-semibold text-base border-t pt-2">
             <span>Total payable</span>
-            <span>₹{Number(totalAmount).toLocaleString("en-IN")}</span>
+            <span>â‚¹{Number(totalAmount).toLocaleString("en-IN")}</span>
           </div>
         </div>
 
@@ -307,7 +356,7 @@ const PaymentPage = () => {
             : "bg-black hover:bg-blue-800 text-white"
         }`}
       >
-        {loading ? "Processing..." : `Proceed To Contribute ₹${totalAmount}`}
+        {loading ? "Processing..." : `Proceed To Contribute â‚¹${totalAmount}`}
       </button>
     </div>
   );

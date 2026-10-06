@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Mail, MapPin, MessageCircle, Phone, Send } from "lucide-react";
 import { sendContactEnquiry } from "../api/contact";
 
@@ -56,7 +56,7 @@ export default function ContactPage() {
               Send us your enquiry
             </h1>
             <p className="mt-5 text-base leading-8 text-slate-600">
-              Have a question about fundraising, investing, campaign setup, or
+              Have a question about raising, contributing, campaign setup, or
               support? Fill this form and your details will be sent to the
               platform email account.
             </p>

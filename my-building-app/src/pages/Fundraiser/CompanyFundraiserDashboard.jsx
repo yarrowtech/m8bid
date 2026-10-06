@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import FundraiserSidebar from "./FundraiserSidebar";
+﻿import { useNavigate } from "react-router-dom";
+import RaiserSidebar from "./FundraiserSidebar";
 
 function StatCard({ title, value, sub }) {
   return (
@@ -11,31 +11,31 @@ function StatCard({ title, value, sub }) {
   );
 }
 
-export default function CompanyFundraiserDashboard() {
+export default function CompanyRaiserDashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50">
-      <FundraiserSidebar active="dashboard" />
+      <RaiserSidebar active="dashboard" />
       <main className="flex-1 overflow-y-auto px-4 py-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
           <p className="text-sm font-semibold text-slate-500 uppercase">
-            Company Fundraiser Account
+            Company Raiser Account
           </p>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">
-            Welcome, {user?.name || "Company Fundraiser"}
+            Welcome, {user?.name || "Company Raiser"}
           </h1>
           <p className="mt-2 text-slate-600">
-            Manage campaigns, company verification, investor engagement, and fundraising performance.
+            Manage campaigns, company verification, contributor engagement, and raising performance.
           </p>
         </div>
 
         <div className="grid md:grid-cols-4 gap-4">
-          <StatCard title="Active Campaigns" value="5" sub="Live fundraising campaigns" />
+          <StatCard title="Active Campaigns" value="5" sub="Live raising campaigns" />
           <StatCard title="Total Raised" value="₹22,40,000" sub="Across all company campaigns" />
-          <StatCard title="Investors Engaged" value="310" sub="Participation count" />
+          <StatCard title="Contributors Engaged" value="310" sub="Participation count" />
           <StatCard title="Company Verification" value="Pending" sub="Upload incorporation and GST docs" />
         </div>
 
@@ -58,7 +58,7 @@ export default function CompanyFundraiserDashboard() {
             <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
             <div className="mt-4 space-y-3">
               <button
-                onClick={() => navigate("/start-fundraiser")}
+                onClick={() => navigate("/start-raiser")}
                 className="w-full rounded-xl bg-slate-900 text-white py-3 font-semibold"
               >
                 Start New Campaign

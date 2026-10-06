@@ -65,6 +65,11 @@ bankDetails: {
   branchName: { type: String, default: "" },
 },
 
+razorpayLinkedAccountId: {
+  type: String,
+  default: "",
+},
+
 access: {
   investor: {
     enabled: { type: Boolean, default: false },

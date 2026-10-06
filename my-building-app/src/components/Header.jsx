@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import finallogo from "../assets/finallogo.png";
@@ -304,15 +304,15 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [investOpen, setInvestOpen] = useState(false);
-  const [fundraiseOpen, setFundraiseOpen] = useState(false);
+  const [contributeOpen, setContributeOpen] = useState(false);
+  const [raiseOpen, setRaiseOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerType, setDrawerType] = useState("about");
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const [fundraiseBlockedOpen, setFundraiseBlockedOpen] = useState(false);
-  const [investBlockedOpen, setInvestBlockedOpen] = useState(false);
+  const [raiseBlockedOpen, setRaiseBlockedOpen] = useState(false);
+  const [contributeBlockedOpen, setContributeBlockedOpen] = useState(false);
 
   const headerRef = useRef(null);
   const profileRef = useRef(null);
@@ -338,8 +338,8 @@ export default function Header() {
   useEffect(() => {
     const closeOnOutside = (e) => {
       if (!headerRef.current?.contains(e.target)) {
-        setInvestOpen(false);
-        setFundraiseOpen(false);
+        setContributeOpen(false);
+        setRaiseOpen(false);
       }
       if (!profileRef.current?.contains(e.target)) {
         setProfileOpen(false);
@@ -348,13 +348,13 @@ export default function Header() {
 
     const closeOnEsc = (e) => {
       if (e.key === "Escape") {
-        setInvestOpen(false);
-        setFundraiseOpen(false);
+        setContributeOpen(false);
+        setRaiseOpen(false);
         setProfileOpen(false);
         setMobileOpen(false);
         setDrawerOpen(false);
-        setFundraiseBlockedOpen(false);
-        setInvestBlockedOpen(false);
+        setRaiseBlockedOpen(false);
+        setContributeBlockedOpen(false);
       }
     };
 
@@ -368,12 +368,12 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    setInvestOpen(false);
-    setFundraiseOpen(false);
+    setContributeOpen(false);
+    setRaiseOpen(false);
     setProfileOpen(false);
     setMobileOpen(false);
-    setFundraiseBlockedOpen(false);
-    setInvestBlockedOpen(false);
+    setRaiseBlockedOpen(false);
+    setContributeBlockedOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -392,21 +392,21 @@ export default function Header() {
   };
 
   const toggleMenu = (menu) => {
-    setInvestOpen(menu === "Contribute" ? !investOpen : false);
-    setFundraiseOpen(menu === "Raising" ? !fundraiseOpen : false);
+    setContributeOpen(menu === "Contribute" ? !contributeOpen : false);
+    setRaiseOpen(menu === "Raising" ? !raiseOpen : false);
   };
 
   const openDrawer = (type) => {
     setDrawerType(type);
     setDrawerOpen(true);
-    setInvestOpen(false);
-    setFundraiseOpen(false);
+    setContributeOpen(false);
+    setRaiseOpen(false);
     setMobileOpen(false);
   };
 
   const openContactPage = () => {
-    setInvestOpen(false);
-    setFundraiseOpen(false);
+    setContributeOpen(false);
+    setRaiseOpen(false);
     setProfileOpen(false);
     setMobileOpen(false);
     setDrawerOpen(false);
@@ -415,120 +415,120 @@ export default function Header() {
 
   const activeMode = loggedInUser?.activeMode || "none";
   const hasSession = Boolean(loggedInUser && localStorage.getItem("token"));
-  const isInvestorMode = activeMode === "investor";
-  const isFundraiserMode = activeMode === "fundraiser";
+  const isContributorMode = activeMode === "contributor";
+  const isRaiserMode = activeMode === "raiser";
   const dashboardPath =
-    activeMode === "fundraiser"
-      ? loggedInUser?.access?.fundraiser?.type === "company"
-        ? "/fundraiser/company/dashboard"
-        : "/fundraiser/dashboard"
-      : loggedInUser?.access?.investor?.type === "company"
-      ? "/investor/company/dashboard"
-      : "/investor/dashboard";
+    activeMode === "raiser"
+      ? loggedInUser?.access?.raiser?.type === "company"
+        ? "/raiser/company/dashboard"
+        : "/raiser/dashboard"
+      : loggedInUser?.access?.contributor?.type === "company"
+      ? "/contributor/company/dashboard"
+      : "/contributor/dashboard";
   const profilePath =
-    activeMode === "fundraiser" ? "/fundraiser/profile" : "/investor/profile";
+    activeMode === "raiser" ? "/raiser/profile" : "/contributor/profile";
 
-  const handleFundraiseRestrictedAccess = () => {
-    setInvestOpen(false);
-    setFundraiseOpen(false);
+  const handleRaiseRestrictedAccess = () => {
+    setContributeOpen(false);
+    setRaiseOpen(false);
     setMobileOpen(false);
-    setFundraiseBlockedOpen(true);
+    setRaiseBlockedOpen(true);
   };
 
-  const handleInvestRestrictedAccess = () => {
-    setInvestOpen(false);
-    setFundraiseOpen(false);
+  const handleContributeRestrictedAccess = () => {
+    setContributeOpen(false);
+    setRaiseOpen(false);
     setMobileOpen(false);
-    setInvestBlockedOpen(true);
+    setContributeBlockedOpen(true);
   };
 
-  const handleFundraiseLoginRedirect = () => {
-    setFundraiseBlockedOpen(false);
+  const handleRaiseLoginRedirect = () => {
+    setRaiseBlockedOpen(false);
     navigate("/login");
   };
 
-  const handleInvestLoginRedirect = () => {
-    setInvestBlockedOpen(false);
+  const handleContributeLoginRedirect = () => {
+    setContributeBlockedOpen(false);
     navigate("/login");
   };
 
   const closeMenus = () => {
-    setInvestOpen(false);
-    setFundraiseOpen(false);
+    setContributeOpen(false);
+    setRaiseOpen(false);
     setProfileOpen(false);
     setMobileOpen(false);
   };
 
-  const investItems = [
+  const contributeItems = [
     {
       label: "Browse Contributing Opportunities",
       desc: "Explore active opportunities and contributor-focused campaigns.",
-      to: "/browse-investors",
+      to: "/browse-contributors",
       onClick: closeMenus,
     },
     {
       label: "Supporter Space",
       desc: "Discover FAQs, updates, and how contributions work.",
-      to: !hasSession ? null : isFundraiserMode ? null : "/supporter-space",
+      to: !hasSession ? null : isRaiserMode ? null : "/supporter-space",
       onClick: !hasSession
-        ? handleInvestRestrictedAccess
-        : isFundraiserMode
-        ? handleInvestRestrictedAccess
+        ? handleContributeRestrictedAccess
+        : isRaiserMode
+        ? handleContributeRestrictedAccess
         : closeMenus,
     },
     {
       label: "Return Based Options",
       desc: "Explore structured participation with expected returns.",
-      to: !hasSession ? null : isFundraiserMode ? null : "/return-based-options",
+      to: !hasSession ? null : isRaiserMode ? null : "/return-based-options",
       onClick: !hasSession
-        ? handleInvestRestrictedAccess
-        : isFundraiserMode
-        ? handleInvestRestrictedAccess
+        ? handleContributeRestrictedAccess
+        : isRaiserMode
+        ? handleContributeRestrictedAccess
         : closeMenus,
     },
     {
       label: "Verified Opportunities",
       desc: "See campaigns reviewed through platform workflows.",
-      to: !hasSession ? null : isFundraiserMode ? null : "/verified-opportunities",
+      to: !hasSession ? null : isRaiserMode ? null : "/verified-opportunities",
       onClick: !hasSession
-        ? handleInvestRestrictedAccess
-        : isFundraiserMode
-        ? handleInvestRestrictedAccess
+        ? handleContributeRestrictedAccess
+        : isRaiserMode
+        ? handleContributeRestrictedAccess
         : closeMenus,
     },
   ];
 
-  const fundraiseItems = [
+  const raiseItems = [
     {
       label: "Start Raising",
-      desc: "Launch your fundraiser with a guided creation flow.",
-      to: "/fundraising",
+      desc: "Launch your raiser with a guided creation flow.",
+      to: "/raising",
       onClick: closeMenus,
     },
     {
       label: "How to Start a Raiser",
-      desc: "Understand fundraising clearly with step-by-step guidance.",
-      to: "/how-to-start-a-fundraising",
+      desc: "Understand raising clearly with step-by-step guidance.",
+      to: "/how-to-start-a-raising",
       onClick: closeMenus,
     },
     {
       label: "Cause-Based Raising",
-      desc: "Create campaigns for support-oriented fundraising.",
-      to: !hasSession ? null : isInvestorMode ? null : "/cause-based-funding",
+      desc: "Create campaigns for support-oriented raising.",
+      to: !hasSession ? null : isContributorMode ? null : "/cause-based-funding",
       onClick: !hasSession
-        ? handleFundraiseRestrictedAccess
-        : isInvestorMode
-        ? handleFundraiseRestrictedAccess
+        ? handleRaiseRestrictedAccess
+        : isContributorMode
+        ? handleRaiseRestrictedAccess
         : closeMenus,
     },
     {
       label: "Raising Ideas",
       desc: "Get inspired with campaign direction and planning ideas.",
-      to: !hasSession ? null : isInvestorMode ? null : "/fundraising-ideas",
+      to: !hasSession ? null : isContributorMode ? null : "/raising-ideas",
       onClick: !hasSession
-        ? handleFundraiseRestrictedAccess
-        : isInvestorMode
-        ? handleFundraiseRestrictedAccess
+        ? handleRaiseRestrictedAccess
+        : isContributorMode
+        ? handleRaiseRestrictedAccess
         : closeMenus,
     },
   ];
@@ -593,28 +593,28 @@ export default function Header() {
             <div className="relative">
               <NavButton
                 label="Contribute"
-                open={investOpen}
+                open={contributeOpen}
                 onClick={() => toggleMenu("Contribute")}
               />
               <DropdownPanel
                 title="Contribute"
                 subtitle="Discover verified opportunities and structured ways to participate."
-                items={investItems}
-                open={investOpen}
+                items={contributeItems}
+                open={contributeOpen}
               />
             </div>
 
             <div className="relative">
               <NavButton
                 label="Raising"
-                open={fundraiseOpen}
+                open={raiseOpen}
                 onClick={() => toggleMenu("Raising")}
               />
               <DropdownPanel
                 title="Raising"
                 subtitle="Start a professional campaign and build momentum with clarity."
-                items={fundraiseItems}
-                open={fundraiseOpen}
+                items={raiseItems}
+                open={raiseOpen}
               />
             </div>
 
@@ -746,15 +746,15 @@ export default function Header() {
               </Link>
 
               <Link
-                to="/fundraising"
+                to="/raising"
                 className="block rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
               >
                 How it Works
               </Link>
 
-              {!hasSession || !isFundraiserMode ? (
+              {!hasSession || !isRaiserMode ? (
                 <Link
-                  to="/browse-investors"
+                  to="/browse-contributors"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
@@ -764,7 +764,7 @@ export default function Header() {
               ) : (
                 <button
                   type="button"
-                  onClick={handleInvestRestrictedAccess}
+                  onClick={handleContributeRestrictedAccess}
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <BadgeDollarSign className="h-4 w-4" />
@@ -772,9 +772,9 @@ export default function Header() {
                 </button>
               )}
 
-              {!hasSession || !isInvestorMode ? (
+              {!hasSession || !isContributorMode ? (
                 <Link
-                  to="/fundraising"
+                  to="/raising"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
@@ -784,7 +784,7 @@ export default function Header() {
               ) : (
                 <button
                   type="button"
-                  onClick={handleFundraiseRestrictedAccess}
+                  onClick={handleRaiseRestrictedAccess}
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
                 >
                   <HandCoins className="h-4 w-4" />
@@ -832,17 +832,17 @@ export default function Header() {
         type={drawerType}
       />
       <AccessModeModal
-        open={fundraiseBlockedOpen}
-        onClose={() => setFundraiseBlockedOpen(false)}
-        onLogin={handleFundraiseLoginRedirect}
+        open={raiseBlockedOpen}
+        onClose={() => setRaiseBlockedOpen(false)}
+        onLogin={handleRaiseLoginRedirect}
         title="Raiser account needed"
-        message="You need to login or register account as a fundraiser to start a fundraising campaign."
+        message="You need to login or register account as a raiser to start a raising campaign."
         buttonLabel="Go to Login"
       />
       <AccessModeModal
-        open={investBlockedOpen}
-        onClose={() => setInvestBlockedOpen(false)}
-        onLogin={handleInvestLoginRedirect}
+        open={contributeBlockedOpen}
+        onClose={() => setContributeBlockedOpen(false)}
+        onLogin={handleContributeLoginRedirect}
         title="Contributor account needed"
         message="You need to login or register account as a contributor to contribute to a campaign."
         buttonLabel="Go to Login"

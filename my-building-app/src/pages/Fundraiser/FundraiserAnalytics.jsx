@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
-import FundraiserSidebar from "./FundraiserSidebar";
+import RaiserSidebar from "./FundraiserSidebar";
 import { getDashboardData } from "../../api/fundraiser.api";
 
 function MetricCard({ title, value, sub }) {
@@ -55,7 +55,7 @@ const getDaysLeft = (deadline, createdAt, daysToRaise) => {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
-export default function FundraiserAnalytics({ embedded = false }) {
+export default function RaiserAnalytics({ embedded = false }) {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -83,10 +83,10 @@ export default function FundraiserAnalytics({ embedded = false }) {
         }
 
         const res = await getDashboardData(userId);
-        const list = res?.data || res?.fundraisers || [];
+        const list = res?.data || res?.raisers || [];
         setCampaigns(Array.isArray(list) ? list : []);
       } catch (err) {
-        console.error("Failed to fetch fundraiser analytics:", err);
+        console.error("Failed to fetch raiser analytics:", err);
         setCampaigns([]);
         setError(err?.message || "Failed to load analytics");
       } finally {
@@ -272,7 +272,7 @@ export default function FundraiserAnalytics({ embedded = false }) {
   return (
     <div className="h-screen w-full bg-[#e3e8f0]">
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active="analytics" />
+        <RaiserSidebar active="analytics" />
         {content}
       </div>
     </div>

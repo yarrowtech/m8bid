@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Mail, Phone, MapPin, ShieldCheck, X, Info, MessageCircle } from "lucide-react";
+import TermsAndConditionsPage from "../pages/TermsAndConditionsPage.jsx";
+import PrivacyPolicyPage from "../pages/PrivacyPolicyPage.jsx";
+import ContactUsPage from "../pages/ContactUsPage.jsx";
+import ShippingPolicyPage from "../pages/ShippingPolicyPage.jsx";
+import CancellationRefundPolicyPage from "../pages/CancellationRefundPolicyPage.jsx";
 
 function DrawerSection({ icon: Icon, title, children }) {
   return (
@@ -58,20 +63,20 @@ function InfoDrawer({ open, onClose, type = "about" }) {
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
                   Platform Overview
                 </p>
-                <h3 className="mt-2 text-2xl font-bold">Built to make fundraising more credible, transparent, and accessible.</h3>
+                <h3 className="mt-2 text-2xl font-bold">Built to make raising more credible, transparent, and accessible.</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-300">
-                  M8-BID is a modern crowdfunding platform designed to connect founders, fundraisers, and supporters through a secure and professional digital experience. 
+                  M8-BID is a modern crowdfunding platform designed to connect founders, raisers, and supporters through a secure and professional digital experience. 
                   We focus on trust, transparency, and clear campaign presentation so users can raise and contribute with confidence.
                 </p>
               </div>
 
               <DrawerSection icon={Info} title="Who We Are">
-                M8-BID is a fundraising and campaign platform built for modern startups, causes, and business initiatives. 
+                M8-BID is a raising and campaign platform built for modern startups, causes, and business initiatives. 
                 Our goal is to simplify the way campaigns are created, presented, shared, and managed while maintaining a professional and reliable experience for all users.
               </DrawerSection>
 
               <DrawerSection icon={ShieldCheck} title="What We Believe">
-                We believe fundraising should not feel confusing or unstructured. A good platform should help people tell their story clearly, 
+                We believe raising should not feel confusing or unstructured. A good platform should help people tell their story clearly, 
                 show progress transparently, and create trust between campaign creators and supporters. That is why M8-BID emphasizes secure workflows, 
                 clean interfaces, and visibility into every important step.
               </DrawerSection>
@@ -87,7 +92,7 @@ function InfoDrawer({ open, onClose, type = "about" }) {
               </DrawerSection>
 
               <DrawerSection icon={ShieldCheck} title="Our Vision">
-                Our vision is to make digital fundraising more trustworthy, more efficient, and more professional for founders, businesses, and supporters alike. 
+                Our vision is to make digital raising more trustworthy, more efficient, and more professional for founders, businesses, and supporters alike. 
                 We want M8-BID to become a platform where campaigns are not only visible, but believable.
               </DrawerSection>
             </>
@@ -99,7 +104,7 @@ function InfoDrawer({ open, onClose, type = "about" }) {
                 </p>
                 <h3 className="mt-2 text-2xl font-bold">We would love to hear from you.</h3>
                 <p className="mt-3 text-sm leading-6 text-blue-50">
-                  Whether you have a product question, fundraising inquiry, partnership proposal, or support request, the M8-BID team is here to help.
+                  Whether you have a product question, raising inquiry, partnership proposal, or support request, the M8-BID team is here to help.
                 </p>
               </div>
 
@@ -115,7 +120,7 @@ function InfoDrawer({ open, onClose, type = "about" }) {
 
               <DrawerSection icon={MapPin} title="Office / Operations">
                 <div className="font-medium text-slate-900">M8-BID Operations Team</div>
-                <div className="mt-1">Serving digital-first fundraising and campaign management workflows.</div>
+                <div className="mt-1">Serving digital-first raising and campaign management workflows.</div>
               </DrawerSection>
             </>
           )}
@@ -128,10 +133,19 @@ function InfoDrawer({ open, onClose, type = "about" }) {
 export default function Footer() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerType, setDrawerType] = useState("about");
+  const [activeLegalPage, setActiveLegalPage] = useState(null);
 
   const openDrawer = (type) => {
     setDrawerType(type);
     setDrawerOpen(true);
+  };
+
+  const legalPages = {
+    terms: <TermsAndConditionsPage embedded />, 
+    privacy: <PrivacyPolicyPage embedded />,
+    contact: <ContactUsPage embedded />,
+    shipping: <ShippingPolicyPage embedded />,
+    refund: <CancellationRefundPolicyPage embedded />,
   };
 
   return (
@@ -151,7 +165,7 @@ export default function Footer() {
             <div>
               <h3 className="text-2xl font-bold tracking-tight">M8-BID</h3>
               <p className="mt-4 max-w-sm text-sm leading-6 text-slate-300">
-                A modern platform for professional fundraising, transparent campaign storytelling, and secure supporter engagement.
+                A modern platform for professional raising, transparent campaign storytelling, and secure supporter engagement.
               </p>
 
               <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-200">
@@ -216,8 +230,27 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="mt-10 border-t border-white/10 pt-6 text-center text-sm text-slate-400">
-            © {new Date().getFullYear()} M8-BID. All rights reserved.
+          <div className="mt-10 border-t border-white/10 pt-6">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-slate-400">
+              <button onClick={() => setActiveLegalPage("terms")} className="hover:text-white transition">
+                Terms and Conditions
+              </button>
+              <button onClick={() => setActiveLegalPage("privacy")} className="hover:text-white transition">
+                Privacy Policy
+              </button>
+              <button onClick={() => setActiveLegalPage("contact")} className="hover:text-white transition">
+                Contact Us
+              </button>
+              <button onClick={() => setActiveLegalPage("shipping")} className="hover:text-white transition">
+                Shipping Policy
+              </button>
+              <button onClick={() => setActiveLegalPage("refund")} className="hover:text-white transition">
+                Cancellation/Refund Policy
+              </button>
+            </div>
+            <div className="mt-4 text-center text-sm text-slate-400">
+              © {new Date().getFullYear()} M8-BID. All rights reserved.
+            </div>
           </div>
         </div>
       </footer>

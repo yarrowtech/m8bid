@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -128,8 +128,8 @@ function StatChip({ icon: Icon, title, value }) {
 
 export default function Hero() {
   const navigate = useNavigate();
-  const [fundraiseBlockedOpen, setFundraiseBlockedOpen] = useState(false);
-  const [fundraiseBlockedMessage, setFundraiseBlockedMessage] = useState(
+  const [raiseBlockedOpen, setRaiseBlockedOpen] = useState(false);
+  const [raiseBlockedMessage, setRaiseBlockedMessage] = useState(
     "You need to login or register account as a raiser to start a raising campaign."
   );
 
@@ -143,27 +143,27 @@ export default function Hero() {
     }
   };
 
-  const handleStartFundraiserClick = () => {
+  const handleStartRaiserClick = () => {
     const user = getSessionUser();
     const hasSession = Boolean(user && localStorage.getItem("token"));
 
     if (!hasSession) {
-      setFundraiseBlockedMessage(
+      setRaiseBlockedMessage(
         "You need to login or register account as a raiser to start a raising campaign."
       );
-      setFundraiseBlockedOpen(true);
+      setRaiseBlockedOpen(true);
       return;
     }
 
-    if (user?.activeMode === "investor") {
-      setFundraiseBlockedMessage(
-        "Warning: You are currently logged in as an investor. A raiser account is needed to access raising actions."
+    if (user?.activeMode === "contributor") {
+      setRaiseBlockedMessage(
+        "Warning: You are currently logged in as an contributor. A raiser account is needed to access raising actions."
       );
-      setFundraiseBlockedOpen(true);
+      setRaiseBlockedOpen(true);
       return;
     }
 
-    navigate("/fundraising");
+    navigate("/raising");
   };
 
   return (
@@ -266,7 +266,7 @@ export default function Hero() {
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
-                onClick={handleStartFundraiserClick}
+                onClick={handleStartRaiserClick}
                 className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-4 text-base font-semibold tracking-wide text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 active:scale-[0.99]"
               >
                 Start A Raiser
@@ -274,7 +274,7 @@ export default function Hero() {
               </button>
 
               <button
-                onClick={() => navigate("/how-to-invest")}
+                onClick={() => navigate("/how-to-contribute")}
                 className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white/75 px-8 py-4 text-base font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white"
               >
                 Explore Campaigns
@@ -298,7 +298,7 @@ export default function Hero() {
               <StatChip
                 icon={Users}
                 title="Built For"
-                value="Founders, Backers, Investors"
+                value="Founders, Backers, Contributors"
               />
             </div>
           </div>
@@ -308,7 +308,7 @@ export default function Hero() {
             <div style={{ transform: "translateY(-24px) translateX(-5.25rem)" }}>
               <CircularProgressImage
                 src={img5}
-                label="Investor Ready"
+                label="Contributor Ready"
                 size={178}
                 percentage={81}
               />
@@ -364,14 +364,14 @@ export default function Hero() {
       </section>
     </div>
     <AccessModeModal
-      open={fundraiseBlockedOpen}
-      onClose={() => setFundraiseBlockedOpen(false)}
+      open={raiseBlockedOpen}
+      onClose={() => setRaiseBlockedOpen(false)}
       onLogin={() => {
-        setFundraiseBlockedOpen(false);
+        setRaiseBlockedOpen(false);
         navigate("/login");
       }}
-      title="Fundraiser account needed"
-      message={fundraiseBlockedMessage}
+      title="Raiser account needed"
+      message={raiseBlockedMessage}
       buttonLabel="Go to Login"
     />
     </>

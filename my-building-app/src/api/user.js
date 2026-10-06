@@ -1,4 +1,5 @@
 import api from "../lib/axiox";
+import Cookies from "js-cookie";
 
 
 export const loginUser = async (payload) => {
@@ -48,6 +49,10 @@ export const enableAccessMode = async (payload) => {
 
 export const logoutUser = () => {
   // Clear all auth data from storage
+  Cookies.remove("token");
+  if (typeof window !== "undefined") {
+    window.__BUILDING_AUTH_TOKEN = "";
+  }
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   localStorage.removeItem("loggedInUser");

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Flame, TrendingUp } from "lucide-react";
 import AccessModeModal from "./AccessModeModal.jsx";
@@ -41,7 +41,7 @@ export default function TrendingCampaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [investorAccessOpen, setInvestorAccessOpen] = useState(false);
+  const [contributorAccessOpen, setContributorAccessOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -130,7 +130,7 @@ export default function TrendingCampaigns() {
       .slice(0, 6);
   }, [campaigns]);
 
-  const hasInvestorAccess = () => {
+  const hasContributorAccess = () => {
     try {
       const rawUser =
         localStorage.getItem("user") || localStorage.getItem("loggedInUser");
@@ -140,7 +140,7 @@ export default function TrendingCampaigns() {
 
       const user = JSON.parse(rawUser);
       return Boolean(
-        user?.access?.investor?.enabled && user?.activeMode === "investor"
+        user?.access?.contributor?.enabled && user?.activeMode === "contributor"
       );
     } catch {
       return false;
@@ -148,12 +148,12 @@ export default function TrendingCampaigns() {
   };
 
   const handleCampaignClick = (campaign) => {
-    if (!hasInvestorAccess()) {
-      setInvestorAccessOpen(true);
+    if (!hasContributorAccess()) {
+      setContributorAccessOpen(true);
       return;
     }
 
-    navigate(`/investment-detail/${campaign.id}`, { state: { campaign: campaign.raw } });
+    navigate(`/contribution-detail/${campaign.id}`, { state: { campaign: campaign.raw } });
   };
 
   return (
@@ -171,7 +171,7 @@ export default function TrendingCampaigns() {
             Trending Campaigns
           </div>
           <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-            Trending Fundraising Campaigns
+            Trending Raising Campaigns
           </h2>
           <p className="mt-3 text-base leading-7 text-slate-600 md:text-lg">
             Discover the campaigns getting strong momentum right now on M8Bid.
@@ -258,11 +258,11 @@ export default function TrendingCampaigns() {
           <button
             type="button"
             onClick={() => {
-              if (!hasInvestorAccess()) {
-                setInvestorAccessOpen(true);
+              if (!hasContributorAccess()) {
+                setContributorAccessOpen(true);
                 return;
               }
-              navigate("/browse-investors");
+              navigate("/browse-contributors");
             }}
             className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
           >
@@ -273,11 +273,11 @@ export default function TrendingCampaigns() {
       </div>
 
       <AccessModeModal
-        open={investorAccessOpen}
-        onClose={() => setInvestorAccessOpen(false)}
+        open={contributorAccessOpen}
+        onClose={() => setContributorAccessOpen(false)}
         onLogin={() => navigate("/login")}
-        title="Investor account needed"
-        message="You need to login or register as an investor to access trending campaigns."
+        title="Contributor account needed"
+        message="You need to login or register as an contributor to access trending campaigns."
         buttonLabel="Go to Login"
       />
     </section>

@@ -6,11 +6,11 @@ import {
   Eye,
   Trash2,
 } from "lucide-react";
-import FundraiserSidebar from "./FundraiserSidebar";
+import RaiserSidebar from "./FundraiserSidebar";
 import {
   getDashboardData,
   getCampaignById,
-  deleteFundraiserCampaign,
+  deleteRaiserCampaign,
 } from "../../api/fundraiser.api";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
@@ -149,7 +149,7 @@ function CampaignRow({ item, deletingId, viewingId, onView, onDelete }) {
   );
 }
 
-export default function FundraiserCampaigns({ embedded = false }) {
+export default function RaiserCampaigns({ embedded = false }) {
   const navigate = useNavigate();
 
   const [campaigns, setCampaigns] = useState([]);
@@ -186,10 +186,10 @@ export default function FundraiserCampaigns({ embedded = false }) {
       }
 
       const res = await getDashboardData(userId);
-      const list = res?.data || res?.fundraisers || [];
+      const list = res?.data || res?.raisers || [];
       setCampaigns(Array.isArray(list) ? list : []);
     } catch (err) {
-      console.error("Failed to fetch fundraiser campaigns:", err);
+      console.error("Failed to fetch raiser campaigns:", err);
       setCampaigns([]);
       setError(err?.message || "Failed to fetch campaigns");
     } finally {
@@ -209,10 +209,10 @@ export default function FundraiserCampaigns({ embedded = false }) {
     try {
       setViewingId(id);
       const res = await getCampaignById(id);
-      const campaignDetails = res?.data || res?.fundraiser || campaign;
+      const campaignDetails = res?.data || res?.raiser || campaign;
 
       window.scrollTo({ top: 0, behavior: "smooth" });
-      navigate(`/investment-detail/${id}`, {
+      navigate(`/contribution-detail/${id}`, {
         state: { campaign: campaignDetails },
       });
     } catch (err) {
@@ -235,7 +235,7 @@ export default function FundraiserCampaigns({ embedded = false }) {
 
     try {
       setDeletingId(id);
-      await deleteFundraiserCampaign(id);
+      await deleteRaiserCampaign(id);
       setCampaigns((prev) => prev.filter((item) => item?._id !== id));
     } catch (err) {
       console.error("Failed to delete campaign:", err);
@@ -251,7 +251,7 @@ export default function FundraiserCampaigns({ embedded = false }) {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Campaigns</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Manage all your fundraising campaigns from one place.
+            Manage all your raising campaigns from one place.
           </p>
         </div>
 
@@ -265,11 +265,11 @@ export default function FundraiserCampaigns({ embedded = false }) {
           </button>
 
           <button
-            onClick={() => navigate("/start-fundraiser")}
+            onClick={() => navigate("/start-raiser")}
             className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-700"
           >
             <PlusCircle size={16} />
-            Start a Fundraiser
+            Start a Raiser
           </button>
         </div>
       </div>
@@ -307,7 +307,7 @@ export default function FundraiserCampaigns({ embedded = false }) {
                 No campaigns found
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                Start your first fundraiser to see it here.
+                Start your first raiser to see it here.
               </p>
             </div>
           ) : (
@@ -332,7 +332,7 @@ export default function FundraiserCampaigns({ embedded = false }) {
   return (
     <div className="h-screen w-full bg-[#e3e8f0]">
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active="campaigns" />
+        <RaiserSidebar active="campaigns" />
         {content}
       </div>
     </div>

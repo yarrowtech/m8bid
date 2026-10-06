@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -11,7 +11,7 @@ import {
   Eye,
   Trash2,
 } from "lucide-react";
-import InvestorSidebar from "./InvestorSidebar";
+import ContributorSidebar from "./InvestorSidebar";
 import { getInvestorProfile, updateInvestorBank, deleteInvestorDocument } from "../../api/investor.api";
 
 function Field({ label, icon: Icon, children }) {
@@ -114,7 +114,7 @@ function SummaryRow({ label, value }) {
   );
 }
 
-export default function InvestorBank() {
+export default function ContributorBank() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -148,7 +148,7 @@ export default function InvestorBank() {
       }));
 
       setExistingBankProof(
-        user?.access?.investor?.documents?.bankProof || ""
+        user?.access?.contributor?.documents?.bankProof || ""
       );
     } catch (error) {
       console.error("Failed to fetch bank profile:", error);
@@ -240,7 +240,7 @@ export default function InvestorBank() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <InvestorSidebar active="profile" />
+        <ContributorSidebar active="profile" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -249,7 +249,7 @@ export default function InvestorBank() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <button
-                onClick={() => navigate("/investor/profile")}
+                onClick={() => navigate("/contributor/profile")}
                 className="mb-3 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 <ArrowLeft size={16} />
@@ -260,7 +260,7 @@ export default function InvestorBank() {
                 Bank Account
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Add payout details for withdrawals and investment transfers.
+                Add payout details for withdrawals and contribution transfers.
               </p>
             </div>
 
@@ -395,14 +395,14 @@ export default function InvestorBank() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/investor/profile")}
+                    onClick={() => navigate("/contributor/profile")}
                     className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     Back to Profile
                   </button>
 
                   <button
-                    onClick={() => navigate("/investor/profile/kyc")}
+                    onClick={() => navigate("/contributor/profile/kyc")}
                     className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                   >
                     Go to KYC Details

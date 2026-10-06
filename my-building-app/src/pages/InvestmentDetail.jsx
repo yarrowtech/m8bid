@@ -1,6 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FaEnvelope, FaInstagram, FaLink, FaSms, FaWhatsapp } from "react-icons/fa";
+import {
+  ArrowLeft,
+  MapPin,
+  ShieldCheck,
+  Share2,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
 import { getCampaignById } from "../api/fundraiser.api";
 import sampleImg from "../assets/fundraising-example.jpg";
 import AccessModeModal from "../components/AccessModeModal.jsx";
@@ -155,12 +163,12 @@ const StatusIcon = ({ status }) => {
 
 const InfoCard = ({ label, value, subValue, className = "" }) => (
   <div
-    className={`rounded-2xl border border-slate-200/90 bg-white px-4 py-3 shadow-sm ${className}`}
+    className={`rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 transition hover:border-slate-300 hover:bg-white hover:shadow-sm ${className}`}
   >
-    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
       {label}
     </p>
-    <p className="mt-1.5 break-words text-sm font-semibold text-slate-900">
+    <p className="mt-1.5 break-words text-sm font-bold text-slate-900">
       {value}
     </p>
     {subValue ? (
@@ -178,17 +186,18 @@ const SectionCard = ({
   className = "",
 }) => (
   <div
-    className={`rounded-[26px] border border-slate-200/90 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] ${
-      compact ? "p-4 sm:p-4" : "p-5 sm:p-5"
+    className={`rounded-[26px] border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_44px_-20px_rgba(15,23,42,0.18)] ${
+      compact ? "p-4 sm:p-5" : "p-5 sm:p-6"
     } ${className}`}
   >
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600">
+          <span className="h-1 w-4 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
           {eyebrow}
         </p>
         <h2
-          className={`mt-2 break-words font-semibold tracking-tight text-slate-900 ${
+          className={`mt-2 break-words font-bold tracking-tight text-slate-900 ${
             compact ? "text-xl sm:text-[22px]" : "text-2xl sm:text-[28px]"
           }`}
         >
@@ -201,7 +210,7 @@ const SectionCard = ({
   </div>
 );
 
-export default function InvestmentDetail() {
+export default function ContributionDetail() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -210,8 +219,7 @@ export default function InvestmentDetail() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedDoc, setSelectedDoc] = useState(null);
-  const [paymentNoticeOpen, setPaymentNoticeOpen] = useState(false);
-  const [investAccessOpen, setInvestAccessOpen] = useState(false);
+  const [contributeAccessOpen, setContributeAccessOpen] = useState(false);
   const [sharePanelOpen, setSharePanelOpen] = useState(false);
   const [campaignData, setCampaignData] = useState(state?.campaign || null);
   const [loadingCampaign, setLoadingCampaign] = useState(
@@ -228,7 +236,7 @@ export default function InvestmentDetail() {
       if (!rawUser || !rawToken) return false;
 
       const user = JSON.parse(rawUser);
-      return Boolean(user?.access?.investor?.enabled);
+      return Boolean(user?.access?.contributor?.enabled);
     } catch {
       return false;
     }
@@ -256,7 +264,7 @@ export default function InvestmentDetail() {
         setCampaignError("");
 
         const res = await getCampaignById(id);
-        const fetchedCampaign = res?.data || res?.fundraiser || null;
+        const fetchedCampaign = res?.data || res?.raiser || null;
 
         if (!isMounted) return;
 
@@ -371,8 +379,8 @@ export default function InvestmentDetail() {
   const fundingType = pickFirst(campaign?.fundingType, "Donation Based");
   const profitPercentage = pickFirst(campaign?.profitPercentage, 0);
   const daysToRaise = pickFirst(campaign?.daysToRaise, 0);
-  const minInvestment = pickFirst(
-    campaign?.minInvestment,
+  const minContribution = pickFirst(
+    campaign?.minContribution,
     campaign?.minimumAmount,
     0
   );
@@ -518,8 +526,8 @@ export default function InvestmentDetail() {
             : "Not Applicable",
       },
       {
-        label: "Minimum Investment",
-        value: minInvestment ? INR(minInvestment) : "Flexible",
+        label: "Minimum Contribution",
+        value: minContribution ? INR(minContribution) : "Flexible",
       },
       { label: "Use of Funds", value: useOfFunds || "-" },
       { label: "Days To Raise", value: `${daysToRaise} days` },
@@ -534,7 +542,7 @@ export default function InvestmentDetail() {
     category,
     fundingType,
     profitPercentage,
-    minInvestment,
+    minContribution,
     daysToRaise,
     city,
     st,
@@ -712,23 +720,26 @@ export default function InvestmentDetail() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [lightboxOpen, nextImg, prevImg]);
 
-  useEffect(() => {
-    if (!paymentNoticeOpen) return;
-
-    const timer = window.setTimeout(() => {
-      setPaymentNoticeOpen(false);
-    }, 5000);
-
-    return () => window.clearTimeout(timer);
-  }, [paymentNoticeOpen]);
-
   const handleDonateClick = () => {
     if (!hasContributorAccess) {
-      setInvestAccessOpen(true);
+      setContributeAccessOpen(true);
       return;
     }
 
-    setPaymentNoticeOpen(true);
+    const authToken =
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token") ||
+      (typeof window !== "undefined" ? window.__BUILDING_AUTH_TOKEN : "") ||
+      "";
+
+    navigate("/payment", {
+      state: {
+        campaign,
+        amount: Number(minContribution || 1000),
+        source: "contribution-detail",
+        authToken,
+      },
+    });
   };
 
   if (loadingCampaign) {
@@ -810,39 +821,6 @@ export default function InvestmentDetail() {
           </div>
         </div>
       )}
-
-      <div
-        className={`fixed right-4 top-4 z-[90] w-[calc(100%-2rem)] max-w-md transition-all duration-300 ease-out ${
-          paymentNoticeOpen
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-6 pointer-events-none opacity-0"
-        }`}
-      >
-        <div className="rounded-2xl border border-amber-200 bg-white p-4 shadow-[0_20px_45px_rgba(15,23,42,0.18)]">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
-                Payment Unavailable
-              </p>
-              <h2 className="mt-1 text-base font-bold text-slate-900">
-                Payment cannot be made right now
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                This campaign's online payment setup is temporarily under
-                review. Please check back later before contributing.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setPaymentNoticeOpen(false)}
-              className="shrink-0 rounded-lg px-2 py-1 text-sm font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-              aria-label="Dismiss payment notice"
-            >
-              x
-            </button>
-          </div>
-        </div>
-      </div>
 
       {lightboxOpen && (
         <div
@@ -956,23 +934,24 @@ export default function InvestmentDetail() {
 
       <div className="mx-auto w-full max-w-[1450px] px-3 pb-10 pt-4 sm:px-4 lg:px-5">
         {/* HEADER */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
           >
-            ← Back
+            <ArrowLeft className="h-4 w-4" />
+            Back
           </button>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-blue-700">
+            <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-blue-700">
               {category}
             </span>
-            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-indigo-700">
+            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-indigo-700">
               {fundingType}
             </span>
             <button
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
               onClick={() => {
                 try {
                   navigator.clipboard?.writeText(window.location.href);
@@ -982,13 +961,14 @@ export default function InvestmentDetail() {
                 alert("Link copied.");
               }}
             >
+              <Share2 className="h-4 w-4" />
               Share
             </button>
           </div>
         </div>
 
         {/* TOP AREA */}
-        <div className="-mt-1 grid grid-cols-1 gap-4 xl:grid-cols-[1.42fr_0.86fr]">
+        <div className="-mt-1 grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.42fr_0.86fr]">
           {/* MERGED CARD */}
           <SectionCard
             eyebrow="Campaign Overview"
@@ -1008,24 +988,25 @@ export default function InvestmentDetail() {
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-[0.92fr_1.08fr]">
               {/* LEFT IMAGE + MEDIA */}
               <div className="space-y-3">
-                <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-slate-100 shadow-sm">
+                <div className="group/cover overflow-hidden rounded-[22px] border border-slate-200 bg-slate-100 shadow-sm">
                   <div className="relative h-[200px] sm:h-[220px] lg:h-[240px]">
                     <img
                       src={cover}
                       alt={title}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover/cover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3">
-                      <div>
-                        <p className="line-clamp-2 text-lg font-semibold text-white">
+                      <div className="min-w-0">
+                        <p className="line-clamp-2 text-lg font-bold text-white drop-shadow">
                           {title}
                         </p>
-                        <p className="mt-1 text-xs text-white/85">
+                        <p className="mt-1 flex items-center gap-1 text-xs text-white/85">
+                          <MapPin className="h-3.5 w-3.5" />
                           {city}, {st}, {country}
                         </p>
                       </div>
-                      <div className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-800">
+                      <div className="shrink-0 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-800 shadow-sm backdrop-blur">
                         {Math.round(progressPercent)}% funded
                       </div>
                     </div>
@@ -1150,7 +1131,7 @@ export default function InvestmentDetail() {
                 </div>
               </div>
             }
-            className="h-fit bg-gradient-to-br from-white via-white to-violet-50/40"
+            className="h-fit bg-gradient-to-br from-white via-white to-violet-50/40 xl:sticky xl:top-6"
           >
             <p className="-mt-1 text-sm text-slate-500">
               raised of {INR(target)}
@@ -1176,7 +1157,7 @@ export default function InvestmentDetail() {
               <InfoCard label="Duration" value={`${daysToRaise} days`} />
               <InfoCard
                 label="Min Amount"
-                value={minInvestment ? INR(minInvestment) : "Flexible"}
+                value={minContribution ? INR(minContribution) : "Flexible"}
               />
               <InfoCard label="Location" value={`${city}, ${st}`} />
             </div>
@@ -1184,9 +1165,10 @@ export default function InvestmentDetail() {
             <div className="mt-4 grid grid-cols-1 gap-3">
               <button
                 onClick={handleDonateClick}
-                className="rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-4 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_12px_24px_rgba(79,70,229,0.22)] transition hover:-translate-y-0.5 hover:brightness-110"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-4 py-3.5 text-sm font-bold tracking-wide text-white shadow-[0_14px_30px_-8px_rgba(79,70,229,0.5)] transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
               >
-                Donate / Invest
+                <Wallet className="h-4 w-4" />
+                Donate / Contribute
               </button>
               <div className="relative">
                 <button
@@ -1376,8 +1358,9 @@ export default function InvestmentDetail() {
             eyebrow="Document Panel"
             title="Campaign Documents Status"
             right={
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold text-emerald-700">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold text-emerald-700">
+                  <ShieldCheck className="h-3 w-3" />
                   {uploadedCount} uploaded
                 </span>
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-semibold text-amber-700">
@@ -1464,7 +1447,8 @@ export default function InvestmentDetail() {
             eyebrow="Discover More"
             title="Similar Campaigns Listing"
             right={
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold text-slate-700">
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold text-slate-700">
+                <Sparkles className="h-3 w-3 text-indigo-500" />
                 {similarProjects.length} campaigns
               </span>
             }
@@ -1479,16 +1463,16 @@ export default function InvestmentDetail() {
                 return (
                   <div
                     key={item._id || idx}
-                    className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                    className="group/sc overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_24px_50px_-20px_rgba(15,23,42,0.28)]"
                   >
                     <div className="relative h-44 overflow-hidden">
                       <img
                         src={item.image || sampleImg}
                         alt={item.title}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover/sc:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 to-transparent" />
-                      <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-800">
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent" />
+                      <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-800 shadow-sm backdrop-blur">
                         {item.category}
                       </span>
                     </div>
@@ -1524,7 +1508,7 @@ export default function InvestmentDetail() {
                       <button
                         onClick={() => {
                           if (item.original) {
-                            navigate("/investment-detail", {
+                            navigate("/contribution-detail", {
                               state: { campaign: item.original },
                             });
                           }
@@ -1541,11 +1525,11 @@ export default function InvestmentDetail() {
           </SectionCard>
         </div>
       <AccessModeModal
-        open={investAccessOpen}
-        onClose={() => setInvestAccessOpen(false)}
+        open={contributeAccessOpen}
+        onClose={() => setContributeAccessOpen(false)}
         onLogin={() => navigate("/login")}
         title="Contributor account needed"
-        message="You need to login or create a contributor account to donate or invest in this campaign."
+        message="You need to login or create a contributor account to donate or contribute in this campaign."
         buttonLabel="Go to Login"
       />
       </div>

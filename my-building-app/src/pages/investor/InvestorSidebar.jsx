@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import {
@@ -37,7 +37,7 @@ function SidebarItem({ icon: Icon, label, active = false, onClick }) {
   );
 }
 
-export default function InvestorSidebar({ active = "dashboard" }) {
+export default function ContributorSidebar({ active = "dashboard" }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -59,7 +59,7 @@ export default function InvestorSidebar({ active = "dashboard" }) {
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
             M8BID
           </h2>
-          <p className="text-[11px] text-slate-400">Investor Portal</p>
+          <p className="text-[11px] text-slate-400">Contributor Portal</p>
         </div>
       </button>
 
@@ -73,31 +73,31 @@ export default function InvestorSidebar({ active = "dashboard" }) {
             icon={LayoutDashboard}
             label="Dashboard"
             active={active === "dashboard"}
-            onClick={() => navigate("/investor/dashboard")}
+            onClick={() => navigate("/contributor/dashboard")}
           />
           <SidebarItem
             icon={BriefcaseBusiness}
             label="Portfolio"
             active={active === "portfolio"}
-            onClick={() => navigate("/investor/portfolio")}
+            onClick={() => navigate("/contributor/portfolio")}
           />
           <SidebarItem
             icon={BarChart3}
             label="Analytics"
             active={active === "analytics"}
-            onClick={() => navigate("/investor/analytics")}
+            onClick={() => navigate("/contributor/analytics")}
           />
           <SidebarItem
             icon={Wallet}
             label="Transactions"
             active={active === "transactions"}
-            onClick={() => navigate("/investor/transactions")}
+            onClick={() => navigate("/contributor/transactions")}
           />
           <SidebarItem
             icon={User}
             label="Profile"
             active={active === "profile"}
-            onClick={() => navigate("/investor/profile")}
+            onClick={() => navigate("/contributor/profile")}
           />
         </div>
       </div>

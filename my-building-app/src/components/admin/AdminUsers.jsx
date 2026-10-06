@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { FaBars, FaSearch, FaEye, FaUserCircle, FaTrash } from "react-icons/fa";
 import { deleteAdminUser, getAdminUsers } from "../../api/admin";
@@ -34,10 +34,10 @@ const getStatusTone = (status = "", isActive) => {
 const getProfileBadgeTone = (label = "") => {
   const v = String(label).toLowerCase();
 
-  if (v.includes("investor")) {
+  if (v.includes("contributor")) {
     return "bg-violet-50 text-violet-700 border-violet-200";
   }
-  if (v.includes("fundraiser")) {
+  if (v.includes("raiser")) {
     return "bg-sky-50 text-sky-700 border-sky-200";
   }
   return "bg-slate-50 text-slate-700 border-slate-200";
@@ -65,67 +65,67 @@ const normalizeStatus = (value, fallbackActive) => {
 
 const normalizeMode = (value) => {
   const mode = String(value || "none").toLowerCase();
-  if (["investor", "fundraiser", "none"].includes(mode)) return mode;
+  if (["contributor", "raiser", "none"].includes(mode)) return mode;
   return "none";
 };
 
 const getProfilesFromUser = (user) => {
   const profiles = [];
-  const investorAccess = user?.investorAccess || user?.access?.investor || {};
-  const fundraiserAccess = user?.fundraiserAccess || user?.access?.fundraiser || {};
+  const contributorAccess = user?.contributorAccess || user?.access?.contributor || {};
+  const raiserAccess = user?.raiserAccess || user?.access?.raiser || {};
 
-  if (investorAccess?.enabled) {
-    profiles.push("Investor");
+  if (contributorAccess?.enabled) {
+    profiles.push("Contributor");
   }
 
-  if (fundraiserAccess?.enabled) {
-    profiles.push("Fundraiser");
+  if (raiserAccess?.enabled) {
+    profiles.push("Raiser");
   }
 
   return profiles;
 };
 
 const getVerificationSummary = (user) => {
-  const investorAccess = user?.investorAccess || user?.access?.investor || {};
-  const fundraiserAccess = user?.fundraiserAccess || user?.access?.fundraiser || {};
+  const contributorAccess = user?.contributorAccess || user?.access?.contributor || {};
+  const raiserAccess = user?.raiserAccess || user?.access?.raiser || {};
 
   const items = [];
 
-  if (investorAccess?.enabled) {
+  if (contributorAccess?.enabled) {
     items.push({
-      label: "Investor KYC",
-      value: investorAccess?.kycStatus || "NONE",
-      role: "investor",
+      label: "Contributor KYC",
+      value: contributorAccess?.kycStatus || "NONE",
+      role: "contributor",
     });
     items.push({
-      label: "Investor Bank",
-      value: investorAccess?.bankStatus || "NONE",
-      role: "investor",
+      label: "Contributor Bank",
+      value: contributorAccess?.bankStatus || "NONE",
+      role: "contributor",
     });
   }
 
-  if (fundraiserAccess?.enabled) {
+  if (raiserAccess?.enabled) {
     items.push({
-      label: "Fundraiser KYC",
-      value: fundraiserAccess?.kycStatus || "NONE",
-      role: "fundraiser",
+      label: "Raiser KYC",
+      value: raiserAccess?.kycStatus || "NONE",
+      role: "raiser",
     });
     items.push({
-      label: "Fundraiser PAN",
-      value: fundraiserAccess?.panStatus || "NONE",
-      role: "fundraiser",
+      label: "Raiser PAN",
+      value: raiserAccess?.panStatus || "NONE",
+      role: "raiser",
     });
     items.push({
-      label: "Fundraiser Bank",
-      value: fundraiserAccess?.bankStatus || "NONE",
-      role: "fundraiser",
+      label: "Raiser Bank",
+      value: raiserAccess?.bankStatus || "NONE",
+      role: "raiser",
     });
 
-    if (fundraiserAccess?.type === "company") {
+    if (raiserAccess?.type === "company") {
       items.push({
         label: "Company Docs",
-        value: fundraiserAccess?.companyStatus || "NONE",
-        role: "fundraiser",
+        value: raiserAccess?.companyStatus || "NONE",
+        role: "raiser",
       });
     }
   }
@@ -194,14 +194,14 @@ export default function AdminUsers() {
 
       let matchesProfile = true;
 
-      if (profileFilter === "investor") {
-        matchesProfile = profiles.some((p) => p.toLowerCase().includes("investor"));
-      } else if (profileFilter === "fundraiser") {
-        matchesProfile = profiles.some((p) => p.toLowerCase().includes("fundraiser"));
+      if (profileFilter === "contributor") {
+        matchesProfile = profiles.some((p) => p.toLowerCase().includes("contributor"));
+      } else if (profileFilter === "raiser") {
+        matchesProfile = profiles.some((p) => p.toLowerCase().includes("raiser"));
       } else if (profileFilter === "both") {
         matchesProfile =
-          profiles.some((p) => p.toLowerCase().includes("investor")) &&
-          profiles.some((p) => p.toLowerCase().includes("fundraiser"));
+          profiles.some((p) => p.toLowerCase().includes("contributor")) &&
+          profiles.some((p) => p.toLowerCase().includes("raiser"));
       }
 
       let matchesVerification = true;
@@ -283,8 +283,8 @@ export default function AdminUsers() {
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400"
           >
             <option value="all">All Profiles</option>
-            <option value="investor">Investor</option>
-            <option value="fundraiser">Fundraiser</option>
+            <option value="contributor">Contributor</option>
+            <option value="raiser">Raiser</option>
             <option value="both">Both</option>
           </select>
         </div>
@@ -356,16 +356,16 @@ export default function AdminUsers() {
                                 {user?.email || "—"}
                               </p>
                               <div className="mt-1 flex flex-wrap gap-1.5">
-                                {user?.investorAccess?.enabled && (
+                                {user?.contributorAccess?.enabled && (
                                   <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
                                     <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
-                                    Investor
+                                    Contributor
                                   </span>
                                 )}
-                                {user?.fundraiserAccess?.enabled && (
+                                {user?.raiserAccess?.enabled && (
                                   <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700">
                                     <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                                    Fundraiser
+                                    Raiser
                                   </span>
                                 )}
                               </div>
@@ -420,7 +420,7 @@ export default function AdminUsers() {
                                     <span
                                       className={cn(
                                         "inline-block h-2 w-2 rounded-full",
-                                        item.role === "investor" ? "bg-violet-500" : "bg-sky-500"
+                                        item.role === "contributor" ? "bg-violet-500" : "bg-sky-500"
                                       )}
                                     />
                                     <span className="font-semibold text-slate-700">

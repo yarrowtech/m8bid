@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   HeartHandshake,
   ShieldCheck,
@@ -262,7 +262,7 @@ export default function CauseBasedFunding() {
           </div>
 
           <Link
-            to="/fundraising"
+            to="/raising"
             className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
           >
             Start now

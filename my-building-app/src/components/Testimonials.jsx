@@ -1,31 +1,31 @@
-// src/components/Testimonials.jsx
+﻿// src/components/Testimonials.jsx
 import React from "react";
 import { BadgeCheck, Quote, Star } from "lucide-react";
-import investor1 from "../assets/investor3.jpg";
-import investor2 from "../assets/investor2.jpg";
-import investor3 from "../assets/investor1.jpg";
+import contributor1 from "../assets/investor3.jpg";
+import contributor2 from "../assets/investor2.jpg";
+import contributor3 from "../assets/investor1.jpg";
 
 const testimonials = [
   {
     name: "Priya R.",
-    role: "Retail Investor",
+    role: "Retail Contributor",
     comment:
-      "Investing here has been seamless and profitable. The platform is easy to use, and my returns are consistent.",
-    image: investor1,
+      "Contributing here has been seamless and profitable. The platform is easy to use, and my returns are consistent.",
+    image: contributor1,
   },
   {
     name: "Amit K.",
-    role: "Growth Investor",
+    role: "Growth Contributor",
     comment:
-      "I love how transparent everything is. I can track my investments in real-time and feel confident about every decision.",
-    image: investor2,
+      "I love how transparent everything is. I can track my contributions in real-time and feel confident about every decision.",
+    image: contributor2,
   },
   {
     name: "Sneha M.",
     role: "Long-Term Supporter",
     comment:
       "The team is supportive, the process is smooth, and the overall experience feels professional and trustworthy.",
-    image: investor3,
+    image: contributor3,
   },
 ];
 
@@ -62,16 +62,16 @@ export default function Testimonials() {
       <div className="mx-auto max-w-3xl text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-1.5 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur">
           <BadgeCheck className="h-4 w-4 text-blue-700" />
-          Trusted by investors
+          Trusted by contributors
         </div>
 
         <h2 className="mt-4 text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
-          What Our Investors Say
+          What Our Contributors Say
         </h2>
 
         <p className="mt-3 text-base md:text-lg leading-7 text-slate-600">
           Hear from people who trust the platform for a transparent, secure, and
-          smooth investment experience.
+          smooth contribution experience.
         </p>
       </div>
 

@@ -1,12 +1,12 @@
-import React from "react";
+﻿import React from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
-import { getFundraisingCauseBySlug } from "../data/fundraisingCauses";
+import { getRaisingCauseBySlug } from "../data/fundraisingCauses";
 
-export default function FundraisingCauseTopicPage() {
+export default function RaisingCauseTopicPage() {
   const { causeSlug } = useParams();
-  const cause = getFundraisingCauseBySlug(causeSlug || "");
+  const cause = getRaisingCauseBySlug(causeSlug || "");
 
   if (!cause) {
     return <Navigate to="/" replace />;
@@ -23,7 +23,7 @@ export default function FundraisingCauseTopicPage() {
       <div className="mx-auto max-w-5xl">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm md:p-10">
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-            Fundraising Topic
+            Raising Topic
           </p>
 
           <h1 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
@@ -49,10 +49,10 @@ export default function FundraisingCauseTopicPage() {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
-              to="/fundraising"
+              to="/raising"
               className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
             >
-              Start this fundraiser
+              Start this raiser
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
 

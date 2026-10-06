@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
+﻿import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -18,7 +18,7 @@ import {
   BriefcaseBusiness,
   CircleDollarSign,
 } from "lucide-react";
-import FundraiserSidebar from "./FundraiserSidebar";
+import RaiserSidebar from "./FundraiserSidebar";
 import {
   getDashboardData,
   getFundraiserProfile,
@@ -209,7 +209,7 @@ function ProfileDropdown({ user, navigate }) {
 
         <div className="hidden text-left md:block">
           <p className="text-[13px] font-medium text-slate-900">
-            {user?.name || "Fundraiser"}
+            {user?.name || "Raiser"}
           </p>
         </div>
 
@@ -219,7 +219,7 @@ function ProfileDropdown({ user, navigate }) {
       {open ? (
         <div className="absolute right-0 top-[110%] z-30 w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
           <button
-            onClick={() => navigate("/fundraiser/profile/kyc")}
+            onClick={() => navigate("/raiser/profile/kyc")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
@@ -236,7 +236,7 @@ function ProfileDropdown({ user, navigate }) {
           </button>
 
           <button
-            onClick={() => navigate("/fundraiser/profile/bank")}
+            onClick={() => navigate("/raiser/profile/bank")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
@@ -253,7 +253,7 @@ function ProfileDropdown({ user, navigate }) {
           </button>
 
           <button
-            onClick={() => navigate("/fundraiser/profile")}
+            onClick={() => navigate("/raiser/profile")}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
@@ -315,12 +315,12 @@ const normalizeProfileStatus = (value, type = "default") => {
   return value || "-";
 };
 
-export default function FundraiserDashboard({ embedded = false }) {
+export default function RaiserDashboard({ embedded = false }) {
   const navigate = useNavigate();
   const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [user, setUser] = useState(localUser || null);
-  const [fundraisers, setFundraisers] = useState([]);
+  const [raisers, setRaisers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -342,7 +342,7 @@ export default function FundraiserDashboard({ embedded = false }) {
           getFundraiserProfile(),
         ]);
 
-        setFundraisers(Array.isArray(dashboardRes?.data) ? dashboardRes.data : []);
+        setRaisers(Array.isArray(dashboardRes?.data) ? dashboardRes.data : []);
 
         const liveUser = profileRes?.data || null;
         if (liveUser) {
@@ -359,27 +359,27 @@ export default function FundraiserDashboard({ embedded = false }) {
     loadDashboard();
   }, [localUser?._id, localUser?.id]);
 
-  const filteredFundraisers = useMemo(() => {
+  const filteredRaisers = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return fundraisers;
+    if (!q) return raisers;
 
-    return fundraisers.filter((item) => {
+    return raisers.filter((item) => {
       return (
         item?.projectTitle?.toLowerCase().includes(q) ||
         item?.projectCategory?.toLowerCase().includes(q) ||
         item?.status?.toLowerCase().includes(q)
       );
     });
-  }, [fundraisers, search]);
+  }, [raisers, search]);
 
-  const totalCampaigns = fundraisers.length;
-  const approvedCount = fundraisers.filter((f) => f.status === "approved").length;
-  const totalRaised = fundraisers.reduce(
+  const totalCampaigns = raisers.length;
+  const approvedCount = raisers.filter((f) => f.status === "approved").length;
+  const totalRaised = raisers.reduce(
     (sum, item) => sum + Number(item?.raisedAmount || 0),
     0
   );
 
-  const totalTarget = fundraisers.reduce(
+  const totalTarget = raisers.reduce(
     (sum, item) => sum + Number(item?.moneyToRaise || 0),
     0
   );
@@ -392,7 +392,7 @@ export default function FundraiserDashboard({ embedded = false }) {
     if (user?.avatar || user?.profileImage) score += 15;
     if (
       ["VERIFIED", "APPROVED"].includes(
-        String(user?.access?.fundraiser?.kycStatus || "").toUpperCase()
+        String(user?.access?.raiser?.kycStatus || "").toUpperCase()
       )
     ) {
       score += 15;
@@ -402,13 +402,13 @@ export default function FundraiserDashboard({ embedded = false }) {
   }, [user]);
 
   const kycStatus = normalizeProfileStatus(
-    user?.access?.fundraiser?.kycStatus,
+    user?.access?.raiser?.kycStatus,
     "kyc"
   );
 
   const bankStatus = user?.bankDetails?.accountNumber
     ? "Linked"
-    : normalizeProfileStatus(user?.access?.fundraiser?.bankStatus, "bank");
+    : normalizeProfileStatus(user?.access?.raiser?.bankStatus, "bank");
 
   const bankLinked = bankStatus === "Linked";
 
@@ -436,7 +436,7 @@ export default function FundraiserDashboard({ embedded = false }) {
     },
   ];
 
-  const firstName = user?.name?.split(" ")[0] || "Fundraiser";
+  const firstName = user?.name?.split(" ")[0] || "Raiser";
 
   if (loading) {
     return (
@@ -506,7 +506,7 @@ export default function FundraiserDashboard({ embedded = false }) {
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <button
-                onClick={() => navigate("/start-fundraiser")}
+                onClick={() => navigate("/start-raiser")}
                 className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-md transition hover:bg-slate-100 active:scale-[0.98]"
               >
                 Start Raising
@@ -516,7 +516,7 @@ export default function FundraiserDashboard({ embedded = false }) {
               </button>
 
               <button
-                onClick={() => navigate("/browse-investors")}
+                onClick={() => navigate("/browse-contributors")}
                 className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 active:scale-[0.98]"
               >
                 Explore Contributing Opportunities →
@@ -544,7 +544,7 @@ export default function FundraiserDashboard({ embedded = false }) {
             </h2>
 
             <button
-              onClick={() => navigate("/fundraiser/campaigns")}
+              onClick={() => navigate("/raiser/campaigns")}
               className="text-sm font-semibold text-sky-700 hover:text-sky-800"
             >
               See all
@@ -552,7 +552,7 @@ export default function FundraiserDashboard({ embedded = false }) {
           </div>
 
           <div className="mt-3 pr-2">
-            {filteredFundraisers.length === 0 ? (
+            {filteredRaisers.length === 0 ? (
               <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-8 text-center">
                 <p className="text-lg font-semibold text-slate-800">
                   No campaigns found
@@ -561,7 +561,7 @@ export default function FundraiserDashboard({ embedded = false }) {
                   Create a Raiser and it will appear here.
                 </p>
                 <button
-                  onClick={() => navigate("/start-fundraiser")}
+                  onClick={() => navigate("/start-raiser")}
                   className="mt-4 rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                 >
                   Create Campaign
@@ -569,7 +569,7 @@ export default function FundraiserDashboard({ embedded = false }) {
               </div>
             ) : (
               <div className="grid gap-3 xl:grid-cols-3">
-                {filteredFundraisers.map((item) => (
+                {filteredRaisers.map((item) => (
                   <CampaignCard
                     key={item._id}
                     tag={item.projectCategory}
@@ -580,7 +580,7 @@ export default function FundraiserDashboard({ embedded = false }) {
                     daysLeft={calcDaysLeft(item.deadline)}
                     progress={calcProgress(item.raisedAmount, item.moneyToRaise)}
                     onView={() =>
-                      navigate(`/investment-detail/${item._id}`, {
+                      navigate(`/contribution-detail/${item._id}`, {
                         state: { campaign: item },
                       })
                     }
@@ -600,7 +600,7 @@ export default function FundraiserDashboard({ embedded = false }) {
         </div>
 
         <div
-          onClick={() => navigate("/fundraiser/profile")}
+          onClick={() => navigate("/raiser/profile")}
           className="mt-5 flex cursor-pointer flex-col items-center rounded-[24px] border border-slate-100 bg-[#fafcff] p-4 transition hover:bg-slate-50 hover:shadow-sm"
         >
           <div className="relative flex h-[122px] w-[122px] items-center justify-center rounded-full border-[8px] border-sky-100">
@@ -618,7 +618,7 @@ export default function FundraiserDashboard({ embedded = false }) {
             Hello {firstName} ðŸ‘‹
           </h4>
           <p className="mt-1 max-w-[230px] text-center text-[11px] leading-5 text-slate-500">
-            Complete your fundraiser profile to improve campaign trust and approvals.
+            Complete your raiser profile to improve campaign trust and approvals.
           </p>
           <p className="mt-2 text-xs font-medium text-sky-700">
             View Profile â†’
@@ -626,19 +626,19 @@ export default function FundraiserDashboard({ embedded = false }) {
         </div>
 
         <div className="mt-5 grid gap-3">
-          <div onClick={() => navigate("/fundraiser/profile")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+          <div onClick={() => navigate("/raiser/profile")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
             <RightMetricCard title="Profile Completion" value={`${profileCompletion}%`} sub="Based on live profile, KYC, and bank details" icon={BadgeCheck} tone="sky" />
           </div>
-          <div onClick={() => navigate("/fundraiser/profile/kyc")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+          <div onClick={() => navigate("/raiser/profile/kyc")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
             <RightMetricCard
               title="KYC Status"
               value={String(kycStatus)}
-              sub="Live status from your fundraiser profile"
+              sub="Live status from your raiser profile"
               icon={FileCheck}
               tone={String(kycStatus).toLowerCase().includes("approved") || String(kycStatus).toLowerCase().includes("verified") ? "emerald" : String(kycStatus).toLowerCase().includes("rejected") ? "rose" : "amber"}
             />
           </div>
-          <div onClick={() => navigate("/fundraiser/profile/bank")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+          <div onClick={() => navigate("/raiser/profile/bank")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
             <RightMetricCard
               title="Bank Account"
               value={bankStatus}
@@ -650,22 +650,22 @@ export default function FundraiserDashboard({ embedded = false }) {
         </div>
 
         <div className="mt-5 space-y-3">
-          <div onClick={() => navigate("/fundraiser/campaigns")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
-            <RightMetricCard title="Approved Campaigns" value={String(approvedCount).padStart(2, "0")} sub="Visible to investors" icon={BriefcaseBusiness} tone="sky" />
+          <div onClick={() => navigate("/raiser/campaigns")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+            <RightMetricCard title="Approved Campaigns" value={String(approvedCount).padStart(2, "0")} sub="Visible to contributors" icon={BriefcaseBusiness} tone="sky" />
           </div>
-          <div onClick={() => navigate("/fundraiser/analytics")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+          <div onClick={() => navigate("/raiser/analytics")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
             <RightMetricCard title="Total Raised" value={formatINR(totalRaised)} sub={`Against target ${formatINR(totalTarget)}`} icon={IndianRupee} tone="emerald" />
           </div>
-          <div onClick={() => navigate("/fundraiser/withdrawals")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
+          <div onClick={() => navigate("/raiser/withdrawals")} className="cursor-pointer rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm">
             <RightMetricCard title="Total Withdrawals" value={formatINR(0)} sub="Withdrawal system not connected yet" icon={CircleDollarSign} tone="indigo" />
           </div>
         </div>
 
         <div className="mt-5 space-y-3">
-          <PrimaryBlueButton onClick={() => navigate("/fundraiser/profile/kyc")} fullWidth>
+          <PrimaryBlueButton onClick={() => navigate("/raiser/profile/kyc")} fullWidth>
             Update KYC & Documents
           </PrimaryBlueButton>
-          <PrimaryBlueButton onClick={() => navigate("/fundraiser/profile/bank")} fullWidth>
+          <PrimaryBlueButton onClick={() => navigate("/raiser/profile/bank")} fullWidth>
             Link Bank Account
           </PrimaryBlueButton>
         </div>
@@ -684,7 +684,7 @@ export default function FundraiserDashboard({ embedded = false }) {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f5f8fc]">
-        <FundraiserSidebar active="dashboard" />
+        <RaiserSidebar active="dashboard" />
         {content}
       </div>
     </div>

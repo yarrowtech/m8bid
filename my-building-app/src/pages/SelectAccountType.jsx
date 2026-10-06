@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { switchMode } from "../api/user";
 
 export default function SelectAccountMode() {
@@ -10,19 +10,19 @@ export default function SelectAccountMode() {
       const res = await switchMode({ mode });
       localStorage.setItem("user", JSON.stringify(res.user));
 
-      if (mode === "investor") {
+      if (mode === "contributor") {
         navigate(
-          res.user?.access?.investor?.type === "company"
-            ? "/investor/company/dashboard"
-            : "/investor/dashboard"
+          res.user?.access?.contributor?.type === "company"
+            ? "/contributor/company/dashboard"
+            : "/contributor/dashboard"
         );
       }
 
-      if (mode === "fundraiser") {
+      if (mode === "raiser") {
         navigate(
-          res.user?.access?.fundraiser?.type === "company"
-            ? "/fundraiser/company/dashboard"
-            : "/fundraiser/dashboard"
+          res.user?.access?.raiser?.type === "company"
+            ? "/raiser/company/dashboard"
+            : "/raiser/dashboard"
         );
       }
     } catch (error) {
@@ -43,26 +43,26 @@ export default function SelectAccountMode() {
         </p>
 
         <div className="grid md:grid-cols-2 gap-6 mt-8">
-          {user?.access?.investor?.enabled && (
+          {user?.access?.contributor?.enabled && (
             <button
-              onClick={() => handleSelect("investor")}
+              onClick={() => handleSelect("contributor")}
               className="rounded-2xl border border-slate-300 p-6 text-left hover:border-slate-900 transition"
             >
-              <h2 className="text-xl font-bold text-slate-900">Investor</h2>
+              <h2 className="text-xl font-bold text-slate-900">Contributor</h2>
               <p className="text-slate-600 mt-2 capitalize">
-                {user?.access?.investor?.type} account
+                {user?.access?.contributor?.type} account
               </p>
             </button>
           )}
 
-          {user?.access?.fundraiser?.enabled && (
+          {user?.access?.raiser?.enabled && (
             <button
-              onClick={() => handleSelect("fundraiser")}
+              onClick={() => handleSelect("raiser")}
               className="rounded-2xl border border-slate-300 p-6 text-left hover:border-yellow-400 transition"
             >
-              <h2 className="text-xl font-bold text-slate-900">Fundraiser</h2>
+              <h2 className="text-xl font-bold text-slate-900">Raiser</h2>
               <p className="text-slate-600 mt-2 capitalize">
-                {user?.access?.fundraiser?.type} account
+                {user?.access?.raiser?.type} account
               </p>
             </button>
           )}

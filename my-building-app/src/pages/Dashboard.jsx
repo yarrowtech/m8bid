@@ -1,4 +1,4 @@
-/*
+﻿/*
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDashboardData } from "../api/user";
@@ -19,44 +19,44 @@ import {
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
-  const [fundraisers, setFundraisers] = useState([]);
+  const [raisers, setRaisers] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [totalRaisedMoney, setTotalRaisedMoney] = useState(0);
   const navigate = useNavigate();
 
-  const fetchFundraisers = async () => {
+  const fetchRaisers = async () => {
     try {
       const userId = user?._id || user?.id;
 if (!userId) return; // Safeguard
 
 const data = await getDashboardData(userId);
       console.log("data", data);
-      setFundraisers(data.data);
+      setRaisers(data.data);
       
       setTotalRaisedMoney(
-        data.data.reduce((total, fundraiser) => {
-          return total + fundraiser.moneyToRaise;
+        data.data.reduce((total, raiser) => {
+          return total + raiser.moneyToRaise;
         }, 0)
       );
     } catch (error) {
-      console.error("Error fetching fundraisers:", error);
+      console.error("Error fetching raisers:", error);
     }
   };
 
 const campaignAnalyticsData = [
-  { name: "Campaign A", raised: 50000, invested: 30000, profitReturned: 7000 },
-  { name: " B", raised: 80000, invested: 50000, profitReturned: 12000 },
-  { name: "C", raised: 60000, invested: 20000, profitReturned: 3000 },
-  { name: "D", raised: 90000, invested: 60000, profitReturned: 15000 }, 
+  { name: "Campaign A", raised: 50000, contributeed: 30000, profitReturned: 7000 },
+  { name: " B", raised: 80000, contributeed: 50000, profitReturned: 12000 },
+  { name: "C", raised: 60000, contributeed: 20000, profitReturned: 3000 },
+  { name: "D", raised: 90000, contributeed: 60000, profitReturned: 15000 }, 
 ];
   useEffect(() => {
-    fetchFundraisers();
-    console.log("first", fundraisers);
+    fetchRaisers();
+    console.log("first", raisers);
   }, []);
 
   const handleViewDetails = (campaign) => {
-    navigate(`/investment-detail`, { state: { campaign } });
+    navigate(`/contribution-detail`, { state: { campaign } });
   };
 
   const handleCloseModal = () => {
@@ -75,7 +75,7 @@ const campaignAnalyticsData = [
               ["dashboard", "📊", "Dashboard"],
               ["profile", "👤", "My Profile"],
               ["projects", "🚀", "My Campaigns"],
-              ["investments", "💸", "My Investments"],
+              ["contributions", "💸", "My Contributions"],
               ["analytics", "📈", "Campaign Analytics"],
             ].map(([key, emoji, label]) => (
               <li key={key}>
@@ -132,50 +132,50 @@ const campaignAnalyticsData = [
               </div>
                <div className="p-6 bg-[#17a2b8] text-white rounded-lg shadow-lg">
                 <h3 className="font-semibold text-lg">Money Raised</h3>
-                <p className="text-xl">₹{fundraisers?.moneyRaised || 0}</p>
+                <p className="text-xl">₹{raisers?.moneyRaised || 0}</p>
               </div>
               <div className="p-6 bg-[#28a745] text-white rounded-lg shadow-lg">
-                <h3 className="font-semibold text-lg">Investments Made</h3>
-                <p className="text-2xl">{fundraisers?.moneyInvested || 0}</p>
+                <h3 className="font-semibold text-lg">Contributions Made</h3>
+                <p className="text-2xl">{raisers?.moneyContributeed || 0}</p>
               </div>
               <div className="p-6 bg-[#ffc107] text-white rounded-lg shadow-lg">
                 <h3 className="font-semibold text-lg">Active Campaigns</h3>
-                <p className="text-xl">{fundraisers?.length} Campaigns</p>
+                <p className="text-xl">{raisers?.length} Campaigns</p>
               </div>
              
             </div>
 
             <div>
               <h3 className="text-xl font-semibold mb-4">
-                My Fundraising Projects
+                My Raising Projects
               </h3>
               <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-                {Array.isArray(fundraisers) && fundraisers.length > 0 ? (
-                  fundraisers.map((fundraiser) => (
+                {Array.isArray(raisers) && raisers.length > 0 ? (
+                  raisers.map((raiser) => (
                     <div
-                      key={fundraiser._id}
+                      key={raiser._id}
                       className="bg-white rounded-lg shadow-md overflow-hidden w-full"
                     >
                       <div className="relative">
                         <img
-                          src={fundraiser.photo} // Fallback to hero image if no photo is available}
-                          alt={fundraiser.projectTitle}
+                          src={raiser.photo} // Fallback to hero image if no photo is available}
+                          alt={raiser.projectTitle}
                           className="w-full h-52 object-cover"
                         />
                         <span className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-sm px-3 py-2 rounded-full">
-                          {fundraiser.state } , {fundraiser.country} , {fundraiser.city}
+                          {raiser.state } , {raiser.country} , {raiser.city}
                         </span>
                       </div>
                       <div className="p-4">
                         <h4 className="font-semibold text-lg leading-snug">
-                          {fundraiser.projectTitle}
+                          {raiser.projectTitle}
                         </h4>
-                        <p className="text-gray-600 mb-2">by {fundraiser?.userId?.name}</p>
+                        <p className="text-gray-600 mb-2">by {raiser?.userId?.name}</p>
                             <p className="text-xl font-semibold mb-1">
-                            Target Amount :  ₹{fundraiser.moneyToRaise?.toLocaleString() || 0} 
+                            Target Amount :  ₹{raiser.moneyToRaise?.toLocaleString() || 0} 
                           </p>
                            <p className="text-sm text-gray-700 font-medium">
-                ₹{fundraiser.raisedAmount || 0} raised
+                ₹{raiser.raisedAmount || 0} raised
               </p>
                         <div className="mt-4 mb-2">
                           <div className="h-2 bg-gray-200 rounded-full">
@@ -183,8 +183,8 @@ const campaignAnalyticsData = [
                               className="h-2 bg-green-500 rounded-full"
                               style={{
                                 width: `${Math.min(
-                                  (fundraiser.raisedAmount /
-                                    fundraiser.moneyToRaise) *
+                                  (raiser.raisedAmount /
+                                    raiser.moneyToRaise) *
                                     100,
                                   100
                                 )}%`,
@@ -196,7 +196,7 @@ const campaignAnalyticsData = [
                       
                         </p>
                         <button
-                          onClick={() => handleViewDetails(fundraiser)}
+                          onClick={() => handleViewDetails(raiser)}
                           className="mt-4 w-full bg-[#F8D388] text-gray-800 font-medium py-2 rounded-lg transition hover:bg-[#f4c66d]"
                         >
                           View Details
@@ -205,7 +205,7 @@ const campaignAnalyticsData = [
                     </div>
                   ))
                 ) : (
-                  <p>No fundraisers created yet. Start a fundraiser!</p>
+                  <p>No raisers created yet. Start a raiser!</p>
                 )}
               </div>
             </div>
@@ -214,43 +214,43 @@ const campaignAnalyticsData = [
 
         {activeTab === "projects" && (
           <div>
-            <h3 className="text-xl font-semibold mb-4">My Fundraising Projects</h3>
+            <h3 className="text-xl font-semibold mb-4">My Raising Projects</h3>
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-              {Array.isArray(fundraisers) && fundraisers.length > 0 ? (
-                fundraisers.map((fundraiser) => (
+              {Array.isArray(raisers) && raisers.length > 0 ? (
+                raisers.map((raiser) => (
                   <div
-                    key={fundraiser._id}
+                    key={raiser._id}
                     className="bg-white rounded-lg shadow-md overflow-hidden w-full"
                   >
                     <div className="relative">
                       <img
-                        src={fundraiser.photo || heroImg} // Fallback to hero image if no photo is available
-                        alt={fundraiser.projectTitle}
+                        src={raiser.photo || heroImg} // Fallback to hero image if no photo is available
+                        alt={raiser.projectTitle}
                         className="w-full h-52 object-cover"
                       />
                       <span className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
-                        {fundraiser.state}
+                        {raiser.state}
                       </span>
                     </div>
                     <div className="p-4">
-                      <h4 className="font-semibold text-lg">{fundraiser.projectTitle}</h4>
+                      <h4 className="font-semibold text-lg">{raiser.projectTitle}</h4>
                       <p className="text-sm text-gray-700 mt-1">
-                        {fundraiser.projectOverview || "Help us reach our goal!"}
+                        {raiser.projectOverview || "Help us reach our goal!"}
                       </p>
                       <div className="mt-4 mb-2">
                         <div className="h-2 bg-gray-200 rounded-full">
                           <p className="text-sm text-gray-700 font-medium">
-                Target Amount : ₹{fundraiser.moneyToRaise || 0} 
+                Target Amount : ₹{raiser.moneyToRaise || 0} 
               </p>
               <p className="text-sm text-gray-700 font-medium">
-                ₹{fundraiser.moneyRaised || 0} raised
+                ₹{raiser.moneyRaised || 0} raised
               </p>
 
                           <div
                             className="h-2 bg-green-500 rounded-full"
                             style={{
                               width: `${Math.min(
-                                (fundraiser.raisedAmount / fundraiser.moneyToRaise) * 100,
+                                (raiser.raisedAmount / raiser.moneyToRaise) * 100,
                                 100
                               )}%`,
                             }}
@@ -258,7 +258,7 @@ const campaignAnalyticsData = [
                         </div>
                       </div>
                       <button
-                        onClick={() => handleViewDetails(fundraiser)}
+                        onClick={() => handleViewDetails(raiser)}
                         className="mt-4 w-full bg-[#F8D388] text-gray-800 font-medium py-2 rounded-lg transition hover:bg-[#f4c66d]"
                       >
                         View Details
@@ -267,16 +267,16 @@ const campaignAnalyticsData = [
                   </div>
                 ))
               ) : (
-                <p>No fundraisers created yet. Start a fundraiser!</p>
+                <p>No raisers created yet. Start a raiser!</p>
               )}
             </div>
           </div>
         )}
 
- {activeTab === "investments" && (
+ {activeTab === "contributions" && (
           <div>
-            <h3 className="text-xl font-semibold mb-4">My Investments</h3>
-            <p className="text-gray-600">[💸 Investments listing goes here]</p>
+            <h3 className="text-xl font-semibold mb-4">My Contributions</h3>
+            <p className="text-gray-600">[💸 Contributions listing goes here]</p>
           </div>
         )}
 
@@ -334,7 +334,7 @@ const campaignAnalyticsData = [
 
   <div className="flex flex-col gap-6">
     <h4 className="text-lg font-semibold text-gray-700 text-center">
-      💸 Investments Made by You
+      💸 Contributions Made by You
     </h4>
     <div className="flex flex-col md:flex-row items-center gap-8">
       <div className="w-full md:w-[60%] bg-white rounded-lg shadow-md p-4">
@@ -346,7 +346,7 @@ const campaignAnalyticsData = [
             <Tooltip />
             <Line
               type="monotone"
-              dataKey="invested"
+              dataKey="contributeed"
               stroke="#38bdf8"
               strokeWidth={3}
               dot={{ r: 3 }}
@@ -361,20 +361,20 @@ const campaignAnalyticsData = [
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="invested" fill="#38bdf8" />
+            <Bar dataKey="contributeed" fill="#38bdf8" />
           </BarChart>
         </ResponsiveContainer>
       </div>
     </div>
     <div className="text-sm text-gray-600 mt-2 text-center">
-      Total Invested: ₹{campaignAnalyticsData.reduce((sum, d) => sum + d.invested, 0)}
+      Total Contributeed: ₹{campaignAnalyticsData.reduce((sum, d) => sum + d.contributeed, 0)}
     </div>
   </div>
 
 
   <div className="flex flex-col gap-6">
     <h4 className="text-lg font-semibold text-gray-700 text-center">
-      📈 Profit Returned to Investors
+      📈 Profit Returned to Contributors
     </h4>
     <div className="flex flex-col md:flex-row items-center gap-8">
       <div className="w-full md:w-[60%] bg-white rounded-lg shadow-md p-4">

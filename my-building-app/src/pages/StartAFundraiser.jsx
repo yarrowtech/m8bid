@@ -1,6 +1,6 @@
 ﻿import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createFundraiser } from "../api/fundraiser.api";
+import { createRaiser } from "../api/fundraiser.api";
 
 const baseField =
   "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 " +
@@ -249,7 +249,7 @@ const DocUpload = memo(function DocUpload({ label, hint, accept, required, value
     </div>
   );
 });
-export default function StartFundraiser() {
+export default function StartRaiser() {
   const navigate = useNavigate();
   const TOTAL_STEPS = 5;
 
@@ -457,12 +457,12 @@ export default function StartFundraiser() {
         if (formData.promoPoster) form.append("promoPoster", formData.promoPoster);
       }
 
-      await createFundraiser(userId, form);
-      alert("Fundraiser submitted successfully!");
-      navigate("/fundraiser/dashboard");
+      await createRaiser(userId, form);
+      alert("Raiser submitted successfully!");
+      navigate("/raiser/dashboard");
     } catch (error) {
-      console.error("Error submitting fundraiser:", error);
-      alert(error?.response?.data?.message || error?.message || "Error submitting fundraiser.");
+      console.error("Error submitting raiser:", error);
+      alert(error?.response?.data?.message || error?.message || "Error submitting raiser.");
     } finally {
       setSubmitting(false);
     }
@@ -472,10 +472,10 @@ export default function StartFundraiser() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-yellow-100 px-4 py-2 text-sm font-semibold text-gray-900">
-            Fundraising - Multi category campaign builder
+            Raising - Multi category campaign builder
           </div>
           <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-            Start Your Fundraiser
+            Start Your Raiser
           </h1>
           <p className="mt-2 max-w-2xl leading-relaxed text-gray-600">
             Create campaigns for NGOs, businesses, medical emergencies, education, companies,
@@ -563,7 +563,7 @@ export default function StartFundraiser() {
 
                     <div className="lg:col-span-2">
                       <Label htmlFor="projectOverview">Campaign Overview</Label>
-                      <Textarea id="projectOverview" name="projectOverview" rows={6} value={formData.projectOverview} onChange={handleChange} placeholder="Explain what the campaign is, who benefits, and why the fundraising matters." />
+                      <Textarea id="projectOverview" name="projectOverview" rows={6} value={formData.projectOverview} onChange={handleChange} placeholder="Explain what the campaign is, who benefits, and why the raising matters." />
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-2">
@@ -805,7 +805,7 @@ export default function StartFundraiser() {
                 {step < TOTAL_STEPS ? (
                   <button type="button" onClick={() => { const err = validateStep(step); if (err) return alert(err); handleNext(); }} disabled={submitting} className="rounded-xl bg-gray-900 px-6 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60">Next</button>
                 ) : (
-                  <button type="button" onClick={handleSubmit} disabled={submitting} className="rounded-xl bg-yellow-400 px-6 py-3 font-extrabold text-gray-900 transition hover:bg-yellow-300 disabled:opacity-60">{submitting ? "Submitting..." : "Submit Fundraiser"}</button>
+                  <button type="button" onClick={handleSubmit} disabled={submitting} className="rounded-xl bg-yellow-400 px-6 py-3 font-extrabold text-gray-900 transition hover:bg-yellow-300 disabled:opacity-60">{submitting ? "Submitting..." : "Submit Raiser"}</button>
                 )}
               </div>
             </div>

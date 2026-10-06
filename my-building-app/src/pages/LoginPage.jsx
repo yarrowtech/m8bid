@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { loginUser } from "../api/user";
@@ -9,23 +9,23 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     emailOrUsername: "",
     password: "",
-    preferredMode: "investor", // Default back to investor
+    preferredMode: "contributor", // Default back to contributor
   });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const getDashboardPath = (user, mode) => {
-    if (mode === "investor") {
-      return user?.access?.investor?.type === "company"
-        ? "/investor/company/dashboard"
-        : "/investor/dashboard";
+    if (mode === "contributor") {
+      return user?.access?.contributor?.type === "company"
+        ? "/contributor/company/dashboard"
+        : "/contributor/dashboard";
     }
 
-    if (mode === "fundraiser") {
-      return user?.access?.fundraiser?.type === "company"
-        ? "/fundraiser/company/dashboard"
-        : "/fundraiser/dashboard";
+    if (mode === "raiser") {
+      return user?.access?.raiser?.type === "company"
+        ? "/raiser/company/dashboard"
+        : "/raiser/dashboard";
     }
 
     return "/";
@@ -61,10 +61,15 @@ export default function LoginPage() {
 
     Cookies.set("token", res.token, { expires: 7 });
     localStorage.setItem("token", res.token);
+    sessionStorage.setItem("token", res.token);
+    if (typeof window !== "undefined") {
+      window.__BUILDING_AUTH_TOKEN = res.token;
+    }
     localStorage.setItem("user", JSON.stringify(res.user));
+    sessionStorage.setItem("user", JSON.stringify(res.user));
 
-    const hasInvestor = res.user?.access?.investor?.enabled;
-    const hasFundraiser = res.user?.access?.fundraiser?.enabled;
+    const hasContributor = res.user?.access?.contributor?.enabled;
+    const hasRaiser = res.user?.access?.raiser?.enabled;
     const activeMode = res.user?.activeMode || formData.preferredMode;
 
     if (res.user?.role === "admin") {
@@ -72,28 +77,28 @@ export default function LoginPage() {
       return;
     }
 
-    if (hasInvestor && hasFundraiser && !activeMode) {
+    if (hasContributor && hasRaiser && !activeMode) {
       navigate("/select-account-mode");
       return;
     }
 
-    if (activeMode === "investor" && hasInvestor) {
-      navigate(getDashboardPath(res.user, "investor"));
+    if (activeMode === "contributor" && hasContributor) {
+      navigate(getDashboardPath(res.user, "contributor"));
       return;
     }
 
-    if (activeMode === "fundraiser" && hasFundraiser) {
-      navigate(getDashboardPath(res.user, "fundraiser"));
+    if (activeMode === "raiser" && hasRaiser) {
+      navigate(getDashboardPath(res.user, "raiser"));
       return;
     }
 
-    if (hasInvestor) {
-      navigate(getDashboardPath(res.user, "investor"));
+    if (hasContributor) {
+      navigate(getDashboardPath(res.user, "contributor"));
       return;
     }
 
-    if (hasFundraiser) {
-      navigate(getDashboardPath(res.user, "fundraiser"));
+    if (hasRaiser) {
+      navigate(getDashboardPath(res.user, "raiser"));
       return;
     }
 
@@ -143,28 +148,28 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, preferredMode: "investor" }))
+                      setFormData((prev) => ({ ...prev, preferredMode: "contributor" }))
                     }
                     className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.preferredMode === "investor"
+                      formData.preferredMode === "contributor"
                         ? "border-slate-900 bg-slate-900 text-white"
                         : "border-slate-300 bg-white text-slate-700"
                     }`}
                   >
-                    Investor
+                    Contributor
                   </button>
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, preferredMode: "fundraiser" }))
+                      setFormData((prev) => ({ ...prev, preferredMode: "raiser" }))
                     }
                     className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.preferredMode === "fundraiser"
+                      formData.preferredMode === "raiser"
                         ? "border-yellow-400 bg-yellow-300 text-slate-900"
                         : "border-slate-300 bg-white text-slate-700"
                     }`}
                   >
-                    Fundraiser
+                    Raiser
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Eye,
 } from "lucide-react";
-import FundraiserSidebar from "./FundraiserSidebar";
+import RaiserSidebar from "./FundraiserSidebar";
 import { getFundraiserProfile } from "../../api/fundraiser.api";
 
 function SectionCard({ title, icon: Icon, children }) {
@@ -93,7 +93,7 @@ const normalizeStatus = (value, fallbackPending = false) => {
   return value || "—";
 };
 
-export default function FundraiserProfile() {
+export default function RaiserProfile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -104,7 +104,7 @@ export default function FundraiserProfile() {
       const res = await getFundraiserProfile();
       setUser(res?.data || null);
     } catch (err) {
-      console.error("Failed to fetch fundraiser profile:", err);
+      console.error("Failed to fetch raiser profile:", err);
     } finally {
       setLoading(false);
     }
@@ -123,8 +123,8 @@ export default function FundraiserProfile() {
         }`
       : "Not Added";
 
-    const kycStatusRaw = user?.access?.fundraiser?.kycStatus || "NONE";
-    const bankStatusRaw = user?.access?.fundraiser?.bankStatus || "NONE";
+    const kycStatusRaw = user?.access?.raiser?.kycStatus || "NONE";
+    const bankStatusRaw = user?.access?.raiser?.bankStatus || "NONE";
 
     return {
       fullName: user?.name || "—",
@@ -134,15 +134,15 @@ export default function FundraiserProfile() {
 
       kycStatus: normalizeStatus(kycStatusRaw, true),
       aadhaarNumber:
-        user?.access?.fundraiser?.details?.aadhaarNumber || "Not Added",
-      panNumber: user?.access?.fundraiser?.details?.panNumber || "Not Added",
+        user?.access?.raiser?.details?.aadhaarNumber || "Not Added",
+      panNumber: user?.access?.raiser?.details?.panNumber || "Not Added",
       addressProofType:
-        user?.access?.fundraiser?.details?.addressProofType || "Not Added",
+        user?.access?.raiser?.details?.addressProofType || "Not Added",
 
-      aadhaarFile: user?.access?.fundraiser?.documents?.kyc || "",
-      panFile: user?.access?.fundraiser?.documents?.pan || "",
-      addressProofFile: user?.access?.fundraiser?.documents?.addressProof || "",
-      bankProofFile: user?.access?.fundraiser?.documents?.bankProof || "",
+      aadhaarFile: user?.access?.raiser?.documents?.kyc || "",
+      panFile: user?.access?.raiser?.documents?.pan || "",
+      addressProofFile: user?.access?.raiser?.documents?.addressProof || "",
+      bankProofFile: user?.access?.raiser?.documents?.bankProof || "",
 
       bankStatus: user?.bankDetails?.accountNumber
         ? "Linked"
@@ -169,7 +169,7 @@ export default function FundraiserProfile() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active="profile" />
+        <RaiserSidebar active="profile" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -178,7 +178,7 @@ export default function FundraiserProfile() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900">
-                Fundraiser Profile
+                Raiser Profile
               </h1>
               <p className="mt-1 text-sm text-slate-500">
                 View your personal details, KYC details and bank details.
@@ -187,13 +187,13 @@ export default function FundraiserProfile() {
 
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => navigate("/fundraiser/profile/kyc")}
+                onClick={() => navigate("/raiser/profile/kyc")}
                 className="rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
               >
                 Edit KYC Details
               </button>
               <button
-                onClick={() => navigate("/fundraiser/profile/bank")}
+                onClick={() => navigate("/raiser/profile/bank")}
                 className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
                 Edit Bank Details

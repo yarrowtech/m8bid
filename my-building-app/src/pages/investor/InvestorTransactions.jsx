@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
-import InvestorSidebar from "./InvestorSidebar";
+import ContributorSidebar from "./InvestorSidebar";
 import { getMyTransactions } from "../../api/investmentapi";
 
 function TransactionRow({ date, campaign, amount, method, status }) {
@@ -25,7 +25,7 @@ function TransactionRow({ date, campaign, amount, method, status }) {
   );
 }
 
-export default function InvestorTransactions() {
+export default function ContributorTransactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -59,7 +59,7 @@ export default function InvestorTransactions() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <InvestorSidebar active="transactions" />
+        <ContributorSidebar active="transactions" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -67,7 +67,7 @@ export default function InvestorTransactions() {
         >
           <h1 className="text-3xl font-bold text-slate-900">Transactions</h1>
           <p className="mt-1 text-sm text-slate-500">
-            View your investment payment history and transaction records.
+            View your contribution payment history and transaction records.
           </p>
 
           {loading ? (
@@ -101,7 +101,7 @@ export default function InvestorTransactions() {
                 ))
               ) : (
                 <div className="px-4 py-8 text-center text-slate-500">
-                  No transactions found. Start investing to see your transaction history.
+                  No transactions found. Start contributing to see your transaction history.
                 </div>
               )}
             </div>

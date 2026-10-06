@@ -1,4 +1,4 @@
-
+﻿
 
 
 
@@ -13,7 +13,7 @@ import property3 from "../assets/property3.jpg";
 // Import local video
 import overviewVideo from "../assets/startup.mp4";
 
-const investmentData = {
+const contributionData = {
   "urban-heights-ventures": {
     title: "Urban Heights Ventures",
     image: property1,
@@ -25,7 +25,7 @@ Our mission is to combine modern architecture with eco-friendly materials and pr
 `,
     policies: [
       "Transparent fund allocation",
-      "Quarterly reporting to investors",
+      "Quarterly reporting to contributors",
       "Verified compliance with local regulations",
     ],
     documents: ["Business License.pdf", "Financial Statement 2024.pdf"],
@@ -45,16 +45,16 @@ Our mission is to combine modern architecture with eco-friendly materials and pr
   },
 };
 
-export default function InvestmentDetail() {
+export default function ContributionDetail() {
   const { id } = useParams();
-  const investment = investmentData[id];
+  const contribution = contributionData[id];
   const [showVideo, setShowVideo] = useState(false); // for modal toggle
 
-  if (!investment) {
-    return <div className="p-10 text-center">Investment not found.</div>;
+  if (!contribution) {
+    return <div className="p-10 text-center">Contribution not found.</div>;
   }
 
-  const progressPercent = (investment.raised / investment.goal) * 100;
+  const progressPercent = (contribution.raised / contribution.goal) * 100;
 
   return (
     <section className="bg-white px-4 py-10 relative overflow-hidden">
@@ -91,7 +91,7 @@ export default function InvestmentDetail() {
       <div className="max-w-7xl mx-auto">
         {/* Title */}
         <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center">
-          {investment.title}
+          {contribution.title}
         </h1>
 
         {/* First Row: Image, Donation Info, About and Documents */}
@@ -99,8 +99,8 @@ export default function InvestmentDetail() {
           {/* Image */}
           <div className="w-full md:w-1/3 flex justify-center items-center mb-6 md:mb-0">
             <img
-              src={investment.image}
-              alt={investment.title}
+              src={contribution.image}
+              alt={contribution.title}
               className="w-full h-100 object-cover rounded-lg"
             />
           </div>
@@ -108,10 +108,10 @@ export default function InvestmentDetail() {
           {/* Donation Info */}
           <div className="w-full md:w-1/4 bg-white border border-gray-200 rounded-xl shadow p-6 mb-6 md:mb-0">
             <p className="text-xl font-semibold mb-1">
-              ₹{investment.raised.toLocaleString()} raised
+              ₹{contribution.raised.toLocaleString()} raised
             </p>
             <p className="text-gray-600 mb-4">
-              of ₹{investment.goal.toLocaleString()} goal
+              of ₹{contribution.goal.toLocaleString()} goal
             </p>
 
             {/* Circular Progress */}
@@ -156,9 +156,9 @@ export default function InvestmentDetail() {
             {/* Recent Donors */}
             <div>
               <p className="text-sm font-medium mb-2 text-purple-700">
-                {investment.comments.length} people just donated
+                {contribution.comments.length} people just donated
               </p>
-              {investment.comments.map((c, i) => (
+              {contribution.comments.map((c, i) => (
                 <div
                   key={i}
                   className="flex justify-between text-sm mb-1 text-gray-800"
@@ -174,12 +174,12 @@ export default function InvestmentDetail() {
           <div className="w-full md:w-1/3">
             <h2 className="text-2xl font-semibold mb-4">About the Project</h2>
             <p className="text-gray-700 whitespace-pre-line mb-4">
-              {investment.description}
+              {contribution.description}
             </p>
 
             <h2 className="text-2xl font-semibold mb-4">Documents</h2>
             <ul className="text-blue-600">
-              {investment.documents.map((doc, i) => (
+              {contribution.documents.map((doc, i) => (
                 <li key={i}>
                   <a href="#">{doc}</a>
                 </li>
@@ -192,7 +192,7 @@ export default function InvestmentDetail() {
         <div className="w-150 mb-10">
           <h2 className="text-2xl font-semibold mb-4">Gallery</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {investment.gallery.map((img, i) => (
+            {contribution.gallery.map((img, i) => (
               <img
                 key={i}
                 src={img}
@@ -363,5 +363,5 @@ return (
   );
 };
 
-export default InvestmentDetail;
+export default ContributionDetail;
 */

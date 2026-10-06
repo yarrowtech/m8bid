@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   TrendingUp,
   Wallet,
@@ -396,7 +396,7 @@ export default function ReturnBasedOptions() {
             </div>
 
             <Link
-              to="/browse-investors"
+              to="/browse-contributors"
               className="text-sm font-semibold text-blue-700 hover:text-blue-900"
             >
               View all campaigns →
@@ -440,7 +440,7 @@ export default function ReturnBasedOptions() {
                   key={campaign._id || campaign.id || campaign.title}
                   campaign={campaign}
                   onOpen={(selectedCampaign) =>
-                    navigate("/investment-detail", {
+                    navigate("/contribution-detail", {
                       state: { campaign: selectedCampaign },
                     })
                   }
@@ -507,7 +507,7 @@ export default function ReturnBasedOptions() {
           </div>
 
           <Link
-            to="/browse-investors"
+            to="/browse-contributors"
             className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
           >
             Browse all campaigns

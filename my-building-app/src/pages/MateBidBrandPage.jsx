@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, BadgeCheck, HandCoins, Rocket, ShieldCheck } from "lucide-react";
 import SEO from "../components/SEO.jsx";
@@ -32,7 +32,7 @@ export default function MateBidBrandPage() {
       <SEO
         title="MateBid / M8BID - Raising, Funding & Contributing Platform"
         description="MateBid, also known as M8BID, is a raising, funding, and contributing platform for startups, businesses, NGOs, causes, and verified campaigns in India."
-        keywords="MateBid, matebid, M8BID, m8bid, MateBid raising, MateBid funding, MateBid contributing, MateBid fundraiser, MateBid campaigns, M8BID funding, M8BID contributing, online raising India"
+        keywords="MateBid, matebid, M8BID, m8bid, MateBid raising, MateBid funding, MateBid contributing, MateBid raiser, MateBid campaigns, M8BID funding, M8BID contributing, online raising India"
         canonical="/matebid"
         jsonLd={{
           "@context": "https://schema.org",
@@ -71,14 +71,14 @@ export default function MateBidBrandPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  to="/how-to-start-a-fundraising"
+                  to="/how-to-start-a-raising"
                   className="inline-flex items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
                 >
                   Start raising
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
                 <Link
-                  to="/how-to-invest"
+                  to="/how-to-contribute"
                   className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100"
                 >
                   Learn contributing

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -125,7 +125,7 @@ function FAQ({ q, a }) {
   );
 }
 
-export default function FundraisingPage() {
+export default function RaisingPage() {
   const navigate = useNavigate();
   const [raiseAccessOpen, setRaiseAccessOpen] = useState(false);
 
@@ -141,7 +141,7 @@ export default function FundraisingPage() {
       if (!rawUser || !rawToken) return false;
 
       const user = JSON.parse(rawUser);
-      return Boolean(user?.access?.fundraiser?.enabled);
+      return Boolean(user?.access?.raiser?.enabled);
     } catch {
       return false;
     }
@@ -149,7 +149,7 @@ export default function FundraisingPage() {
 
   const handleStartRaiserAccess = () => {
     if (canStartRaiser) {
-      navigate("/start-fundraiser");
+      navigate("/start-raiser");
       return;
     }
 
@@ -171,14 +171,14 @@ export default function FundraisingPage() {
         title="Start a Business Raiser — Launch, Share & Collect Securely"
         description="Launch a raising campaign on MateBid in minutes. Set your goal, share your story, and collect contributions securely. KYC-verified, built for founders, startups, and growing businesses."
         keywords="start a raiser, business raising campaign, raise money online India, crowdfunding campaign, launch a campaign, secure raising platform, KYC verified campaign, MateBid raiser, raising for business, founders campaign, startup raiser"
-        canonical="/fundraising"
+        canonical="/raising"
         jsonLd={{
           "@context": "https://schema.org",
           "@graph": [
             {
               "@type": "WebPage",
-              "@id": "https://www.matebid.com/fundraising",
-              url: "https://www.matebid.com/fundraising",
+              "@id": "https://www.matebid.com/raising",
+              url: "https://www.matebid.com/raising",
               name: "Start a Business Raiser — Launch, Share & Collect Securely | M8BID",
               description:
                 "Launch a raising campaign on MateBid. Set your goal, share your story, and collect contributions securely. KYC-verified and built for founders.",
@@ -187,7 +187,7 @@ export default function FundraisingPage() {
                 "@type": "BreadcrumbList",
                 itemListElement: [
                   { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
-                  { "@type": "ListItem", position: 2, name: "Start Raising", item: "https://www.matebid.com/fundraising" },
+                  { "@type": "ListItem", position: 2, name: "Start Raising", item: "https://www.matebid.com/raising" },
                 ],
               },
             },
@@ -281,7 +281,7 @@ export default function FundraisingPage() {
                 </span>
               </button>
 
-              <Link to="/browse-investors" className={OUTLINE_BTN}>
+              <Link to="/browse-contributors" className={OUTLINE_BTN}>
                 Explore campaigns
                 <ArrowRight className="ml-2 h-4 w-4 text-slate-700" />
               </Link>

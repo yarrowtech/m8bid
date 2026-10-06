@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -14,11 +14,11 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
-import FundraiserSidebar from "./FundraiserSidebar";
+import RaiserSidebar from "./FundraiserSidebar";
 import {
   updateKYC,
   getFundraiserProfile,
-  deleteFundraiserDocument,
+  deleteRaiserDocument,
 } from "../../api/fundraiser.api";
 
 function SectionCard({ title, icon: Icon, children }) {
@@ -182,7 +182,7 @@ const statusToLabel = (status) => {
   return status || "Pending Review";
 };
 
-export default function FundraiserKyc() {
+export default function RaiserKyc() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -221,21 +221,21 @@ export default function FundraiserKyc() {
         ...prev,
         fullName: user?.name || "",
         aadhaarNumber:
-          user?.access?.fundraiser?.details?.aadhaarNumber || "",
-        panNumber: user?.access?.fundraiser?.details?.panNumber || "",
+          user?.access?.raiser?.details?.aadhaarNumber || "",
+        panNumber: user?.access?.raiser?.details?.panNumber || "",
         addressProofType:
-          user?.access?.fundraiser?.details?.addressProofType || "aadhaar",
+          user?.access?.raiser?.details?.addressProofType || "aadhaar",
         addressLine: user?.profile?.addressLine || "",
         city: user?.profile?.city || "",
         state: user?.profile?.state || "",
         pincode: user?.profile?.pincode || "",
-        kycStatus: statusToLabel(user?.access?.fundraiser?.kycStatus),
+        kycStatus: statusToLabel(user?.access?.raiser?.kycStatus),
       }));
 
       setExistingDocs({
-        kyc: user?.access?.fundraiser?.documents?.kyc || "",
-        pan: user?.access?.fundraiser?.documents?.pan || "",
-        addressProof: user?.access?.fundraiser?.documents?.addressProof || "",
+        kyc: user?.access?.raiser?.documents?.kyc || "",
+        pan: user?.access?.raiser?.documents?.pan || "",
+        addressProof: user?.access?.raiser?.documents?.addressProof || "",
       });
     } catch (error) {
       console.error("Failed to fetch KYC profile:", error);
@@ -314,7 +314,7 @@ export default function FundraiserKyc() {
   const handleDeleteDoc = async (type) => {
     try {
       setDeletingType(type);
-      await deleteFundraiserDocument(type);
+      await deleteRaiserDocument(type);
       await fetchProfile();
     } catch (error) {
       console.error(`Failed to delete ${type}:`, error);
@@ -342,7 +342,7 @@ export default function FundraiserKyc() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active="profile" />
+        <RaiserSidebar active="profile" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -351,7 +351,7 @@ export default function FundraiserKyc() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <button
-                onClick={() => navigate("/fundraiser/profile")}
+                onClick={() => navigate("/raiser/profile")}
                 className="mb-3 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 <ArrowLeft size={16} />
@@ -359,7 +359,7 @@ export default function FundraiserKyc() {
               </button>
 
               <h1 className="text-3xl font-bold text-slate-900">
-                Fundraiser KYC & Documents
+                Raiser KYC & Documents
               </h1>
               <p className="mt-1 text-sm text-slate-500">
                 Add identity, PAN, address proof and company details for

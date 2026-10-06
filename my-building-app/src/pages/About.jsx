@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   Info,
   ShieldCheck,
@@ -218,7 +218,7 @@ export default function About() {
 
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/how-to-start-a-fundraising"
+                to="/how-to-start-a-raising"
                 className="group inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
               >
                 How to Start Raising

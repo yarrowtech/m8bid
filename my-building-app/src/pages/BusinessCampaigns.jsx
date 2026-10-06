@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   Briefcase,
   TrendingUp,
@@ -191,7 +191,7 @@ export default function BusinessCampaigns() {
     },
     {
       icon: TrendingUp,
-      title: "Investor confidence",
+      title: "Contributor confidence",
       desc: "Clear business pages attract stronger interest and trust.",
     },
   ];
@@ -298,7 +298,7 @@ export default function BusinessCampaigns() {
           </div>
 
           <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-            Business-focused fundraising that looks structured and credible
+            Business-focused raising that looks structured and credible
           </h1>
 
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
@@ -333,7 +333,7 @@ export default function BusinessCampaigns() {
             </div>
 
             <Link
-              to="/browse-investors"
+              to="/browse-contributors"
               className="text-sm font-semibold text-blue-700 hover:text-blue-900"
             >
               View all campaigns →
@@ -377,7 +377,7 @@ export default function BusinessCampaigns() {
                   key={campaign._id || campaign.id || campaign.title}
                   campaign={campaign}
                   onOpen={(selectedCampaign) =>
-                    navigate("/investment-detail", {
+                    navigate("/contribution-detail", {
                       state: { campaign: selectedCampaign },
                     })
                   }
@@ -391,7 +391,7 @@ export default function BusinessCampaigns() {
         <div className="mt-14">
           <div className="max-w-3xl">
             <h2 className="text-2xl font-bold text-slate-900">
-              How business fundraising works
+              How business raising works
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               Strong business campaigns are simple to understand: clear need, clear use of funds, clear progress.
@@ -440,15 +440,15 @@ export default function BusinessCampaigns() {
               Start your business campaign
             </h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Build a clearer fundraising page for product growth, expansion, hiring, or launch.
+              Build a clearer raising page for product growth, expansion, hiring, or launch.
             </p>
           </div>
 
           <Link
-            to="/fundraising"
+            to="/raising"
             className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
           >
-            Start fundraising
+            Start raising
             <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-0.5" />
           </Link>
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -11,11 +11,11 @@ import {
   Eye,
   Trash2,
 } from "lucide-react";
-import FundraiserSidebar from "./FundraiserSidebar";
+import RaiserSidebar from "./FundraiserSidebar";
 import {
   updateBank,
   getFundraiserProfile,
-  deleteFundraiserDocument,
+  deleteRaiserDocument,
 } from "../../api/fundraiser.api";
 
 function Field({ label, icon: Icon, children }) {
@@ -45,7 +45,7 @@ function SummaryRow({ label, value }) {
   );
 }
 
-export default function FundraiserBank() {
+export default function RaiserBank() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -54,6 +54,7 @@ export default function FundraiserBank() {
     accountNumber: "",
     ifscCode: "",
     branchName: "",
+    razorpayLinkedAccountId: "",
     bankProof: null,
   });
 
@@ -76,11 +77,15 @@ export default function FundraiserBank() {
         accountNumber: user?.bankDetails?.accountNumber || "",
         ifscCode: user?.bankDetails?.ifscCode || "",
         branchName: user?.bankDetails?.branchName || "",
+        razorpayLinkedAccountId:
+          user?.razorpayLinkedAccountId ||
+          user?.access?.raiser?.razorpayLinkedAccountId ||
+          "",
         bankProof: null,
       }));
 
       setExistingBankProof(
-        user?.access?.fundraiser?.documents?.bankProof || ""
+        user?.access?.raiser?.documents?.bankProof || ""
       );
     } catch (error) {
       console.error("Failed to fetch bank profile:", error);
@@ -114,6 +119,7 @@ export default function FundraiserBank() {
       fd.append("accountNumber", formData.accountNumber);
       fd.append("ifscCode", formData.ifscCode);
       fd.append("branchName", formData.branchName);
+      fd.append("razorpayLinkedAccountId", formData.razorpayLinkedAccountId);
 
       if (formData.bankProof) {
         fd.append("bankProof", formData.bankProof);
@@ -133,7 +139,7 @@ export default function FundraiserBank() {
   const handleDeleteBankProof = async () => {
     try {
       setDeletingProof(true);
-      await deleteFundraiserDocument("bankProof");
+      await deleteRaiserDocument("bankProof");
       await fetchProfile();
     } catch (error) {
       console.error("Failed to delete bank proof:", error);
@@ -172,7 +178,7 @@ export default function FundraiserBank() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <FundraiserSidebar active="profile" />
+        <RaiserSidebar active="profile" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -181,7 +187,7 @@ export default function FundraiserBank() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <button
-                onClick={() => navigate("/fundraiser/profile")}
+                onClick={() => navigate("/raiser/profile")}
                 className="mb-3 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 <ArrowLeft size={16} />
@@ -276,6 +282,18 @@ export default function FundraiserBank() {
                 </div>
 
                 <div className="md:col-span-2">
+                  <Field label="Razorpay Linked Account ID" icon={Landmark}>
+                    <input
+                      name="razorpayLinkedAccountId"
+                      value={formData.razorpayLinkedAccountId}
+                      onChange={handleChange}
+                      placeholder="acc_XXXXXXXXXXXXXX"
+                      className="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
+                    />
+                  </Field>
+                </div>
+
+                <div className="md:col-span-2">
                   <label className="mb-2 block text-sm font-medium text-slate-700">
                     Bank Proof
                   </label>
@@ -350,6 +368,10 @@ export default function FundraiserBank() {
                   />
                   <SummaryRow label="IFSC Code" value={summary.ifscCode} />
                   <SummaryRow label="Branch Name" value={summary.branchName} />
+                  <SummaryRow
+                    label="Razorpay Linked Account ID"
+                    value={formData.razorpayLinkedAccountId || "Not added"}
+                  />
                   <SummaryRow label="Proof File" value={summary.proofFile} />
                 </div>
               </div>
@@ -369,14 +391,14 @@ export default function FundraiserBank() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/fundraiser/profile")}
+                    onClick={() => navigate("/raiser/profile")}
                     className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     Back to Profile
                   </button>
 
                   <button
-                    onClick={() => navigate("/fundraiser/profile/kyc")}
+                    onClick={() => navigate("/raiser/profile/kyc")}
                     className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                   >
                     Go to KYC Details

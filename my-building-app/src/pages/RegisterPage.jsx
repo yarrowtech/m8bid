@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../api/user";
 
@@ -12,7 +12,7 @@ export default function RegisterPage() {
     phone: "",
     password: "",
     confirmPassword: "",
-    accountMode: "investor",
+    accountMode: "contributor",
   });
 
   const [error, setError] = useState("");
@@ -120,28 +120,28 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, accountMode: "investor" }))
+                      setFormData((prev) => ({ ...prev, accountMode: "contributor" }))
                     }
                     className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.accountMode === "investor"
+                      formData.accountMode === "contributor"
                         ? "border-slate-900 bg-slate-900 text-white"
                         : "border-slate-300 bg-white text-slate-700"
                     }`}
                   >
-                    Investor
+                    Contributor
                   </button>
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, accountMode: "fundraiser" }))
+                      setFormData((prev) => ({ ...prev, accountMode: "raiser" }))
                     }
                     className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.accountMode === "fundraiser"
+                      formData.accountMode === "raiser"
                         ? "border-yellow-400 bg-yellow-300 text-slate-900"
                         : "border-slate-300 bg-white text-slate-700"
                     }`}
                   >
-                    Fundraiser
+                    Raiser
                   </button>
                 </div>
               </div>

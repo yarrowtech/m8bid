@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import {
   BarChart3,
   IndianRupee,
@@ -7,7 +7,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import InvestorSidebar from "./InvestorSidebar";
+import ContributorSidebar from "./InvestorSidebar";
 import { getMyInvestments } from "../../api/investmentapi";
 
 const formatINR = (amount) => {
@@ -15,15 +15,15 @@ const formatINR = (amount) => {
   return "Rs " + value.toLocaleString("en-IN");
 };
 
-const getExpectedReturn = (investment, campaign) => {
+const getExpectedReturn = (contribution, campaign) => {
   const profitPercent = Number(campaign?.profitPercentage || 0);
-  const amount = Number(investment?.amount || 0);
+  const amount = Number(contribution?.amount || 0);
   return Math.round(amount * profitPercent / 100);
 };
 
-const getCurrentValue = (investment, campaign) => {
-  const amount = Number(investment?.amount || 0);
-  const expectedReturn = getExpectedReturn(investment, campaign);
+const getCurrentValue = (contribution, campaign) => {
+  const amount = Number(contribution?.amount || 0);
+  const expectedReturn = getExpectedReturn(contribution, campaign);
   return amount + expectedReturn;
 };
 
@@ -54,8 +54,8 @@ function MetricCard({ title, value, sub, icon: Icon, tone = "sky" }) {
   );
 }
 
-export default function InvestorAnalytics() {
-  const [investments, setInvestments] = useState([]);
+export default function ContributorAnalytics() {
+  const [contributions, setContributions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -65,10 +65,10 @@ export default function InvestorAnalytics() {
         setLoading(true);
         setError("");
         const response = await getMyInvestments();
-        const investmentList = Array.isArray(response?.investments)
-          ? response.investments
+        const contributionList = Array.isArray(response?.contributions)
+          ? response.contributions
           : [];
-        setInvestments(investmentList);
+        setContributions(contributionList);
       } catch (err) {
         setError(err?.message || "Failed to load analytics");
       } finally {
@@ -80,9 +80,9 @@ export default function InvestorAnalytics() {
   }, []);
 
   const analytics = useMemo(() => {
-    if (investments.length === 0) {
+    if (contributions.length === 0) {
       return {
-        totalInvested: 0,
+        totalContributeed: 0,
         totalCurrentValue: 0,
         netReturns: 0,
         portfolioGrowth: 0,
@@ -92,19 +92,19 @@ export default function InvestorAnalytics() {
       };
     }
 
-    const totalInvested = investments.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
-    const totalCurrentValue = investments.reduce((sum, inv) => {
+    const totalContributeed = contributions.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
+    const totalCurrentValue = contributions.reduce((sum, inv) => {
       const campaign = inv?.campaign || inv?.campaignId;
       return sum + getCurrentValue(inv, campaign);
     }, 0);
-    const netReturns = totalCurrentValue - totalInvested;
-    const portfolioGrowth = totalInvested > 0 ? (netReturns / totalInvested) * 100 : 0;
+    const netReturns = totalCurrentValue - totalContributeed;
+    const portfolioGrowth = totalContributeed > 0 ? (netReturns / totalContributeed) * 100 : 0;
 
     // Calculate diversification
     const categories = new Set();
     const categoryCounts = {};
 
-    investments.forEach((inv) => {
+    contributions.forEach((inv) => {
       const campaign = inv?.campaign || inv?.campaignId;
       const category = campaign?.projectCategory || "General";
       categories.add(category);
@@ -115,7 +115,7 @@ export default function InvestorAnalytics() {
     const categoryBreakdown = Object.entries(categoryCounts).map(([category, count]) => ({
       category,
       count,
-      percentage: Math.round((count / investments.length) * 100),
+      percentage: Math.round((count / contributions.length) * 100),
     }));
 
     // Generate insights
@@ -123,7 +123,7 @@ export default function InvestorAnalytics() {
     if (diversificationCount < 3) {
       insights.push({
         title: "Diversification Opportunity",
-        description: "Consider investing in more categories to spread risk across different sectors.",
+        description: "Consider contributing in more categories to spread risk across different sectors.",
       });
     }
 
@@ -147,12 +147,12 @@ export default function InvestorAnalytics() {
     } else if (portfolioGrowth < 0) {
       insights.push({
         title: "Portfolio Review",
-        description: "Consider reviewing your investment strategy to improve returns.",
+        description: "Consider reviewing your contribution strategy to improve returns.",
       });
     }
 
     return {
-      totalInvested,
+      totalContributeed,
       totalCurrentValue,
       netReturns,
       portfolioGrowth: Math.round(portfolioGrowth * 100) / 100,
@@ -160,7 +160,7 @@ export default function InvestorAnalytics() {
       categoryBreakdown,
       insights,
     };
-  }, [investments]);
+  }, [contributions]);
 
   return (
     <div
@@ -171,7 +171,7 @@ export default function InvestorAnalytics() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <InvestorSidebar active="analytics" />
+        <ContributorSidebar active="analytics" />
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
@@ -179,7 +179,7 @@ export default function InvestorAnalytics() {
         >
           <h1 className="text-3xl font-bold text-slate-900">Analytics</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Analyze your portfolio performance and investment behavior.
+            Analyze your portfolio performance and contribution behavior.
           </p>
 
           {loading ? (
@@ -208,15 +208,15 @@ export default function InvestorAnalytics() {
                   tone={analytics.portfolioGrowth >= 0 ? "emerald" : "red"}
                 />
                 <MetricCard
-                  title="Invested Capital"
-                  value={formatINR(analytics.totalInvested)}
+                  title="Contributeed Capital"
+                  value={formatINR(analytics.totalContributeed)}
                   sub="Total deployed"
                   icon={IndianRupee}
                   tone="sky"
                 />
                 <MetricCard
-                  title="Active Investments"
-                  value={investments.length}
+                  title="Active Contributions"
+                  value={contributions.length}
                   sub="Current holdings"
                   icon={Eye}
                   tone="amber"
@@ -233,17 +233,17 @@ export default function InvestorAnalytics() {
               <div className="mt-6 grid gap-4 xl:grid-cols-2">
                 <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
                   <h2 className="text-xl font-semibold text-slate-900">
-                    Investment Distribution
+                    Contribution Distribution
                   </h2>
                   <div className="mt-6 flex h-64 items-end gap-2">
                     {analytics.categoryBreakdown.slice(0, 6).map((cat, i) => {
-                      const height = Math.max(20, (cat.count / investments.length) * 200);
+                      const height = Math.max(20, (cat.count / contributions.length) * 200);
                       return (
                         <div key={i} className="flex-1 text-center">
                           <div
                             className="w-full rounded-t-2xl bg-[#6f5cf2] transition-all hover:bg-[#5f4ae6]"
                             style={{ height: `${height}px` }}
-                            title={`${cat.category}: ${cat.count} investments`}
+                            title={`${cat.category}: ${cat.count} contributions`}
                           />
                           <p className="mt-2 text-xs font-medium text-slate-600 truncate">
                             {cat.category}
@@ -256,7 +256,7 @@ export default function InvestorAnalytics() {
 
                 <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
                   <h2 className="text-xl font-semibold text-slate-900">
-                    Investor Insights
+                    Contributor Insights
                   </h2>
                   <div className="mt-5 space-y-4">
                     {analytics.insights.length > 0 ? (
@@ -272,7 +272,7 @@ export default function InvestorAnalytics() {
                       <div className="rounded-2xl bg-slate-50 p-4">
                         <p className="font-semibold text-slate-900">Getting Started</p>
                         <p className="mt-1 text-sm text-slate-500">
-                          Start investing to see personalized insights about your portfolio performance.
+                          Start contributing to see personalized insights about your portfolio performance.
                         </p>
                       </div>
                     )}

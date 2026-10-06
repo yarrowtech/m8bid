@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -7,8 +7,8 @@ import {
   Workflow,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import fundraisingImage from "../assets/starter.jpg";
-import investingImage from "../assets/growth-chart.jpg";
+import raisingImage from "../assets/starter.jpg";
+import contributingImage from "../assets/growth-chart.jpg";
 export default function WhatWeProvide() {
   const navigate = useNavigate();
   const navigateFromHome = (path) => {
@@ -40,7 +40,7 @@ export default function WhatWeProvide() {
           <article className="grid items-center gap-8 md:grid-cols-2">
             <div className="overflow-hidden rounded-2xl shadow-md">
               <img
-                src={fundraisingImage}
+                src={raisingImage}
                 alt="People supporting a raising campaign"
                 className="h-[320px] w-full object-cover md:h-[360px]"
               />
@@ -52,7 +52,7 @@ export default function WhatWeProvide() {
                 Raising
               </div>
               <h3 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">
-                What raising means here
+                What is raising on M8Bid?
               </h3>
               <p className="mt-3 text-sm leading-7 text-slate-600 md:text-base">
                 Raising is for people, founders, or teams who want to raise
@@ -73,7 +73,7 @@ export default function WhatWeProvide() {
               </div>
               <button
                 type="button"
-                onClick={() => navigateFromHome("/how-to-start-a-fundraising")}
+                onClick={() => navigateFromHome("/how-to-start-a-raising")}
                 className="mt-5 inline-flex items-center rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:brightness-110"
               >
                 Go To Raising
@@ -89,7 +89,7 @@ export default function WhatWeProvide() {
                 Contributing
               </div>
               <h3 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">
-                What contributing means here
+                How does contributing work here?
               </h3>
               <p className="mt-3 text-sm leading-7 text-slate-600 md:text-base">
                 Contributing is for users who want to support selected campaigns with
@@ -110,7 +110,7 @@ export default function WhatWeProvide() {
               </div>
               <button
                 type="button"
-                onClick={() => navigateFromHome("/how-to-invest")}
+                onClick={() => navigateFromHome("/how-to-contribute")}
                 className="mt-5 inline-flex items-center rounded-xl bg-gradient-to-r from-blue-700 to-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:brightness-110"
               >
                 Go To Browse Contributors
@@ -120,7 +120,7 @@ export default function WhatWeProvide() {
 
             <div className="overflow-hidden rounded-2xl shadow-md">
               <img
-                src={investingImage}
+                src={contributingImage}
                 alt="Contribution growth concept"
                 className="h-[320px] w-full object-cover md:h-[360px]"
               />

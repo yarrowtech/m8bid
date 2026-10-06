@@ -16,8 +16,8 @@ const investmentValidation = [
   body("campaignId").isMongoId().withMessage("Invalid campaign ID"),
   body("amount")
     .isNumeric()
-    .isFloat({ min: 1000 })
-    .withMessage("Minimum investment amount is ₹1,000"),
+    .isFloat({ min: 1 })
+    .withMessage("Minimum investment amount is Rs 1 for testing"),
   body("paymentMethod")
     .optional()
     .isIn(["razorpay"])

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   HeartHandshake,
   ShieldCheck,
@@ -60,7 +60,7 @@ const sections = [
       "Campaign purpose and funding goal",
       "Clarity of the story and whether the campaign objective is well explained",
       "Milestone structure and expected next steps",
-      "Updates from the fundraiser and the consistency of communication",
+      "Updates from the raiser and the consistency of communication",
       "Platform trust signals such as structured presentation and workflow-based credibility",
     ],
   },
@@ -87,7 +87,7 @@ const faqs = [
   },
   {
     q: "What should a supporter expect after contributing?",
-    a: "A supporter should expect transparency around campaign progress, updates from the fundraiser when applicable, and a clear record of their participation.",
+    a: "A supporter should expect transparency around campaign progress, updates from the raiser when applicable, and a clear record of their participation.",
   },
 ];
 
@@ -164,7 +164,7 @@ export default function SupporterSpace() {
                   name: "What should a supporter expect after contributing?",
                   acceptedAnswer: {
                     "@type": "Answer",
-                    text: "A supporter should expect transparency around campaign progress, updates from the fundraiser when applicable, and a clear record of their participation.",
+                    text: "A supporter should expect transparency around campaign progress, updates from the raiser when applicable, and a clear record of their participation.",
                   },
                 },
               ],
@@ -194,7 +194,7 @@ export default function SupporterSpace() {
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
             Supporter Space is designed for people who want to contribute with confidence.
             It explains how campaigns work, what to review before contributing, and why
-            transparency, updates, and trust signals matter in a healthy fundraising ecosystem.
+            transparency, updates, and trust signals matter in a healthy raising ecosystem.
           </p>
         </div>
 
@@ -290,7 +290,7 @@ export default function SupporterSpace() {
           </div>
 
           <Link
-            to="/browse-investors"
+            to="/browse-contributors"
             className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
           >
             Browse campaigns

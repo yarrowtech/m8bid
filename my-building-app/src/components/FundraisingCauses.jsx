@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
 import {
   BriefcaseBusiness,
@@ -9,19 +9,17 @@ import {
   HeartPulse,
   Lightbulb,
 } from "lucide-react";
-import { fundraisingCauses } from "../data/fundraisingCauses";
+import { raisingCauses } from "../data/fundraisingCauses";
 
 const iconByCause = {
   projects: FolderKanban,
-  ngo: HandHeart,
   education: GraduationCap,
   business: BriefcaseBusiness,
-  "medical-emergency": HeartPulse,
   companies: Building2,
   startups: Lightbulb,
 };
 
-export default function FundraisingCauses() {
+export default function RaisingCauses() {
   return (
     <section
       className="relative overflow-hidden px-6 py-16 md:py-20 bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100"
@@ -39,20 +37,20 @@ export default function FundraisingCauses() {
             Causes you can raise funds for
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base md:text-xl leading-7 text-slate-600">
-            Pick the fundraising type that matches your goal and start building
+            Pick the raising type that matches your goal and start building
             support from your community.
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-          {fundraisingCauses.map((cause) => {
+        <div className="mt-20 flex flex-wrap justify-center gap-4">
+          {raisingCauses.map((cause) => {
             const Icon = iconByCause[cause.slug] || FolderKanban;
 
             return (
               <Link
                 key={cause.slug}
-                to={`/fundraising-causes/${cause.slug}`}
-                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-700 to-blue-800 p-5 text-white shadow-md transition hover:-translate-y-1 hover:shadow-xl"
+                to={`/raising-causes/${cause.slug}`}
+                className="w-[calc((100%_-_1rem)/2)] sm:w-[calc((100%_-_2rem)/3)] lg:w-[calc((100%_-_3rem)/4)] xl:w-[calc((100%_-_6rem)/7)] group relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-700 to-blue-800 p-5 text-white shadow-md transition hover:-translate-y-1 hover:shadow-xl"
               >
                 <div className="pointer-events-none absolute inset-0 opacity-15 [background-image:radial-gradient(circle_at_15%_20%,#ffffff_0px,#ffffff_5px,transparent_6px),radial-gradient(circle_at_70%_10%,#ffffff_0px,#ffffff_3px,transparent_4px),radial-gradient(circle_at_90%_75%,#ffffff_0px,#ffffff_4px,transparent_5px)]" />
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.1),transparent_50%)]" />

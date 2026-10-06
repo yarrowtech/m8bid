@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+﻿import { Helmet } from "react-helmet-async";
 
 export const SITE_NAME = "MateBid (M8BID)";
 export const SITE_URL = "https://www.matebid.com";
@@ -10,7 +10,7 @@ const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
  * title        string   — page-level title; auto-suffixed with "| M8BID"
  * description  string   — meta description (keep under 160 chars)
  * keywords     string   — comma-separated keyword list
- * canonical    string   — path e.g. "/" or "/how-to-invest" (prefixed with SITE_URL)
+ * canonical    string   — path e.g. "/" or "/how-to-contribute" (prefixed with SITE_URL)
  * ogType       string   — Open Graph type (default "website")
  * ogImage      string   — absolute URL to OG image (1200×630px recommended)
  * noIndex      bool     — add noindex,nofollow (use for auth / dashboard pages)

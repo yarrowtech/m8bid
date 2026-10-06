@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   Lightbulb,
   Megaphone,
@@ -120,21 +120,21 @@ function SectionCard({ icon: Icon, title, points }) {
   );
 }
 
-export default function FundraisingIdeas() {
+export default function RaisingIdeas() {
   return (
     <>
       <SEO
         title="Raising Campaign Ideas — Direction, Storytelling & Promotion Tips"
         description="Get raising campaign ideas on MateBid — storytelling tips, page-building direction, and promotion strategies to launch a clear and credible raising campaign."
         keywords="raising campaign ideas, how to start a raising campaign, campaign direction tips, storytelling for raising, raising page ideas, MateBid raising, crowdfunding ideas India, campaign promotion tips, startup raising ideas, business campaign ideas"
-        canonical="/fundraising-ideas"
+        canonical="/raising-ideas"
         jsonLd={{
           "@context": "https://schema.org",
           "@graph": [
             {
               "@type": "WebPage",
-              "@id": "https://www.matebid.com/fundraising-ideas",
-              url: "https://www.matebid.com/fundraising-ideas",
+              "@id": "https://www.matebid.com/raising-ideas",
+              url: "https://www.matebid.com/raising-ideas",
               name: "Raising Campaign Ideas — Direction, Storytelling & Promotion Tips | M8BID",
               description:
                 "Get raising campaign ideas on MateBid — storytelling tips, page-building direction, and promotion strategies to launch a clear and credible raising campaign.",
@@ -143,7 +143,7 @@ export default function FundraisingIdeas() {
                 "@type": "BreadcrumbList",
                 itemListElement: [
                   { "@type": "ListItem", position: 1, name: "Home", item: "https://www.matebid.com" },
-                  { "@type": "ListItem", position: 2, name: "Raising Ideas", item: "https://www.matebid.com/fundraising-ideas" },
+                  { "@type": "ListItem", position: 2, name: "Raising Ideas", item: "https://www.matebid.com/raising-ideas" },
                 ],
               },
             },
@@ -266,7 +266,7 @@ export default function FundraisingIdeas() {
           </div>
 
           <Link
-            to="/fundraising"
+            to="/raising"
             className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
           >
             Start a raiser

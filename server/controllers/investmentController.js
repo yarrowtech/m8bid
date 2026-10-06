@@ -15,7 +15,7 @@ const generateTxnId = () =>
 const calculateFees = (amount) => {
   const gross = Number(amount);
   const feePercent = Number(process.env.PLATFORM_FEE_PERCENT || 5);
-  const platformFee = Math.round(gross * feePercent * 100) / 100;
+  const platformFee = Math.round((gross * feePercent) / 100);
   const netAmount = Math.round((gross - platformFee) * 100) / 100;
 
   return {
@@ -99,7 +99,7 @@ exports.createInvestment = async (req, res) => {
       });
     }
 
-    const minInvestment = Number(campaign.minInvestment || 1000);
+    const minInvestment = Number(campaign.minInvestment || 1);
     const maxInvestment = Number(campaign.maxInvestment || 0);
 
     const currentFunding = Number(
@@ -137,16 +137,6 @@ exports.createInvestment = async (req, res) => {
       campaign.razorpayLinkedAccountId ||
       fundraiserUser?.razorpayLinkedAccountId ||
       "";
-
-    // local testing only
-    // linkedAccountId = linkedAccountId || "acc_test_dummy";
-
-    if (!linkedAccountId) {
-      return res.status(400).json({
-        success: false,
-        message: "Fundraiser payout account is not configured yet",
-      });
-    }
 
     const { platformFee, netAmount } = calculateFees(amount);
     const txnId = generateTxnId();
@@ -216,10 +206,12 @@ exports.createInvestment = async (req, res) => {
         id: campaign._id,
         title: campaignTitle,
       },
+      payoutConfigured: Boolean(linkedAccountId),
       breakdown: {
         gross: Number(amount),
         platformFee,
         netAmount,
+        linkedAccountIdConfigured: Boolean(linkedAccountId),
       },
       prefill: {
         name: contributorName || req.user.name || "",
@@ -315,27 +307,36 @@ exports.confirmInvestment = async (req, res) => {
       });
     }
 
-    const transferResponse = await createTransferFromPayment({
-      paymentId: razorpay_payment_id,
-      linkedAccountId: inv.linkedAccountId,
-      amount: inv.netAmount,
-      notes: {
-        investmentId: String(inv._id),
-        campaignId: String(inv.campaign?._id),
-        investorId: String(inv.investor),
-      },
-    });
+    let transferResponse = null;
+    let transfer = null;
 
-    const transfer =
-      transferResponse?.items?.[0] ||
-      transferResponse?.transfers?.[0] ||
-      null;
+    if (inv.linkedAccountId) {
+      transferResponse = await createTransferFromPayment({
+        paymentId: razorpay_payment_id,
+        linkedAccountId: inv.linkedAccountId,
+        amount: inv.netAmount,
+        notes: {
+          investmentId: String(inv._id),
+          campaignId: String(inv.campaign?._id),
+          investorId: String(inv.investor),
+        },
+      });
+
+      transfer =
+        transferResponse?.items?.[0] ||
+        transferResponse?.transfers?.[0] ||
+        null;
+    }
 
     inv.paymentId = razorpay_payment_id;
     inv.paymentStatus = "completed";
     inv.status = "confirmed";
     inv.transferId = transfer?.id || null;
-    inv.transferStatus = transfer ? "processed" : "unknown";
+    inv.transferStatus = transfer
+      ? "processed"
+      : inv.linkedAccountId
+      ? "unknown"
+      : "pending";
     await inv.save();
 
     const camp = await Campaign.findById(inv.campaign?._id || inv.campaign);
@@ -408,10 +409,13 @@ exports.confirmInvestment = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Investment confirmed and payout transferred",
+      message: inv.linkedAccountId
+        ? "Investment confirmed and payout transferred"
+        : "Investment confirmed. Payout transfer will complete after Razorpay linked account setup.",
       investment: inv,
       payment,
       transfer: transfer || transferResponse,
+      payoutConfigured: Boolean(inv.linkedAccountId),
     });
   } catch (err) {
     console.error("confirmInvestment error:", err);

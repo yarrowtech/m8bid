@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   ArrowRight,
   ShieldCheck,
@@ -206,7 +206,7 @@ export default function HowItWorks() {
 
         <button
   type="button"
-  onClick={() => navigate("/fundraising")}
+  onClick={() => navigate("/raising")}
   className="group inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
 >
   Start now

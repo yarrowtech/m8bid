@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   BarChart3,
   CircleDollarSign,
@@ -64,7 +64,7 @@ export default function SecurityCompliance() {
             Why M8Bid?
           </h2>
           <p className="mt-3 text-base leading-7 text-slate-600 md:text-lg">
-            Everything you need to launch, grow, and manage fundraising with trust.
+            Everything you need to launch, grow, and manage raising with trust.
           </p>
         </div>
 

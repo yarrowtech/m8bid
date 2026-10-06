@@ -627,6 +627,7 @@ const updateFundraiserBank = async (req, res) => {
       accountNumber = "",
       ifscCode = "",
       branchName = "",
+      razorpayLinkedAccountId = "",
     } = req.body;
 
     const user = await User.findById(userId);
@@ -647,6 +648,11 @@ const updateFundraiserBank = async (req, res) => {
       ifscCode,
       branchName,
     };
+
+    if (typeof razorpayLinkedAccountId === "string") {
+      user.razorpayLinkedAccountId = razorpayLinkedAccountId.trim();
+      user.access.fundraiser.razorpayLinkedAccountId = razorpayLinkedAccountId.trim();
+    }
 
     user.access.fundraiser.documents.bankProof = await uploadOptionalFile(
       files,

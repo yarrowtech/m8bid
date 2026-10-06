@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -71,7 +71,7 @@ const isImageFile = (value = "") => [".jpg", ".jpeg", ".png", ".webp", ".gif", "
 const pretty = (value = "") => String(value).replace(/([A-Z])/g, " $1").replace(/[_-]/g, " ").trim().replace(/\b\w/g, (c) => c.toUpperCase());
 
 const accessFrom = (details) => {
-  const access = details?.fundraiserAccess || details?.access?.fundraiser || {};
+  const access = details?.raiserAccess || details?.access?.raiser || {};
   return {
     enabled: Boolean(access.enabled),
     type: access.type || "individual",
@@ -84,8 +84,8 @@ const accessFrom = (details) => {
   };
 };
 
-const investorAccessFrom = (details) => {
-  const access = details?.investorAccess || details?.access?.investor || {};
+const contributorAccessFrom = (details) => {
+  const access = details?.contributorAccess || details?.access?.contributor || {};
   return {
     enabled: Boolean(access.enabled),
     type: access.type || "individual",
@@ -138,38 +138,38 @@ export default function AdminUserDetails() {
     fetchDetails();
   }, [userId]);
 
-  const fundraiserAccess = useMemo(() => accessFrom(details), [details]);
-  const investorAccess = useMemo(() => investorAccessFrom(details), [details]);
+  const raiserAccess = useMemo(() => accessFrom(details), [details]);
+  const contributorAccess = useMemo(() => contributorAccessFrom(details), [details]);
   const profileMode = useMemo(() => {
     const activeMode = String(details?.activeMode || "").toLowerCase();
-    if (activeMode === "investor" && investorAccess.enabled) return "investor";
-    if (activeMode === "fundraiser" && fundraiserAccess.enabled) return "fundraiser";
-    if (fundraiserAccess.enabled && !investorAccess.enabled) return "fundraiser";
-    if (investorAccess.enabled && !fundraiserAccess.enabled) return "investor";
-    if (fundraiserAccess.enabled) return "fundraiser";
-    if (investorAccess.enabled) return "investor";
-    return "fundraiser";
-  }, [details, fundraiserAccess.enabled, investorAccess.enabled]);
-  const isInvestorView = profileMode === "investor";
+    if (activeMode === "contributor" && contributorAccess.enabled) return "contributor";
+    if (activeMode === "raiser" && raiserAccess.enabled) return "raiser";
+    if (raiserAccess.enabled && !contributorAccess.enabled) return "raiser";
+    if (contributorAccess.enabled && !raiserAccess.enabled) return "contributor";
+    if (raiserAccess.enabled) return "raiser";
+    if (contributorAccess.enabled) return "contributor";
+    return "raiser";
+  }, [details, raiserAccess.enabled, contributorAccess.enabled]);
+  const isContributorView = profileMode === "contributor";
 
   const campaigns = details?.campaigns || [];
-  const investments = details?.investments || [];
-  const investorTransactions = details?.investorTransactions || [];
-  const fundraiserTransactions = details?.fundraiserTransactions || [];
-  const transactions = isInvestorView ? investorTransactions : fundraiserTransactions;
+  const contributions = details?.contributions || [];
+  const contributorTransactions = details?.contributorTransactions || [];
+  const raiserTransactions = details?.raiserTransactions || [];
+  const transactions = isContributorView ? contributorTransactions : raiserTransactions;
   const totalRaised = campaigns.reduce((sum, c) => sum + Number(c?.moneyRaised || c?.currentFunding || 0), 0);
   const totalGoal = campaigns.reduce((sum, c) => sum + Number(c?.fundingGoal || c?.moneyToRaise || 0), 0);
   const transactionRaised = transactions.reduce((sum, txn) => sum + Number(txn?.amount || 0), 0);
   const completedTransactions = transactions.filter((txn) => txn?.status === "completed").length;
   const pendingTransactions = transactions.filter((txn) => ["created", "pending"].includes(String(txn?.status || "").toLowerCase())).length;
   const failedTransactions = transactions.filter((txn) => ["failed", "cancelled", "refunded"].includes(String(txn?.status || "").toLowerCase())).length;
-  const totalInvested = investments.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
-  const estimatedCurrentValue = investments.reduce((sum, inv) => {
+  const totalContributeed = contributions.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
+  const estimatedCurrentValue = contributions.reduce((sum, inv) => {
     const amount = Number(inv?.amount || 0);
     const profit = Number(inv?.campaign?.profitPercentage || 0);
     return sum + amount + Math.round((amount * profit) / 100);
   }, 0);
-  const activeInvestments = investments.filter((inv) => {
+  const activeContributions = contributions.filter((inv) => {
     const paymentStatus = String(inv?.paymentStatus || "").toLowerCase();
     const status = String(inv?.status || "").toLowerCase();
     return paymentStatus === "completed" || status === "confirmed";
@@ -182,36 +182,36 @@ export default function AdminUserDetails() {
   const completion = totalGoal > 0 ? Math.min((totalRaised / totalGoal) * 100, 100) : 0;
   const address = [details?.profile?.addressLine, details?.profile?.city, details?.profile?.state, details?.profile?.pincode].filter(Boolean).join(", ");
 
-  const userDocs = isInvestorView
+  const userDocs = isContributorView
     ? [
-        { title: "KYC Document", url: investorAccess.documents?.kyc, status: investorAccess.kycStatus },
-        { title: "PAN Document", url: investorAccess.documents?.pan, status: investorAccess.kycStatus },
-        { title: "Address Proof", url: investorAccess.documents?.addressProof, status: investorAccess.kycStatus },
-        { title: "Bank Proof", url: investorAccess.documents?.bankProof, status: investorAccess.bankStatus },
+        { title: "KYC Document", url: contributorAccess.documents?.kyc, status: contributorAccess.kycStatus },
+        { title: "PAN Document", url: contributorAccess.documents?.pan, status: contributorAccess.kycStatus },
+        { title: "Address Proof", url: contributorAccess.documents?.addressProof, status: contributorAccess.kycStatus },
+        { title: "Bank Proof", url: contributorAccess.documents?.bankProof, status: contributorAccess.bankStatus },
       ].filter((item) => item.url)
     : [
-        { title: "KYC Document", url: fundraiserAccess.documents?.kyc, status: fundraiserAccess.kycStatus },
-        { title: "PAN Document", url: fundraiserAccess.documents?.pan, status: fundraiserAccess.panStatus },
-        { title: "Address Proof", url: fundraiserAccess.documents?.addressProof, status: fundraiserAccess.kycStatus },
-        { title: "Bank Proof", url: fundraiserAccess.documents?.bankProof, status: fundraiserAccess.bankStatus },
-        { title: "GST Certificate", url: fundraiserAccess.documents?.gst, status: fundraiserAccess.companyStatus },
-        { title: "Business License", url: fundraiserAccess.documents?.license, status: fundraiserAccess.companyStatus },
-        { title: "Incorporation Certificate", url: fundraiserAccess.documents?.incorporation, status: fundraiserAccess.companyStatus },
+        { title: "KYC Document", url: raiserAccess.documents?.kyc, status: raiserAccess.kycStatus },
+        { title: "PAN Document", url: raiserAccess.documents?.pan, status: raiserAccess.panStatus },
+        { title: "Address Proof", url: raiserAccess.documents?.addressProof, status: raiserAccess.kycStatus },
+        { title: "Bank Proof", url: raiserAccess.documents?.bankProof, status: raiserAccess.bankStatus },
+        { title: "GST Certificate", url: raiserAccess.documents?.gst, status: raiserAccess.companyStatus },
+        { title: "Business License", url: raiserAccess.documents?.license, status: raiserAccess.companyStatus },
+        { title: "Incorporation Certificate", url: raiserAccess.documents?.incorporation, status: raiserAccess.companyStatus },
       ].filter((item) => item.url);
 
-  const tabs = isInvestorView
+  const tabs = isContributorView
     ? [
         ["overview", "Overview", FaUser],
         ["access", "Profile Access", FaUserTie],
-        ["activity", "Investor Activity", FaFolderOpen],
-        ["campaigns", "Investor Campaigns", FaMoneyBillWave],
+        ["activity", "Contributor Activity", FaFolderOpen],
+        ["campaigns", "Contributor Campaigns", FaMoneyBillWave],
         ["transactions", "Transactions", FaReceipt],
         ["kyc", "KYC & Documents", FaShieldAlt],
       ]
     : [
         ["overview", "Overview", FaUser],
         ["access", "Profile Access", FaUserTie],
-        ["activity", "Fundraiser Activity", FaFolderOpen],
+        ["activity", "Raiser Activity", FaFolderOpen],
         ["campaigns", "Campaigns Listed", FaMoneyBillWave],
         ["transactions", "Transactions", FaReceipt],
         ["kyc", "KYC & Documents", FaShieldAlt],
@@ -220,12 +220,12 @@ export default function AdminUserDetails() {
   const patchLocalStatus = (key, value) => {
     setDetails((prev) => {
       if (!prev) return prev;
-      if (isInvestorView) {
-        const current = investorAccessFrom(prev);
-        return { ...prev, investorAccess: { ...current, [key]: value } };
+      if (isContributorView) {
+        const current = contributorAccessFrom(prev);
+        return { ...prev, contributorAccess: { ...current, [key]: value } };
       }
       const current = accessFrom(prev);
-      return { ...prev, fundraiserAccess: { ...current, [key]: value } };
+      return { ...prev, raiserAccess: { ...current, [key]: value } };
     });
   };
 
@@ -236,7 +236,7 @@ export default function AdminUserDetails() {
       patchLocalStatus(key, status);
       await updateUserDocumentStatus(
         userId,
-        isInvestorView ? "investor" : "fundraiser",
+        isContributorView ? "contributor" : "raiser",
         documentType,
         status
       );
@@ -272,21 +272,21 @@ export default function AdminUserDetails() {
               <button onClick={() => setSidebarOpen(true)} className="grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/10 text-white hover:bg-white/15 lg:hidden"><FaBars /></button>
               <button onClick={() => navigate("/admin/users")} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15"><FaArrowLeft />Back</button>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">{isInvestorView ? "Investor Admin Profile" : "Fundraiser Admin Profile"}</p>
-                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{details?.name || (isInvestorView ? "Investor User" : "Fundraiser User")}</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">{isContributorView ? "Contributor Admin Profile" : "Raiser Admin Profile"}</p>
+                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{details?.name || (isContributorView ? "Contributor User" : "Raiser User")}</h1>
                 <p className="mt-2 text-sm text-slate-300">
-                  {isInvestorView
-                    ? "Investor overview, access, activity, portfolio, transactions, KYC, and documents are shown here."
-                    : "Fundraiser overview, access, activity, campaigns, KYC, and documents are shown here."}
+                  {isContributorView
+                    ? "Contributor overview, access, activity, portfolio, transactions, KYC, and documents are shown here."
+                    : "Raiser overview, access, activity, campaigns, KYC, and documents are shown here."}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {[
-                    isInvestorView
-                      ? investorAccess.enabled ? "Investor Enabled" : "Investor Disabled"
-                      : fundraiserAccess.enabled ? "Fundraiser Enabled" : "Fundraiser Disabled",
-                    `Type: ${pretty(isInvestorView ? investorAccess.type : fundraiserAccess.type)}`,
+                    isContributorView
+                      ? contributorAccess.enabled ? "Contributor Enabled" : "Contributor Disabled"
+                      : raiserAccess.enabled ? "Raiser Enabled" : "Raiser Disabled",
+                    `Type: ${pretty(isContributorView ? contributorAccess.type : raiserAccess.type)}`,
                     `Mode: ${pretty(details?.activeMode || "none")}`,
-                    isInvestorView ? `Investments: ${investments.length}` : `Campaigns: ${campaigns.length}`,
+                    isContributorView ? `Contributions: ${contributions.length}` : `Campaigns: ${campaigns.length}`,
                   ].map((item) => <span key={item} className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/95">{item}</span>)}
                 </div>
               </div>
@@ -301,27 +301,27 @@ export default function AdminUserDetails() {
         </div>
       </div>
 
-      {loading ? <Card className="p-10 text-center text-slate-500">Loading fundraiser profile...</Card> : !details ? <Card className="p-10 text-center text-slate-500">User details not found.</Card> : (
+      {loading ? <Card className="p-10 text-center text-slate-500">Loading raiser profile...</Card> : !details ? <Card className="p-10 text-center text-slate-500">User details not found.</Card> : (
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Stat
-              title={isInvestorView ? "Investments Made" : "Campaigns Created"}
-              value={isInvestorView ? investments.length : campaigns.length}
+              title={isContributorView ? "Contributions Made" : "Campaigns Created"}
+              value={isContributorView ? contributions.length : campaigns.length}
               accent="from-sky-500 to-cyan-500"
             />
             <Stat
-              title={isInvestorView ? "Total Invested" : "Total Goal"}
-              value={INR(isInvestorView ? totalInvested : totalGoal)}
+              title={isContributorView ? "Total Contributeed" : "Total Goal"}
+              value={INR(isContributorView ? totalContributeed : totalGoal)}
               accent="from-blue-600 to-indigo-600"
             />
             <Stat
-              title={isInvestorView ? "Portfolio Value" : "Total Raised"}
-              value={INR(isInvestorView ? estimatedCurrentValue : totalRaised)}
+              title={isContributorView ? "Portfolio Value" : "Total Raised"}
+              value={INR(isContributorView ? estimatedCurrentValue : totalRaised)}
               accent="from-emerald-500 to-green-600"
             />
             <Stat
-              title={isInvestorView ? "Transactions" : "Completion Rate"}
-              value={isInvestorView ? transactions.length : `${completion.toFixed(0)}%`}
+              title={isContributorView ? "Transactions" : "Completion Rate"}
+              value={isContributorView ? transactions.length : `${completion.toFixed(0)}%`}
               accent="from-amber-500 to-orange-500"
             />
           </div>
@@ -342,8 +342,8 @@ export default function AdminUserDetails() {
               <Card className="p-6">
                 <SectionTitle
                   icon={FaUser}
-                  title={isInvestorView ? "Investor Overview" : "Fundraiser Overview"}
-                  subtitle={isInvestorView ? "Identity, contact, address, bank, and investor account information." : "Identity, contact, address, and bank information."}
+                  title={isContributorView ? "Contributor Overview" : "Raiser Overview"}
+                  subtitle={isContributorView ? "Identity, contact, address, bank, and contributor account information." : "Identity, contact, address, and bank information."}
                 />
                 <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                   <Info label="Full Name" value={details?.name} icon={FaUser} />
@@ -352,8 +352,8 @@ export default function AdminUserDetails() {
                   <Info label="Address" value={address || "--"} icon={FaMapMarkerAlt} />
                   <Info label="Bank Name" value={details?.bankDetails?.bankName || "--"} icon={FaUniversity} />
                   <Info label="Account Holder" value={details?.bankDetails?.accountHolderName || "--"} icon={FaUniversity} />
-                  {isInvestorView ? <Info label="Total Invested" value={INR(totalInvested)} icon={FaMoneyBillWave} /> : null}
-                  {isInvestorView ? <Info label="Active Investments" value={activeInvestments} icon={FaReceipt} /> : null}
+                  {isContributorView ? <Info label="Total Contributeed" value={INR(totalContributeed)} icon={FaMoneyBillWave} /> : null}
+                  {isContributorView ? <Info label="Active Contributions" value={activeContributions} icon={FaReceipt} /> : null}
                 </div>
               </Card>
               <div className="space-y-6">
@@ -361,27 +361,27 @@ export default function AdminUserDetails() {
                   <SectionTitle
                     icon={FaShieldAlt}
                     title="Verification Snapshot"
-                    subtitle={isInvestorView ? "Live investor verification state." : "Live fundraiser verification state."}
+                    subtitle={isContributorView ? "Live contributor verification state." : "Live raiser verification state."}
                   />
                   <div className="mt-5 space-y-3">
-                    <StatusRow label="KYC Status" value={isInvestorView ? investorAccess.kycStatus : fundraiserAccess.kycStatus} />
-                    {isInvestorView ? null : <StatusRow label="PAN Status" value={fundraiserAccess.panStatus} />}
-                    <StatusRow label="Bank Status" value={isInvestorView ? investorAccess.bankStatus : fundraiserAccess.bankStatus} />
-                    {isInvestorView ? null : <StatusRow label="Company Status" value={fundraiserAccess.companyStatus} />}
+                    <StatusRow label="KYC Status" value={isContributorView ? contributorAccess.kycStatus : raiserAccess.kycStatus} />
+                    {isContributorView ? null : <StatusRow label="PAN Status" value={raiserAccess.panStatus} />}
+                    <StatusRow label="Bank Status" value={isContributorView ? contributorAccess.bankStatus : raiserAccess.bankStatus} />
+                    {isContributorView ? null : <StatusRow label="Company Status" value={raiserAccess.companyStatus} />}
                   </div>
                 </Card>
                 <Card className="p-6">
                   <SectionTitle
                     icon={FaMoneyBillWave}
-                    title={isInvestorView ? "Portfolio Summary" : "Campaign Summary"}
-                    subtitle={isInvestorView ? "Quick investor portfolio and transaction numbers." : "Quick fundraiser numbers."}
+                    title={isContributorView ? "Portfolio Summary" : "Campaign Summary"}
+                    subtitle={isContributorView ? "Quick contributor portfolio and transaction numbers." : "Quick raiser numbers."}
                   />
                   <div className="mt-5 grid grid-cols-2 gap-3">
-                    {isInvestorView ? (
+                    {isContributorView ? (
                       <>
-                        <Metric label="Investments" value={investments.length} />
+                        <Metric label="Contributions" value={contributions.length} />
                         <Metric label="Portfolio Value" value={INR(estimatedCurrentValue)} />
-                        <Metric label="Active" value={activeInvestments} />
+                        <Metric label="Active" value={activeContributions} />
                         <Metric label="Transactions" value={transactions.length} />
                       </>
                     ) : (
@@ -404,11 +404,11 @@ export default function AdminUserDetails() {
                 <SectionTitle
                   icon={FaUserTie}
                   title="Profile Access"
-                  subtitle={isInvestorView ? "Investor-specific access configuration." : "Fundraiser-specific access configuration."}
+                  subtitle={isContributorView ? "Contributor-specific access configuration." : "Raiser-specific access configuration."}
                 />
                 <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <Info label={isInvestorView ? "Investor Enabled" : "Fundraiser Enabled"} value={isInvestorView ? investorAccess.enabled ? "Yes" : "No" : fundraiserAccess.enabled ? "Yes" : "No"} />
-                  <Info label="Profile Type" value={pretty(isInvestorView ? investorAccess.type : fundraiserAccess.type)} />
+                  <Info label={isContributorView ? "Contributor Enabled" : "Raiser Enabled"} value={isContributorView ? contributorAccess.enabled ? "Yes" : "No" : raiserAccess.enabled ? "Yes" : "No"} />
+                  <Info label="Profile Type" value={pretty(isContributorView ? contributorAccess.type : raiserAccess.type)} />
                   <Info label="Active Mode" value={pretty(details?.activeMode || "none")} />
                   <Info label="Account Role" value={pretty(details?.role || "user")} />
                 </div>
@@ -417,13 +417,13 @@ export default function AdminUserDetails() {
                 <SectionTitle
                   icon={FaShieldAlt}
                   title="Access Review"
-                  subtitle={isInvestorView ? "Approval states tied to investor documents." : "Approval states tied to fundraiser documents."}
+                  subtitle={isContributorView ? "Approval states tied to contributor documents." : "Approval states tied to raiser documents."}
                 />
                 <div className="mt-5 space-y-3">
-                  <StatusRow label="KYC" value={isInvestorView ? investorAccess.kycStatus : fundraiserAccess.kycStatus} />
-                  {isInvestorView ? null : <StatusRow label="PAN" value={fundraiserAccess.panStatus} />}
-                  <StatusRow label="Bank" value={isInvestorView ? investorAccess.bankStatus : fundraiserAccess.bankStatus} />
-                  {isInvestorView ? null : <StatusRow label="Company" value={fundraiserAccess.companyStatus} />}
+                  <StatusRow label="KYC" value={isContributorView ? contributorAccess.kycStatus : raiserAccess.kycStatus} />
+                  {isContributorView ? null : <StatusRow label="PAN" value={raiserAccess.panStatus} />}
+                  <StatusRow label="Bank" value={isContributorView ? contributorAccess.bankStatus : raiserAccess.bankStatus} />
+                  {isContributorView ? null : <StatusRow label="Company" value={raiserAccess.companyStatus} />}
                 </div>
               </Card>
             </div>
@@ -432,12 +432,12 @@ export default function AdminUserDetails() {
           {activeTab === "activity" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {isInvestorView ? (
+                {isContributorView ? (
                   <>
-                    <Info label="Total Investments" value={investments.length} />
-                    <Info label="Total Invested" value={INR(totalInvested)} />
-                    <Info label="Active Investments" value={activeInvestments} />
-                    <Info label="Investor Transactions" value={transactions.length} />
+                    <Info label="Total Contributions" value={contributions.length} />
+                    <Info label="Total Contributeed" value={INR(totalContributeed)} />
+                    <Info label="Active Contributions" value={activeContributions} />
+                    <Info label="Contributor Transactions" value={transactions.length} />
                   </>
                 ) : (
                   <>
@@ -451,29 +451,29 @@ export default function AdminUserDetails() {
               <Card className="p-6">
                 <SectionTitle
                   icon={FaFolderOpen}
-                  title={isInvestorView ? "Investor Activity" : "Fundraiser Activity"}
-                  subtitle={isInvestorView ? "See where and how much money this investor has invested." : "Campaign creation and status activity timeline."}
+                  title={isContributorView ? "Contributor Activity" : "Raiser Activity"}
+                  subtitle={isContributorView ? "See where and how much money this contributor has contributeed." : "Campaign creation and status activity timeline."}
                 />
                 <div className="mt-5 space-y-3">
-                  {isInvestorView ? (
-                    investments.length > 0 ? investments.map((investment) => {
-                      const campaign = investment?.campaign || {};
+                  {isContributorView ? (
+                    contributions.length > 0 ? contributions.map((contribution) => {
+                      const campaign = contribution?.campaign || {};
                       return (
-                        <div key={investment?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div key={contribution?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="font-semibold text-slate-900">{campaign?.projectTitle || "Campaign"}</p>
-                            <p className="text-sm text-slate-500">Invested {INR(investment?.amount || 0)} in {pretty(campaign?.projectCategory || "general")}</p>
-                            <p className="mt-1 text-xs text-slate-400">{formatDate(investment?.createdAt)}</p>
+                            <p className="text-sm text-slate-500">Contributeed {INR(contribution?.amount || 0)} in {pretty(campaign?.projectCategory || "general")}</p>
+                            <p className="mt-1 text-xs text-slate-400">{formatDate(contribution?.createdAt)}</p>
                           </div>
                           <div className="text-left sm:text-right">
-                            <p className="text-sm font-bold text-slate-900">{INR(investment?.amount || 0)}</p>
-                            <span className={cn("mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(investment?.paymentStatus || investment?.status))}>
-                              {investment?.paymentStatus || investment?.status || "pending"}
+                            <p className="text-sm font-bold text-slate-900">{INR(contribution?.amount || 0)}</p>
+                            <span className={cn("mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(contribution?.paymentStatus || contribution?.status))}>
+                              {contribution?.paymentStatus || contribution?.status || "pending"}
                             </span>
                           </div>
                         </div>
                       );
-                    }) : <Empty text="No investor activity is available for this user yet." />
+                    }) : <Empty text="No contributor activity is available for this user yet." />
                   ) : (
                     campaigns.length > 0 ? campaigns.map((campaign) => (
                       <div key={campaign?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -487,7 +487,7 @@ export default function AdminUserDetails() {
                           <span className={cn("mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(campaign?.status))}>{campaign?.status || "pending"}</span>
                         </div>
                       </div>
-                    )) : <Empty text="No fundraiser activity available for this user yet." />
+                    )) : <Empty text="No raiser activity available for this user yet." />
                   )}
                 </div>
               </Card>
@@ -496,14 +496,14 @@ export default function AdminUserDetails() {
 
           {activeTab === "campaigns" && (
             <div className="space-y-4">
-              {isInvestorView ? (
-                investments.length > 0 ? investments.map((investment) => {
-                  const campaign = investment?.campaign || {};
+              {isContributorView ? (
+                contributions.length > 0 ? contributions.map((contribution) => {
+                  const campaign = contribution?.campaign || {};
                   const goal = Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
                   const raised = Number(campaign?.currentFunding || campaign?.moneyRaised || 0);
                   const progress = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
                   const expectedReturn = Math.round(
-                    (Number(investment?.amount || 0) * Number(campaign?.profitPercentage || 0)) / 100
+                    (Number(contribution?.amount || 0) * Number(campaign?.profitPercentage || 0)) / 100
                   );
                   const gallery = campaignGallery({
                     documents: {
@@ -513,22 +513,22 @@ export default function AdminUserDetails() {
                   });
 
                   return (
-                    <Card key={investment?._id} className="overflow-hidden">
+                    <Card key={contribution?._id} className="overflow-hidden">
                       <div className="p-5">
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                           <div className="min-w-0 flex-1">
                             <div className="mb-3 flex flex-wrap gap-2">
                               <Tag text={campaign?.status || "pending"} className={tone(campaign?.status)} />
                               <Tag text={pretty(campaign?.projectCategory || "general")} />
-                              <Tag text={formatDate(investment?.createdAt)} />
+                              <Tag text={formatDate(contribution?.createdAt)} />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900">{campaign?.projectTitle || "Campaign"}</h3>
                             <p className="mt-2 text-sm leading-6 text-slate-600">{campaign?.projectOverview || "No campaign overview available."}</p>
                             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                              <Metric label="Invested" value={INR(investment?.amount || 0)} />
+                              <Metric label="Contributeed" value={INR(contribution?.amount || 0)} />
                               <Metric label="Current Raise" value={INR(raised)} />
                               <Metric label="Expected Return" value={expectedReturn > 0 ? INR(expectedReturn) : "N/A"} />
-                              <Metric label="Payment Status" value={investment?.paymentStatus || "--"} />
+                              <Metric label="Payment Status" value={contribution?.paymentStatus || "--"} />
                             </div>
                             <div className="mt-4">
                               <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Campaign progress</span><span>{progress.toFixed(0)}%</span></div>
@@ -538,8 +538,8 @@ export default function AdminUserDetails() {
                           <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:grid-cols-1">
                             <Metric label="Goal" value={INR(goal)} />
                             <Metric label="Funding Type" value={campaign?.fundingType || "--"} />
-                            <Metric label="Transfer Status" value={investment?.transferStatus || "--"} />
-                            <Metric label="Order ID" value={investment?.orderId || "--"} />
+                            <Metric label="Transfer Status" value={contribution?.transferStatus || "--"} />
+                            <Metric label="Order ID" value={contribution?.orderId || "--"} />
                           </div>
                         </div>
                         <div className="mt-5">
@@ -548,7 +548,7 @@ export default function AdminUserDetails() {
                       </div>
                     </Card>
                   );
-                }) : <Empty text="No investor campaign details found for this user yet." />
+                }) : <Empty text="No contributor campaign details found for this user yet." />
               ) : (
                 campaigns.length > 0 ? campaigns.map((campaign) => {
                   const goal = Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
@@ -606,7 +606,7 @@ export default function AdminUserDetails() {
                       )}
                     </Card>
                   );
-                }) : <Empty text="No campaigns have been created by this fundraiser yet." />
+                }) : <Empty text="No campaigns have been created by this raiser yet." />
               )}
             </div>
           )}
@@ -615,7 +615,7 @@ export default function AdminUserDetails() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Info label="Total Transactions" value={transactions.length} />
-                <Info label={isInvestorView ? "Total Invested via Transactions" : "Total Raised via Transactions"} value={INR(transactionRaised)} />
+                <Info label={isContributorView ? "Total Contributeed via Transactions" : "Total Raised via Transactions"} value={INR(transactionRaised)} />
                 <Info label="Completed" value={completedTransactions} />
                 <Info label="Pending / Failed" value={`${pendingTransactions} / ${failedTransactions}`} />
               </div>
@@ -623,8 +623,8 @@ export default function AdminUserDetails() {
               <Card className="p-6">
                 <SectionTitle
                   icon={FaReceipt}
-                  title={isInvestorView ? "Investor Transactions" : "Fundraiser Transactions"}
-                  subtitle={isInvestorView ? "Full investment transaction history showing where money was invested and whether payment was completed or not." : "Full transaction history showing raised amount and whether each payment was completed or not."}
+                  title={isContributorView ? "Contributor Transactions" : "Raiser Transactions"}
+                  subtitle={isContributorView ? "Full contribution transaction history showing where money was contributeed and whether payment was completed or not." : "Full transaction history showing raised amount and whether each payment was completed or not."}
                 />
                 <div className="mt-5 space-y-4">
                   {transactions.length > 0 ? transactions.map((txn) => (
@@ -633,7 +633,7 @@ export default function AdminUserDetails() {
                         <div className="min-w-0 flex-1">
                           <div className="mb-2 flex flex-wrap gap-2">
                             <Tag text={txn?.status || "pending"} className={tone(txn?.status)} />
-                            <Tag text={pretty(txn?.type || "investment")} />
+                            <Tag text={pretty(txn?.type || "contribution")} />
                             <Tag text={pretty(txn?.paymentMethod || "razorpay")} />
                             <Tag text={formatDate(txn?.createdAt)} />
                           </div>
@@ -642,13 +642,13 @@ export default function AdminUserDetails() {
                             {txn?.campaign?.title || "Unknown Campaign"}
                           </h3>
                           <p className="mt-1 text-sm text-slate-500">
-                            {txn?.description || "Fundraiser transaction record"}
+                            {txn?.description || "Raiser transaction record"}
                           </p>
 
                           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                             <Info label="Transaction ID" value={txn?.transactionId || "--"} />
-                            <Info label={isInvestorView ? "Fundraiser" : "Investor"} value={isInvestorView ? txn?.fundraiser?.name || "--" : txn?.investor?.name || "--"} />
-                            <Info label={isInvestorView ? "Fundraiser Email" : "Investor Email"} value={isInvestorView ? txn?.fundraiser?.email || "--" : txn?.investor?.email || "--"} />
+                            <Info label={isContributorView ? "Raiser" : "Contributor"} value={isContributorView ? txn?.raiser?.name || "--" : txn?.contributor?.name || "--"} />
+                            <Info label={isContributorView ? "Raiser Email" : "Contributor Email"} value={isContributorView ? txn?.raiser?.email || "--" : txn?.contributor?.email || "--"} />
                             <Info label="Order ID" value={txn?.orderId || "--"} />
                             <Info label="Gateway Payment ID" value={txn?.paymentGatewayId || "--"} />
                             <Info label="Transfer ID" value={txn?.transferId || "--"} />
@@ -662,14 +662,14 @@ export default function AdminUserDetails() {
                         </div>
 
                         <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:grid-cols-1">
-                          <Metric label={isInvestorView ? "Invested Amount" : "Raised Amount"} value={INR(txn?.amount || 0)} />
+                          <Metric label={isContributorView ? "Contributeed Amount" : "Raised Amount"} value={INR(txn?.amount || 0)} />
                           <Metric label="Platform Fee" value={INR(txn?.fee || 0)} />
                           <Metric label="Net Amount" value={INR(txn?.netAmount || 0)} />
                           <Metric label="Processed On" value={formatDate(txn?.processedAt)} />
                         </div>
                       </div>
                     </div>
-                  )) : <Empty text={isInvestorView ? "No investor transactions found for this user yet." : "No fundraiser transactions found for this user yet."} />}
+                  )) : <Empty text={isContributorView ? "No contributor transactions found for this user yet." : "No raiser transactions found for this user yet."} />}
                 </div>
               </Card>
             </div>
@@ -682,12 +682,12 @@ export default function AdminUserDetails() {
                   <SectionTitle
                     icon={FaShieldAlt}
                     title="KYC Details"
-                    subtitle={isInvestorView ? "Investor KYC details fetched from the backend." : "Fundraiser KYC details fetched from the backend."}
+                    subtitle={isContributorView ? "Contributor KYC details fetched from the backend." : "Raiser KYC details fetched from the backend."}
                   />
                   <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Info label="Aadhaar Number" value={isInvestorView ? investorAccess.details?.aadhaarNumber || "--" : fundraiserAccess.details?.aadhaarNumber || "--"} icon={FaIdCard} />
-                    <Info label="PAN Number" value={isInvestorView ? investorAccess.details?.panNumber || "--" : fundraiserAccess.details?.panNumber || "--"} icon={FaIdCard} />
-                    <Info label="Address Proof Type" value={isInvestorView ? investorAccess.details?.addressProofType || "--" : fundraiserAccess.details?.addressProofType || "--"} icon={FaMapMarkerAlt} />
+                    <Info label="Aadhaar Number" value={isContributorView ? contributorAccess.details?.aadhaarNumber || "--" : raiserAccess.details?.aadhaarNumber || "--"} icon={FaIdCard} />
+                    <Info label="PAN Number" value={isContributorView ? contributorAccess.details?.panNumber || "--" : raiserAccess.details?.panNumber || "--"} icon={FaIdCard} />
+                    <Info label="Address Proof Type" value={isContributorView ? contributorAccess.details?.addressProofType || "--" : raiserAccess.details?.addressProofType || "--"} icon={FaMapMarkerAlt} />
                     <Info label="Bank Account Number" value={details?.bankDetails?.accountNumber || "--"} icon={FaUniversity} />
                     <Info label="IFSC Code" value={details?.bankDetails?.ifscCode || "--"} icon={FaUniversity} />
                     <Info label="Branch Name" value={details?.bankDetails?.branchName || "--"} icon={FaUniversity} />
@@ -697,24 +697,24 @@ export default function AdminUserDetails() {
                   <SectionTitle
                     icon={FaShieldAlt}
                     title="Live Status Controls"
-                    subtitle={isInvestorView ? "Update investor KYC and bank statuses in real time." : "Update fundraiser KYC statuses in real time."}
+                    subtitle={isContributorView ? "Update contributor KYC and bank statuses in real time." : "Update raiser KYC statuses in real time."}
                   />
                   <div className="mt-5 space-y-4">
-                    <Approve label="KYC Status" value={isInvestorView ? investorAccess.kycStatus : fundraiserAccess.kycStatus} disabled={isInvestorView ? !investorAccess.documents?.kyc && !investorAccess.documents?.pan && !investorAccess.documents?.addressProof : !fundraiserAccess.documents?.kyc} loading={Object.keys(statusLoading).some((key) => key.startsWith("kyc-"))} onPick={(status) => handleStatusUpdate("kyc", "kycStatus", status)} />
-                    {isInvestorView ? null : <Approve label="PAN Status" value={fundraiserAccess.panStatus} disabled={!fundraiserAccess.documents?.pan} loading={Object.keys(statusLoading).some((key) => key.startsWith("pan-"))} onPick={(status) => handleStatusUpdate("pan", "panStatus", status)} />}
-                    <Approve label="Bank Status" value={isInvestorView ? investorAccess.bankStatus : fundraiserAccess.bankStatus} disabled={isInvestorView ? !investorAccess.documents?.bankProof : !fundraiserAccess.documents?.bankProof} loading={Object.keys(statusLoading).some((key) => key.startsWith("bank-"))} onPick={(status) => handleStatusUpdate("bank", "bankStatus", status)} />
-                    {isInvestorView ? null : <Approve label="Company Status" value={fundraiserAccess.companyStatus} disabled={!fundraiserAccess.documents?.gst && !fundraiserAccess.documents?.license && !fundraiserAccess.documents?.incorporation} loading={Object.keys(statusLoading).some((key) => key.startsWith("company-"))} onPick={(status) => handleStatusUpdate("company", "companyStatus", status)} />}
+                    <Approve label="KYC Status" value={isContributorView ? contributorAccess.kycStatus : raiserAccess.kycStatus} disabled={isContributorView ? !contributorAccess.documents?.kyc && !contributorAccess.documents?.pan && !contributorAccess.documents?.addressProof : !raiserAccess.documents?.kyc} loading={Object.keys(statusLoading).some((key) => key.startsWith("kyc-"))} onPick={(status) => handleStatusUpdate("kyc", "kycStatus", status)} />
+                    {isContributorView ? null : <Approve label="PAN Status" value={raiserAccess.panStatus} disabled={!raiserAccess.documents?.pan} loading={Object.keys(statusLoading).some((key) => key.startsWith("pan-"))} onPick={(status) => handleStatusUpdate("pan", "panStatus", status)} />}
+                    <Approve label="Bank Status" value={isContributorView ? contributorAccess.bankStatus : raiserAccess.bankStatus} disabled={isContributorView ? !contributorAccess.documents?.bankProof : !raiserAccess.documents?.bankProof} loading={Object.keys(statusLoading).some((key) => key.startsWith("bank-"))} onPick={(status) => handleStatusUpdate("bank", "bankStatus", status)} />
+                    {isContributorView ? null : <Approve label="Company Status" value={raiserAccess.companyStatus} disabled={!raiserAccess.documents?.gst && !raiserAccess.documents?.license && !raiserAccess.documents?.incorporation} loading={Object.keys(statusLoading).some((key) => key.startsWith("company-"))} onPick={(status) => handleStatusUpdate("company", "companyStatus", status)} />}
                   </div>
                 </Card>
               </div>
               <Card className="p-6">
                 <SectionTitle
                   icon={FaFileAlt}
-                  title={isInvestorView ? "Investor Documents" : "Fundraiser Documents"}
+                  title={isContributorView ? "Contributor Documents" : "Raiser Documents"}
                   subtitle="All user documents are listed here and can be viewed."
                 />
                 <div className="mt-5 space-y-4">
-                  {userDocs.length > 0 ? userDocs.map((doc) => <Doc key={`${doc.title}-${doc.url}`} title={doc.title} url={doc.url} status={doc.status} />) : <Empty text={isInvestorView ? "No investor KYC documents have been uploaded." : "No fundraiser KYC documents have been uploaded."} />}
+                  {userDocs.length > 0 ? userDocs.map((doc) => <Doc key={`${doc.title}-${doc.url}`} title={doc.title} url={doc.url} status={doc.status} />) : <Empty text={isContributorView ? "No contributor KYC documents have been uploaded." : "No raiser KYC documents have been uploaded."} />}
                 </div>
               </Card>
             </div>
