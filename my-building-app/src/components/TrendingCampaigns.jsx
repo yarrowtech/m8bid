@@ -148,11 +148,6 @@ export default function TrendingCampaigns() {
   };
 
   const handleCampaignClick = (campaign) => {
-    if (!hasContributorAccess()) {
-      setContributorAccessOpen(true);
-      return;
-    }
-
     navigate(`/contribution-detail/${campaign.id}`, { state: { campaign: campaign.raw } });
   };
 
@@ -276,7 +271,7 @@ export default function TrendingCampaigns() {
         open={contributorAccessOpen}
         onClose={() => setContributorAccessOpen(false)}
         onLogin={() => navigate("/login")}
-        title="Contributor account needed"
+        title="Sign in to continue"
         message="You need to login or register as an contributor to access trending campaigns."
         buttonLabel="Go to Login"
       />

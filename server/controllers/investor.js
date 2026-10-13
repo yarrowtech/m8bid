@@ -1,3 +1,4 @@
+const { normalizeUser } = require("../utils/unifiedUser");
 const User = require("../models/userSchema");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 
@@ -38,7 +39,7 @@ const getInvestorProfile = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("INVESTOR PROFILE ERROR:", err);
@@ -112,7 +113,7 @@ const updateInvestorKYC = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Investor KYC updated successfully",
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("INVESTOR KYC UPDATE ERROR:", err);
@@ -168,7 +169,7 @@ const updateInvestorBank = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Investor bank details updated successfully",
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("INVESTOR BANK UPDATE ERROR:", err);
@@ -223,7 +224,7 @@ const deleteInvestorDocument = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: `${type} deleted successfully`,
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("INVESTOR DELETE DOCUMENT ERROR:", err);

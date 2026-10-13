@@ -66,7 +66,7 @@ export default function RaiserSidebar({
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
             M8BID
           </h2>
-          <p className="text-[11px] text-slate-400">Raiser Portal</p>
+          <p className="text-[11px] text-slate-400">Raise Funds</p>
         </div>
       </button>
 
@@ -76,6 +76,10 @@ export default function RaiserSidebar({
         </p>
 
         <div className="mt-3 space-y-2">
+          <SidebarItem icon={LayoutDashboard} label="Overview" onClick={() => navigate("/dashboard")} />
+          <SidebarItem icon={Wallet} label="Raise Funds" onClick={() => navigate("/raiser/dashboard")} />
+          <SidebarItem icon={Wallet} label="Contribute Funds" onClick={() => navigate("/contributor/dashboard")} />
+
           <SidebarItem
             icon={LayoutDashboard}
             label="Dashboard"
@@ -102,9 +106,9 @@ export default function RaiserSidebar({
           />
           <SidebarItem
             icon={User}
-            label="Profile"
+            label="My Account"
             active={active === "profile"}
-            onClick={() => navigate("/raiser/profile")}
+            onClick={() => navigate("/account")}
           />
         </div>
       </div>

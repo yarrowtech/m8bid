@@ -1,5 +1,7 @@
-﻿import React, { useMemo, useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import { readDashboardCache } from "../../lib/dashboardCache";
+import DashboardPlaceholder from "../../components/DashboardPlaceholder";
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   Search,
   Mail,
@@ -26,13 +28,6 @@ import ContributorSidebar from "./InvestorSidebar";
 import { getMyInvestments } from "../../api/investmentapi";
 import { getProfile } from "../../api/user";
 
-function TopIconButton({ children }) {
-  return (
-    <button className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50">
-      {children}
-    </button>
-  );
-}
 
 function PrimaryBlueButton({
   children,
@@ -79,10 +74,9 @@ function StatCard({ icon: Icon, title, value, subtitle, iconWrapClass }) {
 function ContributionCard({
   tag,
   title,
-  contributeed,
+  contributed,
   target,
   status,
-  expectedReturn,
   progress,
   onView,
 }) {
@@ -102,8 +96,8 @@ function ContributionCard({
       </h3>
 
       <div className="mt-3 flex items-center justify-between text-[12px]">
-        <span className="text-slate-500">Contributeed</span>
-        <span className="font-semibold text-slate-900">{contributeed}</span>
+        <span className="text-slate-500">Contributed</span>
+        <span className="font-semibold text-slate-900">{contributed}</span>
       </div>
 
       <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
@@ -127,14 +121,7 @@ function ContributionCard({
             {status}
           </p>
         </div>
-        <div className="rounded-xl bg-slate-50 px-2.5 py-2">
-          <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
-            Expected Return
-          </p>
-          <p className="mt-1 text-[12px] font-semibold text-slate-900">
-            {expectedReturn}
-          </p>
-        </div>
+
       </div>
 
       <button
@@ -177,96 +164,6 @@ function RightMetricCard({ title, value, sub, icon: Icon, tone = "sky" }) {
   );
 }
 
-function ProfileDropdown({ user, navigate }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-full px-1.5 py-1 transition hover:bg-white"
-      >
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#ece6ff] to-[#f5f1ff] text-[11px] font-semibold text-slate-800">
-          {user?.name?.charAt(0) || "I"}
-        </div>
-
-        <div className="hidden md:block text-left">
-          <p className="text-[13px] font-medium text-slate-900">
-            {user?.name || "Contributor"}
-          </p>
-        </div>
-
-        <ChevronDown size={14} className="text-slate-400" />
-      </button>
-
-      {open ? (
-        <div className="absolute right-0 top-[110%] z-30 w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-          <button
-            onClick={() => navigate("/contributor/profile/kyc")}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f1edff] text-[#6f5cf2]">
-              <FileCheck size={17} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Update KYC
-              </p>
-              <p className="text-[11px] text-slate-400">
-                Manage Contributor verification details
-              </p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate("/contributor/profile/bank")}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-              <Landmark size={17} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Update Bank Details
-              </p>
-              <p className="text-[11px] text-slate-400">
-                Add or edit payout account information
-              </p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate("/contributor/profile")}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f3efff] text-[#7b68f4]">
-              <User size={17} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Contributor Profile
-              </p>
-              <p className="text-[11px] text-slate-400">
-                View your contributor account details
-              </p>
-            </div>
-          </button>
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 const formatINR = (amount) => {
   const value = Number(amount || 0);
@@ -295,27 +192,10 @@ const getCampaignTarget = (campaign) =>
 const getCampaignRaised = (campaign) =>
   Number(campaign?.currentFunding || campaign?.moneyRaised || campaign?.raisedAmount || 0);
 
-const getExpectedReturnText = (campaign) => {
-  const percent = Number(campaign?.profitPercentage || 0);
-  if (percent > 0) return `${percent}%`;
-  return "N/A";
-};
-
 const getProfileCompletion = (user) => {
-  let score = 0;
-  if (user?.name) score += 20;
-  if (user?.email) score += 20;
-  if (user?.profile?.phone) score += 15;
-  if (user?.profile?.photo) score += 15;
-  if (
-    ["VERIFIED", "APPROVED"].includes(
-      String(user?.access?.contributor?.kycStatus || "").toUpperCase()
-    )
-  ) {
-    score += 15;
-  }
-  if (user?.bankDetails?.accountNumber) score += 15;
-  return Math.min(score, 100);
+  return Math.min(100, (user?.name ? 20 : 0) + (user?.email ? 20 : 0)
+    + (user?.profile?.phone ? 15 : 0) + (user?.profile?.photo ? 15 : 0)
+    + (user?.kycStatus === "VERIFIED" ? 15 : 0) + (user?.bankDetails?.accountNumber ? 15 : 0));
 };
 
 const normalizeStatusLabel = (value, type) => {
@@ -338,20 +218,20 @@ const normalizeStatusLabel = (value, type) => {
   return value || "-";
 };
 
-export default function ContributorDashboard() {
+export default function ContributorDashboard({ embedded = false }) {
   const navigate = useNavigate();
   const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [user, setUser] = useState(localUser || null);
-  const [contributions, setContributions] = useState([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const cached = readDashboardCache("/contributions/my");
+  const [contributions, setContributions] = useState((cached?.contributions || []).filter((entry) => entry.paymentStatus === "completed" && entry.status === "confirmed"));
+  const { search = "" } = useOutletContext() || {};
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        setLoading(true);
         setError("");
 
         const [contributionRes, profileRes] = await Promise.all([
@@ -362,7 +242,7 @@ export default function ContributorDashboard() {
         const contributionList = Array.isArray(contributionRes?.contributions)
           ? contributionRes.contributions
           : [];
-        setContributions(contributionList);
+        setContributions(contributionList.filter((entry) => entry.paymentStatus === "completed" && entry.status === "confirmed"));
 
         const liveUser = profileRes?.user || null;
         if (liveUser) {
@@ -394,8 +274,8 @@ export default function ContributorDashboard() {
     });
   }, [contributions, search]);
 
-  const totalContributeed = useMemo(
-    () => contributions.reduce((sum, item) => sum + Number(item?.amount || 0), 0),
+  const totalContributed = useMemo(
+    () => contributions.filter((item) => item.paymentStatus === "completed").reduce((sum, item) => sum + Number(item?.amount || 0), 0),
     [contributions]
   );
 
@@ -409,19 +289,7 @@ export default function ContributorDashboard() {
     [contributions]
   );
 
-  const estimatedReturns = useMemo(
-    () =>
-      contributions.reduce((sum, item) => {
-        const campaign = getCampaignData(item);
-        const percent = Number(campaign?.profitPercentage || 0);
-        if (!percent) return sum;
-        return sum + (Number(item?.amount || 0) * percent) / 100;
-      }, 0),
-    [contributions]
-  );
-
-  const portfolioValue = totalContributeed + estimatedReturns;
-  const savedDeals = 0;
+  const savedDeals = user?.savedCampaigns?.length || 0;
   const profileCompletion = getProfileCompletion(user);
   const kycStatus = normalizeStatusLabel(user?.access?.contributor?.kycStatus, "kyc");
   const bankStatus = user?.bankDetails?.accountNumber
@@ -455,8 +323,8 @@ export default function ContributorDashboard() {
       {
         icon: Wallet,
         title: "Total Contributions",
-        value: formatINR(totalContributeed),
-        subtitle: "Amount contributeed from backend records",
+        value: formatINR(totalContributed),
+        subtitle: "Amount contributed from backend records",
         iconWrapClass: "bg-[#f1edff]",
       },
       {
@@ -466,33 +334,21 @@ export default function ContributorDashboard() {
         subtitle: "Live and tracked contributions",
         iconWrapClass: "bg-emerald-100",
       },
-      {
-        icon: IndianRupee,
-        title: "Estimated Returns",
-        value: formatINR(estimatedReturns),
-        subtitle: "Based on campaign return percentages",
-        iconWrapClass: "bg-[#f3efff]",
-      },
+
       {
         icon: Heart,
         title: "Saved Opportunities",
         value: String(savedDeals).padStart(2, "0"),
-        subtitle: "Not available from backend yet",
+        subtitle: "Campaigns saved to your account",
         iconWrapClass: "bg-amber-100",
       },
     ],
-    [activeContributions, estimatedReturns, totalContributeed]
+    [activeContributions, totalContributed, savedDeals]
   );
 
   const firstName = user?.name?.split(" ")[0] || "Contributor";
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#f5f8fc]">
-        <p className="text-lg font-semibold text-slate-700">Loading dashboard...</p>
-      </div>
-    );
-  }
+  if (loading) return <DashboardPlaceholder />;
 
   return (
     <div
@@ -503,58 +359,21 @@ export default function ContributorDashboard() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f5f8fc]">
-        <ContributorSidebar active="dashboard" />
+        {!embedded && <ContributorSidebar active="dashboard" />}
 
         <div className="flex min-w-0 flex-1">
           <main
             className="scrollbar-hide min-w-0 flex-1 overflow-y-auto border-l border-slate-200 bg-[#f5f8fc] px-4 py-4 md:px-5"
             style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
           >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="relative w-full max-w-[380px]">
-                <Search
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search your contributions..."
-                  className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-[#8d7bff] focus:bg-white"
-                />
-              </div>
-
-              <div className="ml-auto flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => navigate("/")}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                >
-                  <Home size={15} />
-                  Home
-                </button>
-                <TopIconButton>
-                  <Mail size={14} />
-                </TopIconButton>
-
-                <TopIconButton>
-                  <Bell size={14} />
-                </TopIconButton>
-
-                <div className="h-6 w-px bg-slate-200" />
-
-                <ProfileDropdown user={user} navigate={navigate} />
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex-1 rounded-[24px] bg-gradient-to-r from-[#6f5cf2] via-[#7b68f4] to-[#8d7bff] px-5 py-5 text-white shadow-sm">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ebe6ff]">
-                   Contributor Dashboard
+                   Contribute Funds Dashboard
                 </p>
 
                 <h1 className="mt-2 text-[22px] font-semibold leading-tight md:text-[24px]">
-                  Track your real contributions, portfolio value, returns and account readiness.
+                  Track your contributions, supported funding campaigns, and account readiness.
                 </h1>
 
                 <div className="mt-2 text-sm text-[#ebe6ff]">
@@ -576,7 +395,7 @@ export default function ContributorDashboard() {
                     onClick={() => navigate("/contributor/portfolio")}
                     className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 active:scale-[0.98]"
                   >
-                    View Portfolio -
+                    View Supported Campaigns
                   </button>
                 </div>
               </div>
@@ -597,7 +416,7 @@ export default function ContributorDashboard() {
             <section className="mt-5 rounded-[24px] bg-[#f5f8fc]">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-[22px] font-semibold tracking-tight text-slate-900">
-                  My Contributions
+                  Campaigns I Supported
                 </h2>
 
                 <button
@@ -612,7 +431,7 @@ export default function ContributorDashboard() {
                 {filteredContributions.length === 0 ? (
                   <div className="rounded-[20px] border border-dashed border-slate-300 bg-white p-8 text-center">
                     <p className="text-lg font-semibold text-slate-800">
-                      No contributions found
+                      No supported campaigns yet
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
                       Your confirmed and pending contributions will appear here.
@@ -639,10 +458,9 @@ export default function ContributorDashboard() {
                           key={contribution?._id}
                           tag={campaign?.projectCategory || "General"}
                           title={campaign?.projectTitle || "Campaign"}
-                          contributeed={formatINR(contribution?.amount)}
+                          contributed={formatINR(contribution?.amount)}
                           target={formatINR(target)}
                           status={normalizeContributionStatus(contribution)}
-                          expectedReturn={getExpectedReturnText(campaign)}
                           progress={progress}
                           onView={() =>
                             campaign?._id
@@ -660,7 +478,7 @@ export default function ContributorDashboard() {
             </section>
           </main>
 
-          <aside className="hidden w-[320px] shrink-0 border-l border-slate-200 bg-white px-4 py-5 xl:block">
+          {!embedded && <aside className="hidden w-[320px] shrink-0 border-l border-slate-200 bg-white px-4 py-5 xl:block">
             <div className="flex items-center justify-between">
               <h3 className="text-[28px] font-semibold tracking-tight text-slate-900">
                 My Contributor Profile
@@ -742,23 +560,17 @@ export default function ContributorDashboard() {
 
             <div className="mt-5 space-y-3">
               <RightMetricCard
-                title="Portfolio Value"
-                value={formatINR(portfolioValue)}
-                sub="Contributeed amount plus estimated returns"
+                title="Total Contributed"
+                value={formatINR(totalContributed)}
+                sub="Confirmed contributions to funding campaigns"
                 icon={BriefcaseBusiness}
                 tone="sky"
               />
-              <RightMetricCard
-                title="Returns Earned"
-                value={formatINR(estimatedReturns)}
-                sub="Estimated from profit-return campaigns"
-                icon={LineChart}
-                tone="emerald"
-              />
+
               <RightMetricCard
                 title="Saved Deals"
                 value={String(savedDeals).padStart(2, "0")}
-                sub="Saved opportunities API not available yet"
+                sub="Campaigns saved to your account"
                 icon={Heart}
                 tone="indigo"
               />
@@ -818,17 +630,15 @@ export default function ContributorDashboard() {
                     </div>
                     <div>
                       <p className="text-[12px] font-medium text-slate-900">
-                        Portfolio Growth
+                        Campaigns Supported
                       </p>
                       <p className="text-[10px] text-slate-500">
-                        Estimated against contributeed capital
+                        Distinct funding campaigns you supported
                       </p>
                     </div>
                   </div>
                   <span className="text-[12px] font-semibold text-emerald-600">
-                    {totalContributeed > 0
-                      ? `+${Math.round((estimatedReturns / totalContributeed) * 100)}%`
-                      : "0%"}
+                    {new Set(contributions.filter((item) => item.paymentStatus === "completed").map((item) => item.campaign?._id)).size}
                   </span>
                 </div>
               </div>
@@ -846,10 +656,10 @@ export default function ContributorDashboard() {
                 onClick={() => navigate("/contributor/portfolio")}
                 fullWidth
               >
-                View My Portfolio
+                View Supported Campaigns
               </PrimaryBlueButton>
             </div>
-          </aside>
+          </aside>}
         </div>
       </div>
     </div>

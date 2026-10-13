@@ -12,7 +12,7 @@ import planIcon from "../assets/plan.png";
 
 const plans = [
   {
-    name: "Donation-Based ",
+    name: "Contribution-Based ",
     desc: "Designed for users who want to support meaningful projects, social causes, or community-driven initiatives without expecting any financial return.",
     min: "₹500",
     return: "No return (support only)",

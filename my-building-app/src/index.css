@@ -101,6 +101,18 @@ html {
   animation-delay: 160ms;
 }
 
+.admin-sidebar a:hover,
+.admin-sidebar a:active,
+.admin-sidebar button:hover,
+.admin-sidebar button:active {
+  transform: none;
+}
+
+.admin-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #0f172a;
+}
+
 .raiser-workspace-content > div > aside:first-child,
 .raiser-workspace-content > div > div > aside:first-child,
 .contributor-workspace-content > div > aside:first-child,
@@ -287,4 +299,46 @@ a:active {
   [class*="rounded-3xl"] ul li:nth-child(n + 4) {
     display: none !important;
   }
+}
+/* Embedded pages fill the persistent dashboard content area, not the viewport. */
+.user-dashboard-content .h-screen {
+  height: 100%;
+}
+
+@media (max-width: 767px) {
+  aside[aria-label="Dashboard navigation"] { width: 56px; padding: 8px 4px; }
+  aside[aria-label="Dashboard navigation"] h2,
+  aside[aria-label="Dashboard navigation"] nav span { display: none; }
+  aside[aria-label="Dashboard navigation"] nav a { justify-content: center; padding: 12px 4px; }
+  aside[aria-label="Dashboard navigation"] > a:first-child { font-size: 11px; text-align: center; }
+  aside[aria-label="Dashboard navigation"] > a:last-child { font-size: 0; justify-content: center; padding: 4px; }
+  aside[aria-label="My profile"] { width: 128px; padding: 8px; }
+  aside[aria-label="My profile"] > h2 { font-size: 16px; }
+  aside[aria-label="My profile"] > a { padding: 12px 4px; }
+}
+
+/* Keep the established funding dashboard card and navigation treatment. */
+aside[aria-label="Dashboard navigation"] nav a[aria-current="page"] .dashboard-nav-icon {
+  background: #6f5cf2;
+  color: white;
+}
+@media (max-width: 767px) {
+  aside[aria-label="Dashboard navigation"] nav .dashboard-nav-icon { display: flex; }
+  .dashboard-profile-panel > a > div:first-child { width: 88px; height: 88px; }
+  .dashboard-profile-panel > a h3 { font-size: 18px; }
+  .dashboard-profile-panel > div a > div { flex-direction: column; align-items: flex-start; }
+  .dashboard-profile-panel > div a p { overflow-wrap: anywhere; }
+}
+
+.dashboard-profile-panel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dashboard-profile-panel::-webkit-scrollbar { display: none; }
+.dashboard-profile-panel p { display: block !important; }
+@media (max-height: 650px) and (min-width: 768px) {
+  .dashboard-profile-panel { padding-top: 12px; padding-bottom: 12px; }
+  .dashboard-profile-panel > a > div:first-child { width: 72px; height: 72px; }
+  .dashboard-profile-panel > a { margin-top: 10px; padding-bottom: 12px; }
+  .dashboard-profile-panel > div { gap: 8px; margin-top: 12px; }
 }

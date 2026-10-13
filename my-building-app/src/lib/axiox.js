@@ -1,5 +1,36 @@
 ﻿import axios from "axios";
 import Cookies from "js-cookie";
+import { cacheDashboardResponse } from "./dashboardCache";
+
+let redirectingToLogin = false;
+
+function expireSession() {
+  Cookies.remove("token");
+  window.__BUILDING_AUTH_TOKEN = "";
+  for (const storage of [localStorage, sessionStorage]) {
+    for (const key of ["token", "user", "loggedInUser", "activeMode"]) {
+      storage.removeItem(key);
+    }
+  }
+  if (!redirectingToLogin) {
+    redirectingToLogin = true;
+    const loginPath = window.location.pathname.startsWith("/admin")
+      ? "/admin/login"
+      : "/login";
+    if (window.location.pathname !== loginPath) window.location.replace(loginPath);
+  }
+}
+
+function isTokenExpired(token) {
+  try {
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const { exp } = JSON.parse(atob(payload));
+    return typeof exp === "number" && exp * 1000 <= Date.now();
+  } catch {
+    // The server remains responsible for verifying malformed or invalid tokens.
+    return false;
+  }
+}
 
 function getAuthToken() {
   const runtimeToken =
@@ -32,12 +63,10 @@ const api = axios.create({
 });
 
 const AUTH_WHITELIST = ["/auth/login", "/auth/register", "/contact/enquiry"]; // endpoints that don't need token
-const PUBLIC_GET_ROUTES = ["/campaigns", "/raiser/all", "/raiser/campaigns"];
+const PUBLIC_GET_ROUTES = ["/campaigns", "/raiser/all", "/raiser/campaigns", "/fundraiser/campaigns", "/raiser/campaigns"];
 
 api.interceptors.request.use(
   (config) => {
-    const token = getAuthToken();
-
     // Skip adding token for whitelisted endpoints
     const isAuthRoute = AUTH_WHITELIST.some((url) => config.url?.includes(url));
     if (isAuthRoute) {
@@ -49,6 +78,14 @@ api.interceptors.request.use(
 
     if (isPublicGet) {
       return config;
+    }
+
+    const token = getAuthToken();
+    if (token && isTokenExpired(token)) {
+      expireSession();
+      const error = new Error("Your session has expired. Please log in again.");
+      error.code = "TOKEN_EXPIRED";
+      return Promise.reject(error);
     }
 
     // If no token and it's not an auth route, block the request
@@ -68,8 +105,15 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => { cacheDashboardResponse(response); return response; },
   (error) => {
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
+      // Ignore a late response from a previous session after a fresh login.
+      const currentToken = getAuthToken();
+      if (currentToken && error.config.headers.Authorization === `Bearer ${currentToken}`) {
+        expireSession();
+      }
+    }
     return Promise.reject(error);
   }
 );

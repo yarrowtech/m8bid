@@ -18,6 +18,14 @@ const {
 const { decodeToken, isAdmin } = require("../middleware/authmiddleware.js");
 
 const router = express.Router();
+const { getWebsiteAnalytics, importWebsiteAnalytics, syncWebsiteSearch } = require("../controllers/adminController/WebsiteAnalytics");
+const { analyticsSections, getAnalyticsSection } = require("../controllers/adminController/WebsiteAnalytics");
+for (const section of analyticsSections) {
+  router.get(`/website-analytics/${section}`, decodeToken, isAdmin, getAnalyticsSection(section));
+}
+router.post("/website-analytics/sync-search", decodeToken, isAdmin, syncWebsiteSearch);
+router.get("/website-analytics", decodeToken, isAdmin, getWebsiteAnalytics);
+router.post("/website-analytics/import", decodeToken, isAdmin, importWebsiteAnalytics);
 
 router.get("/dashboard", decodeToken, isAdmin, AdminDashboard);
 

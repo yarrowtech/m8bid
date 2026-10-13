@@ -9,6 +9,9 @@ import {
 } from "react-router-dom";
 
 //Components
+import AccountSecurity from "./pages/AccountSecurity.jsx";
+import AccountOverview from "./pages/AccountOverview.jsx";
+import UserDashboardLayout from "./components/UserDashboardLayout.jsx";
 import Header from "../src/components/Header.jsx";
 import Hero from "../src/components/Hero.jsx";
 import HowItWorks from "../src/components/HowItWorks.jsx";
@@ -31,7 +34,7 @@ import SEO from "./components/SEO.jsx";
 
 // Pages
 import BrowseContributors from "./pages/BrowseInvestors.jsx";
-import ContributionDetail from "./pages/InvestmentFundDetails.jsx";
+import ContributionDetail from "./pages/InvestmentDetail.jsx";
 import RaisingPage from "./pages/FundraisingPage.jsx";
 import StartRaiser from "./pages/StartAFundraiser.jsx";
 
@@ -43,7 +46,9 @@ import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminUsers from "./components/admin/AdminUsers";
 import AdminCampaigns from "./components/admin/AdminCampaigns";
 import AdminTransactions from "./components/admin/AdminTransaction";
+import AdminContributions from "./components/admin/AdminContributions";
 import AdminAnalytics from "./components/admin/AdminAnalytics";
+import WebsiteAnalytics from "./components/admin/WebsiteAnalytics";
 import AdminUserDetails from "./components/admin/AdminUserDetails";
 
 import PaymentPage from "./pages/PaymentPage.jsx";
@@ -90,7 +95,7 @@ import { RaiserProvider } from "./context/FundraiserContext.jsx";
 function getStoredSession() {
   try {
     const rawUser =
-      localStorage.getItem("user") || localStorage.getItem("loggedInUser");
+      localStorage.getItem("user") || sessionStorage.getItem("user") || localStorage.getItem("loggedInUser");
     const rawToken =
       localStorage.getItem("token") || sessionStorage.getItem("token");
 
@@ -126,11 +131,11 @@ function getModeDashboardPath(user, fallbackMode) {
 function RoleAccessBlocker({ mode, user }) {
   const navigate = useNavigate();
   const title =
-    mode === "contributor" ? "Contributor account needed" : "Raiser account needed";
+    mode === "contributor" ? "Sign in to your account" : "Sign in to your account";
   const message =
     mode === "contributor"
-      ? "You need to login or register as an contributor to access this page."
-      : "You need to login or register as a raiser to access this page.";
+      ? "Sign in to your MateBid account to continue."
+      : "Sign in to your MateBid account to continue.";
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -153,12 +158,17 @@ function RequireMode({ mode, children }) {
     return <RoleAccessBlocker mode={mode} user={user} />;
   }
 
-  if (!user?.access?.[mode]?.enabled) {
-    return <RoleAccessBlocker mode={mode} user={user} />;
-  }
 
-  if (user?.activeMode !== mode) {
-    return <RoleAccessBlocker mode={mode} user={user} />;
+
+  return children;
+}
+
+function RequireAdmin({ children }) {
+  const location = useLocation();
+  const { user, token } = getStoredSession();
+
+  if (!token || user?.role !== "admin") {
+    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   }
 
   return children;
@@ -180,7 +190,7 @@ function RequireAccountMode({ mode, children }) {
     return children;
   }
 
-  if (!token || !user || !user?.access?.[mode]?.enabled || user?.activeMode !== mode) {
+  if (!token || !user) {
     return <RoleAccessBlocker mode={mode} user={user} />;
   }
 
@@ -203,78 +213,12 @@ function getContributorSidebarActive(pathname) {
   return "dashboard";
 }
 
-function RaiserWorkspaceRoutes() {
-  const location = useLocation();
-  const routeKey = `${location.pathname}${location.search}${location.hash}`;
-
-  return (
-    <div className="h-screen w-full bg-[#e3e8f0] text-slate-900">
-      <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <RaiserSidebar active={getRaiserSidebarActive(location.pathname)} />
-
-        <PageTransition
-          routeKey={routeKey}
-          className="raiser-workspace-content flex min-w-0 flex-1"
-        >
-          <Routes>
-            <Route path="dashboard" element={<RaiserDashboard embedded />} />
-            <Route
-              path="company/dashboard"
-              element={<CompanyRaiserDashboard embedded />}
-            />
-            <Route path="campaigns" element={<RaiserCampaigns embedded />} />
-            <Route path="analytics" element={<RaiserAnalytics embedded />} />
-            <Route path="withdrawals" element={<RaiserWithdrawals embedded />} />
-            <Route path="profile" element={<RaiserProfile embedded />} />
-            <Route path="profile/kyc" element={<RaiserKYC embedded />} />
-            <Route path="profile/bank" element={<RaiserBank embedded />} />
-          </Routes>
-        </PageTransition>
-      </div>
-    </div>
-  );
-}
-
-function ContributorWorkspaceRoutes() {
-  const location = useLocation();
-  const routeKey = `${location.pathname}${location.search}${location.hash}`;
-
-  return (
-    <div className="h-screen w-full bg-[#e3e8f0] text-slate-900">
-      <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <ContributorSidebar active={getContributorSidebarActive(location.pathname)} />
-
-        <PageTransition
-          routeKey={routeKey}
-          className="contributor-workspace-content flex min-w-0 flex-1"
-        >
-          <Routes>
-            <Route path="dashboard" element={<ContributorDashboard />} />
-            <Route path="company/dashboard" element={<CompanyContributorDashboard />} />
-            <Route path="portfolio" element={<ContributorPortfolio />} />
-            <Route path="analytics" element={<ContributorAnalytics />} />
-            <Route path="transactions" element={<ContributorTransactions />} />
-            <Route path="profile" element={<ContributorProfile />} />
-            <Route path="profile/kyc" element={<ContributorKyc />} />
-            <Route path="profile/bank" element={<ContributorBank />} />
-          </Routes>
-        </PageTransition>
-      </div>
-    </div>
-  );
-}
-
 function AppRoutes({ loggedInUser, setLoggedInUser }) {
   const location = useLocation();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isRaiserWorkspaceRoute = location.pathname.startsWith("/raiser/");
-  const isContributorWorkspaceRoute = location.pathname.startsWith("/contributor/");
-  const appTransitionKey = isRaiserWorkspaceRoute
-    ? "raiser-workspace"
-    : isContributorWorkspaceRoute
-    ? "contributor-workspace"
-    : `${location.pathname}${location.search}${location.hash}`;
+  const isUserDashboardRoute = ["/dashboard", "/account", "/raiser/", "/contributor/"].some((path) => location.pathname === path || location.pathname.startsWith(path.endsWith("/") ? path : `${path}/`));
+  const appTransitionKey = isAdminRoute ? "admin-workspace" : isUserDashboardRoute ? "user-dashboard" : `${location.pathname}${location.search}${location.hash}`;
 
   const hideHeaderRoutes = [
     "/raiser/dashboard",
@@ -297,7 +241,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
   ];
 
   const shouldHideHeader =
-    isAdminRoute ||
+    isAdminRoute || isUserDashboardRoute ||
     hideHeaderRoutes.some((route) => location.pathname.startsWith(route));
 
   return (
@@ -311,7 +255,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         />
       )}
 
-      <PageTransition routeKey={appTransitionKey}>
+      <PageTransition routeKey={appTransitionKey} disabled={isAdminRoute || isUserDashboardRoute}>
       <Routes>
         {/* Home */}
         <Route
@@ -321,7 +265,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
               <SEO
                 title="MateBid / M8BID Crowdfunding Platform for Startups, Businesses & Causes"
                 description="MateBid, also known as M8BID, is India's professional crowdfunding platform for raising, funding, and contributing to verified startup, business, NGO, and cause campaigns."
-                keywords="MateBid, matebid, M8BID, m8bid, MateBid raising, MateBid contributing, MateBid funding, crowdfunding platform India, startup raising, raise funds online, business crowdfunding, NGO raising, donation crowdfunding, contribute to campaigns, verified campaigns, campaign funding, crowdfunding for education, medical crowdfunding"
+                keywords="MateBid, matebid, M8BID, m8bid, MateBid raising, MateBid contributing, MateBid funding, crowdfunding platform India, startup raising, raise funds online, business crowdfunding, NGO raising, contribution-based funding, contribute to campaigns, verified campaigns, campaign funding, crowdfunding for education, medical crowdfunding"
                 canonical="/"
                 jsonLd={{
                   "@context": "https://schema.org",
@@ -418,6 +362,27 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
           element={<LoginPage setLoggedInUser={setLoggedInUser} />}
         />
         <Route path="/register" element={<RegisterPage />} />
+        <Route element={<RequireMode><UserDashboardLayout /></RequireMode>}>
+          <Route path="/dashboard" element={<AccountOverview />} />
+          <Route path="/account" element={<ContributorProfile embedded />} />
+          <Route path="/account/security" element={<AccountSecurity />} />
+          <Route path="/raiser/dashboard" element={<RaiserDashboard embedded />} />
+          <Route path="/raiser/company/dashboard" element={<CompanyRaiserDashboard embedded />} />
+          <Route path="/raiser/campaigns" element={<RaiserCampaigns embedded />} />
+          <Route path="/raiser/analytics" element={<RaiserAnalytics embedded />} />
+          <Route path="/raiser/withdrawals" element={<RaiserWithdrawals embedded />} />
+          <Route path="/raiser/profile" element={<ContributorProfile embedded />} />
+          <Route path="/raiser/profile/kyc" element={<ContributorKyc embedded />} />
+          <Route path="/raiser/profile/bank" element={<ContributorBank embedded />} />
+          <Route path="/contributor/dashboard" element={<ContributorDashboard embedded />} />
+          <Route path="/contributor/company/dashboard" element={<CompanyContributorDashboard embedded />} />
+          <Route path="/contributor/portfolio" element={<ContributorPortfolio />} />
+          <Route path="/contributor/analytics" element={<ContributorAnalytics />} />
+          <Route path="/contributor/transactions" element={<ContributorTransactions embedded />} />
+          <Route path="/contributor/profile" element={<ContributorProfile embedded />} />
+          <Route path="/contributor/profile/kyc" element={<ContributorKyc embedded />} />
+          <Route path="/contributor/profile/bank" element={<ContributorBank embedded />} />
+        </Route>
 
         {/* Public pages */}
         <Route
@@ -431,7 +396,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         />
 
         <Route
-          path="/contribution-detail/:id"
+          path="/contribution-detail/:id?"
           element={<ContributionDetail />}
         />
 
@@ -445,24 +410,13 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
           }
         />
 
-        <Route path="/select-account-mode" element={<SelectAccountMode />} />
+        <Route path="/select-account-mode" element={<Navigate to="/dashboard" replace />} />
 
         
         <Route
-          path="/raiser/*"
-          element={
-            <RequireMode mode="raiser">
-              <RaiserWorkspaceRoutes />
-            </RequireMode>
-          }
-        />
-
-        <Route
           path="/supporter-space"
           element={
-            <RequireAccountMode mode="contributor">
-              <SupporterSpace />
-            </RequireAccountMode>
+            <SupporterSpace />
           }
         />
         <Route
@@ -495,41 +449,31 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/return-based-options"
           element={
-            <RequireAccountMode mode="contributor">
-              <ReturnBasedOptions />
-            </RequireAccountMode>
+            <ReturnBasedOptions />
           }
         />
         <Route
           path="/verified-opportunities"
           element={
-            <RequireAccountMode mode="contributor">
-              <VerifiedOpportunities />
-            </RequireAccountMode>
+            <VerifiedOpportunities />
           }
         />
         <Route
           path="/business-campaigns"
           element={
-            <RequireAccountMode mode="contributor">
-              <BusinessCampaigns />
-            </RequireAccountMode>
+            <BusinessCampaigns />
           }
         />
         <Route
           path="/cause-based-funding"
           element={
-            <RequireAccountMode mode="raiser">
-              <CauseBasedFunding />
-            </RequireAccountMode>
+            <CauseBasedFunding />
           }
         />
         <Route
           path="/raising-ideas"
           element={
-            <RequireAccountMode mode="raiser">
-              <RaisingIdeas />
-            </RequireAccountMode>
+            <RaisingIdeas />
           }
         />
         <Route
@@ -553,10 +497,7 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route
           path="/raising-causes/:causeSlug"
           element={
-            <RequireAccountMode mode="raiser">
-              <RaisingCauseTopicPage />
-              <Footer />
-            </RequireAccountMode>
+            <><RaisingCauseTopicPage /><Footer /></>
           }
         />
 
@@ -580,11 +521,13 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
         <Route path="/payment-success" element={<PaymentSuccess />} />
 
 
-<Route path="/contributor/*" element={<RequireMode mode="contributor"><ContributorWorkspaceRoutes /></RequireMode>} />
+
 
         {/* Admin routes */}
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin/login" element={<LoginPage adminOnly setLoggedInUser={setLoggedInUser} />} />
+        <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
           <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="contributions" element={<AdminContributions />} />
           <Route path="dashboard" element={<AdminDashboard />} />
 
           {/* USERS */}
@@ -599,6 +542,8 @@ function AppRoutes({ loggedInUser, setLoggedInUser }) {
 
           {/* ANALYTICS */}
           <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="website-analytics" element={<WebsiteAnalytics />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
       </Routes>
       </PageTransition>
@@ -610,7 +555,7 @@ export default function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const { user } = getStoredSession();
     if (user) {
       setLoggedInUser(user);
     }

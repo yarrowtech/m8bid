@@ -10,7 +10,7 @@ const testimonials = [
     name: "Priya R.",
     role: "Retail Contributor",
     comment:
-      "Contributing here has been seamless and profitable. The platform is easy to use, and my returns are consistent.",
+      "The platform makes it easy to discover funding campaigns and keep track of my contributions.",
     image: contributor1,
   },
   {

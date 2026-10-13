@@ -1,10 +1,11 @@
+const { normalizeUser } = require("../utils/unifiedUser");
 // controllers/fundraiser.js
 const mongoose = require("mongoose");
 const Fundraiser = require("../models/Fundraiser");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 const User = require("../models/userSchema");
 
-const ALLOWED_FUNDING_TYPES = ["Profit Return", "Non-Profit Return"];
+const ALLOWED_FUNDING_TYPES = ["Contribution"];
 const ALLOWED_CAMPAIGN_TYPES = ["ngo", "business", "medical", "education", "company", "startup", "project"];
 const ALLOWED_BUSINESS_VARIANTS = ["small-business", "food-business", "normal-business", "custom"];
 
@@ -187,15 +188,12 @@ const createFundRaiser = async (req, res) => {
     const projectCategory = (req.body.projectCategory || "").trim();
     const entityName = (req.body.entityName || "").trim();
     const useOfFunds = (req.body.useOfFunds || "").trim();
-    const fundingType = (req.body.fundingType || "").trim();
+    const fundingType = "Contribution";
     const introduction = (req.body.introduction || "").trim();
 
     const moneyToRaise = toNum(req.body.moneyToRaise, 0);
     const daysToRaise = toNum(req.body.daysToRaise, 0);
-    const profitPercentage =
-      fundingType === "Profit Return"
-        ? toNum(req.body.profitPercentage, 0)
-        : 0;
+
 
     if (!projectTitle) {
       return res.status(400).json({
@@ -270,12 +268,7 @@ const createFundRaiser = async (req, res) => {
       });
     }
 
-    if (fundingType === "Profit Return" && profitPercentage < 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Profit percentage cannot be negative",
-      });
-    }
+
 
     const requiredDocs = getRequiredDocuments(campaignType, campaignSubcategory || projectCategory);
     const missingRequiredDoc = requiredDocs.find((field) => !files?.[field]?.[0]);
@@ -318,7 +311,6 @@ const createFundRaiser = async (req, res) => {
       moneyToRaise,
       daysToRaise,
       fundingType,
-      profitPercentage,
       introduction,
 
       promotion: req.body.promotion === "yes" ? "yes" : "no",
@@ -425,6 +417,9 @@ const getFundraisersByUser = async (req, res) => {
       });
     }
 
+    if (req.user.role !== "admin" && String(userId) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: "You can only view your own campaign dashboard" });
+    }
     const data = await Fundraiser.find({ userId })
       .populate("userId", "name email")
       .sort({ createdAt: -1 })
@@ -445,7 +440,7 @@ const getFundraisersByUser = async (req, res) => {
 
 const getAllFundraisers = async (req, res) => {
   try {
-    const query = { status: "approved" };
+    const query = { status: { $in: ["pending", "approved", "completed"] } };
 
     if (req.query.category) {
       query.projectCategory = new RegExp(escapeRegex(req.query.category), "i");
@@ -524,6 +519,12 @@ const deleteFundraiserById = async (req, res) => {
       });
     }
 
+    if (req.user.role !== "admin" && String(fundraiser.userId) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: "You can only delete your own funding campaign" });
+    }
+    if (await require("../models/Contribution").exists({ campaign: id })) {
+      return res.status(409).json({ success: false, message: "A campaign with contribution history cannot be deleted" });
+    }
     await Fundraiser.findByIdAndDelete(id);
 
     return res.status(200).json({
@@ -605,7 +606,7 @@ const updateFundraiserKYC = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "KYC updated successfully",
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("KYC UPDATE ERROR:", err);
@@ -666,7 +667,7 @@ const updateFundraiserBank = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Bank details updated successfully",
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("BANK UPDATE ERROR:", err);
@@ -690,7 +691,7 @@ const getFundraiserProfile = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("PROFILE ERROR:", err);
@@ -743,7 +744,7 @@ const deleteFundraiserDocument = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: `${type} deleted successfully`,
-      data: user,
+      data: normalizeUser(user),
     });
   } catch (err) {
     console.error("DELETE DOCUMENT ERROR:", err);

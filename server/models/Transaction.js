@@ -19,7 +19,7 @@ const transactionSchema = new mongoose.Schema(
 
     campaign: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Campaign",
+      ref: "Fundraiser",
       default: null,
       index: true,
     },
@@ -42,6 +42,7 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       enum: [
         "investment",
+        "contribution",
         "refund",
         "payout",
         "platform_fee",
@@ -49,7 +50,7 @@ const transactionSchema = new mongoose.Schema(
         "other",
       ],
       required: true,
-      default: "investment",
+      default: "contribution",
       index: true,
     },
 

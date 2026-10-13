@@ -42,9 +42,26 @@ const decodeToken = async (req, res, next) => {
       });
     }
 
+    if (user.accountStatus === "disabled") {
+      return res.status(401).json({ success: false, message: "This account has been disabled. Contact support." });
+    }
     req.user = user;
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        code: "TOKEN_EXPIRED",
+        message: "Your session has expired. Please log in again.",
+      });
+    }
+    if (error.name === "JsonWebTokenError" || error.name === "NotBeforeError") {
+      return res.status(401).json({
+        success: false,
+        code: "INVALID_TOKEN",
+        message: "Invalid session. Please log in again.",
+      });
+    }
     console.error("Token verification failed:", error);
 
     return res.status(401).json({
@@ -76,14 +93,6 @@ const requireAccess = (mode) => {
       });
     }
 
-    if (!req.user.access?.[mode]?.enabled) {
-      return res.status(403).json({
-        success: false,
-        code: "ACCESS_NOT_ENABLED",
-        message: `You need a ${mode} account to perform this action`,
-      });
-    }
-
     next();
   };
 };
@@ -91,10 +100,16 @@ const requireAccess = (mode) => {
 const requireInvestor = requireAccess("investor");
 const requireFundraiser = requireAccess("fundraiser");
 
+const requireVerifiedIdentity = (req, res, next) => {
+  const status = req.user?.kycStatus || req.user?.access?.investor?.kycStatus || req.user?.access?.fundraiser?.kycStatus;
+  if (status !== "VERIFIED") return res.status(403).json({ success: false, code: "VERIFICATION_REQUIRED", message: "Complete your account identity verification before contributing funds" });
+  next();
+};
+
 const requireInvestorVerification = (req, res, next) => {
   const investor = req.user?.access?.investor;
 
-  if (!investor?.enabled) {
+  if (!investor) {
     return res.status(403).json({
       success: false,
       code: "ACCESS_NOT_ENABLED",
@@ -120,7 +135,7 @@ const requireInvestorVerification = (req, res, next) => {
 const requireFundraiserVerification = (req, res, next) => {
   const fundraiser = req.user?.access?.fundraiser;
 
-  if (!fundraiser?.enabled) {
+  if (!fundraiser) {
     return res.status(403).json({
       success: false,
       code: "ACCESS_NOT_ENABLED",
@@ -160,6 +175,7 @@ module.exports = {
   isAdmin,
   requireInvestor,
   requireFundraiser,
+  requireVerifiedIdentity,
   requireInvestorVerification,
   requireFundraiserVerification,
 };

@@ -31,10 +31,16 @@ app.get("/", (req, res) => {
 
 // Routes
 app.use("/api/auth", authRoutes); // Authentication Routes
+app.use("/api/raiser", fundRaiserRouter);
 app.use("/api/fundraiser", fundRaiserRouter); // Correct endpoint for fundraisers
+app.use("/api/contributor", investorRouter);
+app.use("/api/account", require("./routes/account"));
+app.use("/api/account", investorRouter);
 app.use("/api/investor", investorRouter); // Investor Routes
 app.use("/api/campaigns", CampaignRouter); // Campaigns Routes
 app.use("/api/admin", decodeToken, isAdmin, adminRoutes); // Admin Routes
+app.use("/api/contributions", investmentRoutes);
+app.use("/api/admin/contributions", require("./routes/contributionAdmin"));
 app.use("/api/investments", investmentRoutes);
 app.use("/api/contact", contactRoutes);
 

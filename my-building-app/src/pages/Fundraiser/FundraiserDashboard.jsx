@@ -1,5 +1,7 @@
-﻿import React, { useMemo, useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import { readDashboardCache } from "../../lib/dashboardCache";
+import DashboardPlaceholder from "../../components/DashboardPlaceholder";
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   Search,
   Mail,
@@ -24,13 +26,6 @@ import {
   getFundraiserProfile,
 } from "../../api/fundraiser.api";
 
-function TopIconButton({ children }) {
-  return (
-    <button className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50">
-      {children}
-    </button>
-  );
-}
 
 function PrimaryBlueButton({
   children,
@@ -183,96 +178,6 @@ function RightMetricCard({ title, value, sub, icon: Icon, tone = "sky" }) {
   );
 }
 
-function ProfileDropdown({ user, navigate }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-full px-1.5 py-1 transition hover:bg-white"
-      >
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 to-indigo-200 text-[11px] font-semibold text-slate-800">
-          {user?.name?.charAt(0) || "J"}
-        </div>
-
-        <div className="hidden text-left md:block">
-          <p className="text-[13px] font-medium text-slate-900">
-            {user?.name || "Raiser"}
-          </p>
-        </div>
-
-        <ChevronDown size={14} className="text-slate-400" />
-      </button>
-
-      {open ? (
-        <div className="absolute right-0 top-[110%] z-30 w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-          <button
-            onClick={() => navigate("/raiser/profile/kyc")}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
-              <FileCheck size={17} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Update your KYC & Documents
-              </p>
-              <p className="text-[11px] text-slate-400">
-                Upload Raiser required documents
-              </p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate("/raiser/profile/bank")}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-              <Landmark size={17} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Link your Bank Account Here
-              </p>
-              <p className="text-[11px] text-slate-400">
-                Add payout and withdrawal details
-              </p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate("/raiser/profile")}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
-              <Settings size={17} />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Profile Settings
-              </p>
-              <p className="text-[11px] text-slate-400">
-                Manage your Raiser account
-              </p>
-            </div>
-          </button>
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 const formatINR = (amount) => {
   const n = Number(amount || 0);
@@ -320,15 +225,15 @@ export default function RaiserDashboard({ embedded = false }) {
   const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [user, setUser] = useState(localUser || null);
-  const [raisers, setRaisers] = useState([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const cached = readDashboardCache(`/raiser/raiser/${localUser?._id || localUser?.id}`);
+  const [raisers, setRaisers] = useState(cached?.data || []);
+  const { search = "" } = useOutletContext() || {};
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        setLoading(true);
         setError("");
 
         const userId = localUser?._id || localUser?.id;
@@ -438,13 +343,7 @@ export default function RaiserDashboard({ embedded = false }) {
 
   const firstName = user?.name?.split(" ")[0] || "Raiser";
 
-  if (loading) {
-    return (
-      <div className="flex h-screen flex-1 items-center justify-center bg-[#f5f8fc]">
-        <p className="text-lg font-semibold text-slate-700">Loading dashboard...</p>
-      </div>
-    );
-  }
+  if (loading) return <DashboardPlaceholder />;
 
   const content = (
     <div className="flex min-w-0 flex-1">
@@ -452,48 +351,10 @@ export default function RaiserDashboard({ embedded = false }) {
         className="min-w-0 flex-1 overflow-y-auto border-l border-slate-200 bg-[#f5f8fc] px-4 py-4 scrollbar-hide md:px-5"
         style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative w-full max-w-[380px]">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search your campaigns..."
-              className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:bg-white"
-            />
-          </div>
-
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => navigate("/")}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              <Home size={15} />
-              Home
-            </button>
-
-            <TopIconButton>
-              <Mail size={14} />
-            </TopIconButton>
-
-            <TopIconButton>
-              <Bell size={14} />
-            </TopIconButton>
-
-            <div className="h-6 w-px bg-slate-200" />
-
-            <ProfileDropdown user={user} navigate={navigate} />
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4">
           <div className="flex-1 rounded-[24px] bg-gradient-to-r from-sky-600 to-indigo-600 px-5 py-5 text-white shadow-sm">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-100">
-              Raiser Dashboard
+              Raise Funds Dashboard
             </p>
 
             <h1 className="mt-2 text-[22px] font-semibold leading-tight md:text-[24px]">
@@ -592,7 +453,7 @@ export default function RaiserDashboard({ embedded = false }) {
         </section>
       </main>
 
-      <aside className="hidden w-[320px] shrink-0 border-l border-slate-200 bg-white px-4 py-5 xl:block">
+      {!embedded && <aside className="hidden w-[320px] shrink-0 border-l border-slate-200 bg-white px-4 py-5 xl:block">
         <div className="flex items-center justify-between">
           <h3 className="text-[28px] font-semibold tracking-tight text-slate-900">
             My Raiser Profile
@@ -669,7 +530,7 @@ export default function RaiserDashboard({ embedded = false }) {
             Link Bank Account
           </PrimaryBlueButton>
         </div>
-      </aside>
+      </aside>}
     </div>
   );
 

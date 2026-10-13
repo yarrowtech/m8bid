@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { getCampaignById } from "../api/fundraiser.api";
+import api from "../lib/axiox";
 import sampleImg from "../assets/fundraising-example.jpg";
 import AccessModeModal from "../components/AccessModeModal.jsx";
 
@@ -226,6 +227,36 @@ export default function ContributionDetail() {
     !state?.campaign && Boolean(id)
   );
   const [campaignError, setCampaignError] = useState("");
+  const [savedCampaign, setSavedCampaign] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [savingCampaign, setSavingCampaign] = useState(false);
+  useEffect(() => {
+    let stored;
+    try { stored = JSON.parse(localStorage.getItem("user") || "{}"); } catch { stored = {}; }
+    setSavedCampaign((stored.savedCampaigns || []).some((entry) => String(entry?._id || entry) === String(id || state?.campaign?._id)));
+    setSaveMessage("");
+  }, [id, state?.campaign?._id]);
+  const toggleSavedCampaign = async () => {
+    if (!localStorage.getItem("token") && !sessionStorage.getItem("token")) { navigate("/login"); return; }
+    const campaignId = id || campaignData?._id;
+    if (!campaignId || savingCampaign) return;
+    setSavingCampaign(true);
+    try {
+      if (savedCampaign) await api.delete(`/account/saved-campaigns/${campaignId}`);
+      else await api.put(`/account/saved-campaigns/${campaignId}`);
+      setSavedCampaign(!savedCampaign);
+      setSaveMessage(savedCampaign ? "Campaign removed from saved campaigns." : "Campaign saved to your account.");
+      for (const storage of [localStorage, sessionStorage]) {
+        try {
+          const user = JSON.parse(storage.getItem("user") || "{}");
+          user.savedCampaigns = (user.savedCampaigns || []).filter((entry) => String(entry?._id || entry) !== String(campaignId));
+          if (!savedCampaign) user.savedCampaigns.push(campaignId);
+          storage.setItem("user", JSON.stringify(user));
+        } catch { /* The API remains the source of saved campaigns. */ }
+      }
+    } catch (error) { setSaveMessage(error.response?.data?.message || "Unable to save campaign. Please retry."); }
+    finally { setSavingCampaign(false); }
+  };
   const hasContributorAccess = useMemo(() => {
     try {
       const rawUser =
@@ -236,7 +267,7 @@ export default function ContributionDetail() {
       if (!rawUser || !rawToken) return false;
 
       const user = JSON.parse(rawUser);
-      return Boolean(user?.access?.contributor?.enabled);
+      return Boolean(user);
     } catch {
       return false;
     }
@@ -371,13 +402,11 @@ export default function ContributionDetail() {
     campaign?.category,
     "General"
   );
-  const campaignType = pickFirst(campaign?.campaignType, "").toString().toLowerCase();
+  const campaignType = String(campaign?.campaignType || "").toLowerCase();
   const campaignSubcategory = pickFirst(campaign?.campaignSubcategory, "");
   const entityName = pickFirst(campaign?.entityName, campaign?.organizationName, campaign?.businessName, "");
   const useOfFunds = pickFirst(campaign?.useOfFunds, "");
 
-  const fundingType = pickFirst(campaign?.fundingType, "Donation Based");
-  const profitPercentage = pickFirst(campaign?.profitPercentage, 0);
   const daysToRaise = pickFirst(campaign?.daysToRaise, 0);
   const minContribution = pickFirst(
     campaign?.minContribution,
@@ -517,14 +546,6 @@ export default function ContributionDetail() {
       },
       { label: "Entity Name", value: entityName || companyName || "-" },
       { label: "Campaign Category", value: category },
-      { label: "Funding Type", value: fundingType },
-      {
-        label: "Expected Return",
-        value:
-          fundingType === "Profit Return"
-            ? `${profitPercentage || 0}%`
-            : "Not Applicable",
-      },
       {
         label: "Minimum Contribution",
         value: minContribution ? INR(minContribution) : "Flexible",
@@ -540,8 +561,6 @@ export default function ContributionDetail() {
     ];
   }, [
     category,
-    fundingType,
-    profitPercentage,
     minContribution,
     daysToRaise,
     city,
@@ -721,6 +740,7 @@ export default function ContributionDetail() {
   }, [lightboxOpen, nextImg, prevImg]);
 
   const handleDonateClick = () => {
+    if (campaign?.status !== "approved") return;
     if (!hasContributorAccess) {
       setContributeAccessOpen(true);
       return;
@@ -947,9 +967,8 @@ export default function ContributionDetail() {
             <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-blue-700">
               {category}
             </span>
-            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-indigo-700">
-              {fundingType}
-            </span>
+            <button type="button" onClick={toggleSavedCampaign} disabled={savingCampaign} aria-pressed={savedCampaign} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50">{savingCampaign ? "Saving…" : savedCampaign ? "Saved Campaign" : "Save Campaign"}</button>
+            {saveMessage && <p role="status" className="text-sm text-slate-600">{saveMessage}</p>}
             <button
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
               onClick={() => {
@@ -1057,21 +1076,8 @@ export default function ContributionDetail() {
                       {companyName}
                     </h3>
                   </div>
-                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-indigo-700">
-                    {fundingType}
-                  </span>
                 </div>
 
-                {fundingType === "Profit Return" && (
-                  <div className="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-indigo-700">
-                      Profit Return
-                    </p>
-                    <p className="mt-1.5 text-base font-semibold text-indigo-900">
-                      Expected Return: {profitPercentage || 0}%
-                    </p>
-                  </div>
-                )}
 
                 <p className="mt-4 line-clamp-[8] whitespace-pre-line text-[14px] leading-7 text-slate-700">
                   {companyText}
@@ -1165,10 +1171,11 @@ export default function ContributionDetail() {
             <div className="mt-4 grid grid-cols-1 gap-3">
               <button
                 onClick={handleDonateClick}
+                disabled={campaign?.status !== "approved"}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-4 py-3.5 text-sm font-bold tracking-wide text-white shadow-[0_14px_30px_-8px_rgba(79,70,229,0.5)] transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
               >
                 <Wallet className="h-4 w-4" />
-                Donate / Contribute
+                {campaign?.status === "pending" ? "Awaiting Approval" : campaign?.status === "approved" ? "Contribute Funds" : "Campaign Closed"}
               </button>
               <div className="relative">
                 <button
@@ -1262,6 +1269,7 @@ export default function ContributionDetail() {
             <p className="whitespace-pre-line text-[13.5px] leading-7 text-slate-700">
               {projectText}
             </p>
+            {campaign?.updates?.length > 0 && <div className="mt-6"><h3 className="text-lg font-bold text-slate-900">Campaign Updates</h3><ul className="mt-3 space-y-3">{campaign.updates.slice().reverse().map((entry, index) => <li key={entry._id || index} className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">{new Date(entry.date).toLocaleDateString("en-IN")}</p><p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">{entry.message}</p></li>)}</ul></div>}
           </SectionCard>
 
           <SectionCard
@@ -1508,7 +1516,8 @@ export default function ContributionDetail() {
                       <button
                         onClick={() => {
                           if (item.original) {
-                            navigate("/contribution-detail", {
+                            const campaignId = item.original._id || item.original.id;
+                            navigate(campaignId ? `/contribution-detail/${campaignId}` : "/contribution-detail", {
                               state: { campaign: item.original },
                             });
                           }
@@ -1528,8 +1537,8 @@ export default function ContributionDetail() {
         open={contributeAccessOpen}
         onClose={() => setContributeAccessOpen(false)}
         onLogin={() => navigate("/login")}
-        title="Contributor account needed"
-        message="You need to login or create a contributor account to donate or contribute in this campaign."
+        title="Sign in to continue"
+        message="Sign in to your MateBid account to contribute to this funding campaign."
         buttonLabel="Go to Login"
       />
       </div>

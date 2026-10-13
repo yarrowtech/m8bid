@@ -68,7 +68,7 @@ const sections = [
     icon: BarChart3,
     title: "What makes supporter space valuable",
     points: [
-      "It provides a dedicated area for people who are not necessarily looking for financial return, but still want transparency and accountability.",
+      "It gives supporters a place to understand funding campaigns and follow their progress.",
       "It helps explain campaign mechanics in a simpler way for new users.",
       "It encourages confidence through knowledge, not just promotion.",
       "It supports long-term engagement by giving supporters updates, clarity, and a stronger sense of campaign connection.",
@@ -82,8 +82,8 @@ const faqs = [
     a: "Supporter Space is for users who want to contribute to campaigns, understand how funding works on the platform, and follow campaign progress with more confidence.",
   },
   {
-    q: "Does supporter space only apply to donation-style campaigns?",
-    a: "Not necessarily. It mainly supports users who want to understand and engage with campaigns from a supporter perspective, even if the campaign structure varies.",
+    q: "How does Supporter Space help me contribute?",
+    a: "It explains how funding campaigns work, how to contribute, and how to follow campaign updates.",
   },
   {
     q: "What should a supporter expect after contributing?",
@@ -153,10 +153,10 @@ export default function SupporterSpace() {
                 },
                 {
                   "@type": "Question",
-                  name: "Does supporter space only apply to donation-style campaigns?",
+                  name: "How does Supporter Space help me contribute?",
                   acceptedAnswer: {
                     "@type": "Answer",
-                    text: "Not necessarily. It mainly supports users who want to understand and engage with campaigns from a supporter perspective, even if the campaign structure varies.",
+                    text: "It explains how funding campaigns work, how to contribute, and how to follow campaign updates.",
                   },
                 },
                 {

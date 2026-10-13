@@ -6,7 +6,8 @@ const getAllCampaigns = async (req, res) => {
   try {
     // ✅ Public page: show only approved if you want
     // const filter = { status: "approved" };
-    const filter = {};
+    // Shared public catalogue: authentication must never add an owner filter.
+    const filter = { status: { $in: ["pending", "approved", "completed"] } };
 
     const campaigns = await Campaign.find(filter)
       .populate("userId", "name email")

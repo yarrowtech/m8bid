@@ -11,13 +11,13 @@ function StatCard({ title, value, sub }) {
   );
 }
 
-export default function CompanyRaiserDashboard() {
+export default function CompanyRaiserDashboard({ embedded = false }) {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50">
-      <RaiserSidebar active="dashboard" />
+      {!embedded && <RaiserSidebar active="dashboard" />}
       <main className="flex-1 overflow-y-auto px-4 py-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">

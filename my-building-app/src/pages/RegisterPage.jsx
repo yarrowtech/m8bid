@@ -12,7 +12,6 @@ export default function RegisterPage() {
     phone: "",
     password: "",
     confirmPassword: "",
-    accountMode: "contributor",
   });
 
   const [error, setError] = useState("");
@@ -57,7 +56,6 @@ export default function RegisterPage() {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        accountMode: formData.accountMode,
       };
 
       const res = await registerUser(payload);
@@ -87,7 +85,7 @@ export default function RegisterPage() {
               <span className="block text-yellow-300">Start securely.</span>
             </h1>
             <p className="mt-5 text-slate-300 leading-7">
-              Register once and continue through the correct login flow for your account.
+              Register once to raise funds, contribute to funding campaigns, and manage your account.
             </p>
           </div>
         </div>
@@ -112,39 +110,7 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleRegister} className="mt-8 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Register as
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, accountMode: "contributor" }))
-                    }
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.accountMode === "contributor"
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    Contributor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, accountMode: "raiser" }))
-                    }
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.accountMode === "raiser"
-                        ? "border-yellow-400 bg-yellow-300 text-slate-900"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    Raiser
-                  </button>
-                </div>
-              </div>
+              <p className="text-sm text-slate-600">One account to Raise Funds and Contribute Funds.</p>
 
               <input
                 type="text"

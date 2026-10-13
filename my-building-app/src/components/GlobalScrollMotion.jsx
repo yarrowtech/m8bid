@@ -16,10 +16,13 @@ export default function GlobalScrollMotion() {
   const location = useLocation();
 
   useEffect(() => {
+    if (["/admin", "/dashboard", "/account", "/raiser", "/contributor"].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))) {
+      return undefined;
+    }
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     if (reduceMotion) return undefined;
 
-    const seen = new WeakSet();
+    const seen = new Set();
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -34,7 +37,7 @@ export default function GlobalScrollMotion() {
       const attachTargets = () => {
         const targets = document.querySelectorAll(MOTION_SELECTOR);
         targets.forEach((node, idx) => {
-          if (seen.has(node)) return;
+          if (seen.has(node) || node.closest("[data-scroll-motion-disabled]")) return;
           seen.add(node);
           node.classList.add("motion-target");
           const explicitDelay = Number(node.getAttribute("data-motion-delay"));
@@ -53,6 +56,10 @@ export default function GlobalScrollMotion() {
     return () => {
       mutationObserver.disconnect();
       observer.disconnect();
+      seen.forEach((node) => {
+        node.classList.remove("motion-target", "motion-in");
+        node.style.removeProperty("--motion-delay");
+      });
     };
   }, [location.pathname]);
 

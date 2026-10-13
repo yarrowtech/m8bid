@@ -47,7 +47,19 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    accountStatus: { type: String, enum: ["active", "disabled"], default: "active" },
 
+kycStatus: { type: String, enum: documentStatusEnum, default: "NONE" },
+fundraiserVerification: { type: String, enum: documentStatusEnum, default: "NONE" },
+contributorProfile: {
+  totalContributed: { type: Number, default: 0 },
+  supportedCampaigns: { type: Number, default: 0 },
+},
+fundraiserProfile: {
+  totalRaised: { type: Number, default: 0 },
+  activeCampaigns: { type: Number, default: 0 },
+},
+savedCampaigns: [{ type: mongoose.Schema.Types.ObjectId, ref: "Fundraiser" }],
 profile: {
   phone: { type: String, default: "" },
   photo: { type: String, default: "" },
@@ -72,7 +84,7 @@ razorpayLinkedAccountId: {
 
 access: {
   investor: {
-    enabled: { type: Boolean, default: false },
+    enabled: { type: Boolean, default: true },
     type: {
       type: String,
       enum: profileTypeEnum,
@@ -83,6 +95,7 @@ access: {
       enum: documentStatusEnum,
       default: "NONE",
     },
+    panStatus: { type: String, enum: documentStatusEnum, default: "NONE" },
     bankStatus: {
       type: String,
       enum: documentStatusEnum,
@@ -101,7 +114,7 @@ access: {
     },
   },
   fundraiser: {
-    enabled: { type: Boolean, default: false },
+    enabled: { type: Boolean, default: true },
     type: {
       type: String,
       enum: profileTypeEnum,
@@ -157,6 +170,23 @@ activeMode: {
 
 userSchema.pre("save", async function (next) {
   try {
+    this.role = this.role === "admin" ? "admin" : "user";
+    this.access.investor.enabled = true;
+    this.access.fundraiser.enabled = true;
+    // Identity and bank verification belong to the account, not a dashboard.
+    for (const field of ["kycStatus", "panStatus", "bankStatus", "details", "documents"]) {
+      const source = this.isModified(`access.investor.${field}`) ? "investor"
+        : this.isModified(`access.fundraiser.${field}`) ? "fundraiser" : null;
+      if (!source) continue;
+      const target = source === "investor" ? "fundraiser" : "investor";
+      if (field === "documents") {
+        for (const key of ["kyc", "pan", "addressProof", "bankProof"]) {
+          this.set(`access.${target}.documents.${key}`, this.get(`access.${source}.documents.${key}`) || "");
+        }
+      } else this.set(`access.${target}.${field}`, this.get(`access.${source}.${field}`));
+    }
+    this.kycStatus = this.access.investor.kycStatus;
+    this.fundraiserVerification = this.access.fundraiser.kycStatus;
     if (this.username) this.username = this.username.trim().toLowerCase();
     if (this.email) this.email = this.email.trim().toLowerCase();
 
@@ -173,5 +203,17 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
+
+userSchema.post("save", async function (user) {
+  await require("./KYC").findOneAndUpdate({ user: user._id }, { $set: {
+    status: user.kycStatus,
+    documents: {
+      kyc: user.access.investor.documents.kyc,
+      pan: user.access.investor.documents.pan,
+      addressProof: user.access.investor.documents.addressProof,
+      bankProof: user.access.investor.documents.bankProof,
+    },
+  } }, { upsert: true });
+});
 
 module.exports = mongoose.model("User", userSchema);

@@ -140,7 +140,7 @@ export default function HowToContribute() {
   const contributingSteps = [
     {
       title: "Login As Contributor",
-      text: "Use an contributor account so campaign browsing and transactions are connected to your profile.",
+      text: "Use your MateBid account to keep your funding campaigns and contributions together.",
       icon: LogIn,
       bg: "bg-blue-100",
       iconColor: "text-blue-700",
@@ -193,9 +193,7 @@ export default function HowToContribute() {
   const handleContributorAction = (path) => {
     const user = getSessionUser();
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const hasContributorAccount = Boolean(
-      user?.access?.contributor?.enabled && user?.activeMode === "contributor"
-    );
+    const hasContributorAccount = Boolean(user);
 
     if (!user || !token || !hasContributorAccount) {
       setContributorAccessOpen(true);
@@ -280,7 +278,7 @@ export default function HowToContribute() {
             items={[
               {
                 title: "Account Readiness",
-                text: "Login with an contributor account and complete any required profile, KYC, or bank details before contributing.",
+                text: "Sign in to your MateBid account and complete the required identity verification before contributing.",
               },
               {
                 title: "Campaign Fit",
@@ -572,8 +570,8 @@ export default function HowToContribute() {
           setContributorAccessOpen(false);
           navigate("/login");
         }}
-        title="Contributor account needed"
-        message="You need an contributor account to browse and contribute in campaigns. Please login with an contributor account or create one first."
+        title="Sign in to continue"
+        message="Sign in to your MateBid account to contribute to funding campaigns."
         buttonLabel="Go to Login"
       />
     </>

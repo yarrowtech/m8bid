@@ -37,12 +37,15 @@ const verifyPaymentSignature = ({
     .update(body)
     .digest("hex");
 
-  return expectedSignature === razorpay_signature;
+  if (typeof razorpay_signature !== "string" || !/^[a-f0-9]{64}$/i.test(razorpay_signature)) return false;
+  return crypto.timingSafeEqual(Buffer.from(expectedSignature, "hex"), Buffer.from(razorpay_signature, "hex"));
 };
 
 const fetchPayment = async (paymentId) => {
   return razorpay.payments.fetch(paymentId);
 };
+const refundPayment = ({ paymentId, amount, receipt }) => razorpay.payments.refund(paymentId, { amount: toPaise(amount), speed: "normal", receipt });
+const fetchRefund = (refundId) => razorpay.refunds.fetch(refundId);
 
 const createTransferFromPayment = async ({
   paymentId,
@@ -69,6 +72,8 @@ module.exports = {
   createOrder,
   verifyPaymentSignature,
   fetchPayment,
+  refundPayment,
+  fetchRefund,
   createTransferFromPayment,
   toPaise,
 };

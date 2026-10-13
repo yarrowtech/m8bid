@@ -140,16 +140,7 @@ export default function AdminUserDetails() {
 
   const raiserAccess = useMemo(() => accessFrom(details), [details]);
   const contributorAccess = useMemo(() => contributorAccessFrom(details), [details]);
-  const profileMode = useMemo(() => {
-    const activeMode = String(details?.activeMode || "").toLowerCase();
-    if (activeMode === "contributor" && contributorAccess.enabled) return "contributor";
-    if (activeMode === "raiser" && raiserAccess.enabled) return "raiser";
-    if (raiserAccess.enabled && !contributorAccess.enabled) return "raiser";
-    if (contributorAccess.enabled && !raiserAccess.enabled) return "contributor";
-    if (raiserAccess.enabled) return "raiser";
-    if (contributorAccess.enabled) return "contributor";
-    return "raiser";
-  }, [details, raiserAccess.enabled, contributorAccess.enabled]);
+  const [profileMode, setProfileMode] = useState("raiser");
   const isContributorView = profileMode === "contributor";
 
   const campaigns = details?.campaigns || [];
@@ -163,12 +154,7 @@ export default function AdminUserDetails() {
   const completedTransactions = transactions.filter((txn) => txn?.status === "completed").length;
   const pendingTransactions = transactions.filter((txn) => ["created", "pending"].includes(String(txn?.status || "").toLowerCase())).length;
   const failedTransactions = transactions.filter((txn) => ["failed", "cancelled", "refunded"].includes(String(txn?.status || "").toLowerCase())).length;
-  const totalContributeed = contributions.reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
-  const estimatedCurrentValue = contributions.reduce((sum, inv) => {
-    const amount = Number(inv?.amount || 0);
-    const profit = Number(inv?.campaign?.profitPercentage || 0);
-    return sum + amount + Math.round((amount * profit) / 100);
-  }, 0);
+  const totalContributed = contributions.filter((inv) => inv.paymentStatus === "completed").reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
   const activeContributions = contributions.filter((inv) => {
     const paymentStatus = String(inv?.paymentStatus || "").toLowerCase();
     const status = String(inv?.status || "").toLowerCase();
@@ -282,15 +268,16 @@ export default function AdminUserDetails() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {[
                     isContributorView
-                      ? contributorAccess.enabled ? "Contributor Enabled" : "Contributor Disabled"
-                      : raiserAccess.enabled ? "Raiser Enabled" : "Raiser Disabled",
+                      ? contributorAccess.enabled ? "Can Contribute Funds" : "Contributor Disabled"
+                      : raiserAccess.enabled ? "Can Raise Funds" : "Raiser Disabled",
                     `Type: ${pretty(isContributorView ? contributorAccess.type : raiserAccess.type)}`,
-                    `Mode: ${pretty(details?.activeMode || "none")}`,
+                    "Role: User",
                     isContributorView ? `Contributions: ${contributions.length}` : `Campaigns: ${campaigns.length}`,
                   ].map((item) => <span key={item} className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/95">{item}</span>)}
                 </div>
               </div>
             </div>
+            <div className="flex flex-wrap gap-2"><button onClick={() => setProfileMode("raiser")} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold">Raise Funds activity</button><button onClick={() => setProfileMode("contributor")} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold">Contribute Funds activity</button></div>
             <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm text-slate-200 sm:min-w-[290px]">
               <HeroInfo icon={FaEnvelope} label="Email" value={details?.email} />
               <HeroInfo icon={FaPhone} label="Phone" value={details?.profile?.phone || details?.phone} />
@@ -310,13 +297,13 @@ export default function AdminUserDetails() {
               accent="from-sky-500 to-cyan-500"
             />
             <Stat
-              title={isContributorView ? "Total Contributeed" : "Total Goal"}
-              value={INR(isContributorView ? totalContributeed : totalGoal)}
+              title={isContributorView ? "Total Contributed" : "Total Goal"}
+              value={INR(isContributorView ? totalContributed : totalGoal)}
               accent="from-blue-600 to-indigo-600"
             />
             <Stat
               title={isContributorView ? "Portfolio Value" : "Total Raised"}
-              value={INR(isContributorView ? estimatedCurrentValue : totalRaised)}
+              value={INR(isContributorView ? totalContributed : totalRaised)}
               accent="from-emerald-500 to-green-600"
             />
             <Stat
@@ -352,7 +339,7 @@ export default function AdminUserDetails() {
                   <Info label="Address" value={address || "--"} icon={FaMapMarkerAlt} />
                   <Info label="Bank Name" value={details?.bankDetails?.bankName || "--"} icon={FaUniversity} />
                   <Info label="Account Holder" value={details?.bankDetails?.accountHolderName || "--"} icon={FaUniversity} />
-                  {isContributorView ? <Info label="Total Contributeed" value={INR(totalContributeed)} icon={FaMoneyBillWave} /> : null}
+                  {isContributorView ? <Info label="Total Contributed" value={INR(totalContributed)} icon={FaMoneyBillWave} /> : null}
                   {isContributorView ? <Info label="Active Contributions" value={activeContributions} icon={FaReceipt} /> : null}
                 </div>
               </Card>
@@ -380,7 +367,7 @@ export default function AdminUserDetails() {
                     {isContributorView ? (
                       <>
                         <Metric label="Contributions" value={contributions.length} />
-                        <Metric label="Portfolio Value" value={INR(estimatedCurrentValue)} />
+                        <Metric label="Portfolio Value" value={INR(totalContributed)} />
                         <Metric label="Active" value={activeContributions} />
                         <Metric label="Transactions" value={transactions.length} />
                       </>
@@ -407,7 +394,7 @@ export default function AdminUserDetails() {
                   subtitle={isContributorView ? "Contributor-specific access configuration." : "Raiser-specific access configuration."}
                 />
                 <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <Info label={isContributorView ? "Contributor Enabled" : "Raiser Enabled"} value={isContributorView ? contributorAccess.enabled ? "Yes" : "No" : raiserAccess.enabled ? "Yes" : "No"} />
+                  <Info label={isContributorView ? "Can Contribute Funds" : "Can Raise Funds"} value={isContributorView ? contributorAccess.enabled ? "Yes" : "No" : raiserAccess.enabled ? "Yes" : "No"} />
                   <Info label="Profile Type" value={pretty(isContributorView ? contributorAccess.type : raiserAccess.type)} />
                   <Info label="Active Mode" value={pretty(details?.activeMode || "none")} />
                   <Info label="Account Role" value={pretty(details?.role || "user")} />
@@ -435,7 +422,7 @@ export default function AdminUserDetails() {
                 {isContributorView ? (
                   <>
                     <Info label="Total Contributions" value={contributions.length} />
-                    <Info label="Total Contributeed" value={INR(totalContributeed)} />
+                    <Info label="Total Contributed" value={INR(totalContributed)} />
                     <Info label="Active Contributions" value={activeContributions} />
                     <Info label="Contributor Transactions" value={transactions.length} />
                   </>
@@ -452,7 +439,7 @@ export default function AdminUserDetails() {
                 <SectionTitle
                   icon={FaFolderOpen}
                   title={isContributorView ? "Contributor Activity" : "Raiser Activity"}
-                  subtitle={isContributorView ? "See where and how much money this contributor has contributeed." : "Campaign creation and status activity timeline."}
+                  subtitle={isContributorView ? "See where and how much money this contributor has contributed." : "Campaign creation and status activity timeline."}
                 />
                 <div className="mt-5 space-y-3">
                   {isContributorView ? (
@@ -462,7 +449,7 @@ export default function AdminUserDetails() {
                         <div key={contribution?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="font-semibold text-slate-900">{campaign?.projectTitle || "Campaign"}</p>
-                            <p className="text-sm text-slate-500">Contributeed {INR(contribution?.amount || 0)} in {pretty(campaign?.projectCategory || "general")}</p>
+                            <p className="text-sm text-slate-500">Contributed {INR(contribution?.amount || 0)} in {pretty(campaign?.projectCategory || "general")}</p>
                             <p className="mt-1 text-xs text-slate-400">{formatDate(contribution?.createdAt)}</p>
                           </div>
                           <div className="text-left sm:text-right">
@@ -502,9 +489,7 @@ export default function AdminUserDetails() {
                   const goal = Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
                   const raised = Number(campaign?.currentFunding || campaign?.moneyRaised || 0);
                   const progress = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
-                  const expectedReturn = Math.round(
-                    (Number(contribution?.amount || 0) * Number(campaign?.profitPercentage || 0)) / 100
-                  );
+
                   const gallery = campaignGallery({
                     documents: {
                       photo: campaign?.photo,
@@ -525,9 +510,8 @@ export default function AdminUserDetails() {
                             <h3 className="text-xl font-bold text-slate-900">{campaign?.projectTitle || "Campaign"}</h3>
                             <p className="mt-2 text-sm leading-6 text-slate-600">{campaign?.projectOverview || "No campaign overview available."}</p>
                             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                              <Metric label="Contributeed" value={INR(contribution?.amount || 0)} />
+                              <Metric label="Contributed" value={INR(contribution?.amount || 0)} />
                               <Metric label="Current Raise" value={INR(raised)} />
-                              <Metric label="Expected Return" value={expectedReturn > 0 ? INR(expectedReturn) : "N/A"} />
                               <Metric label="Payment Status" value={contribution?.paymentStatus || "--"} />
                             </div>
                             <div className="mt-4">
@@ -615,7 +599,7 @@ export default function AdminUserDetails() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Info label="Total Transactions" value={transactions.length} />
-                <Info label={isContributorView ? "Total Contributeed via Transactions" : "Total Raised via Transactions"} value={INR(transactionRaised)} />
+                <Info label={isContributorView ? "Total Contributed via Transactions" : "Total Raised via Transactions"} value={INR(transactionRaised)} />
                 <Info label="Completed" value={completedTransactions} />
                 <Info label="Pending / Failed" value={`${pendingTransactions} / ${failedTransactions}`} />
               </div>
@@ -624,7 +608,7 @@ export default function AdminUserDetails() {
                 <SectionTitle
                   icon={FaReceipt}
                   title={isContributorView ? "Contributor Transactions" : "Raiser Transactions"}
-                  subtitle={isContributorView ? "Full contribution transaction history showing where money was contributeed and whether payment was completed or not." : "Full transaction history showing raised amount and whether each payment was completed or not."}
+                  subtitle={isContributorView ? "Full contribution transaction history showing where money was contributed and whether payment was completed or not." : "Full transaction history showing raised amount and whether each payment was completed or not."}
                 />
                 <div className="mt-5 space-y-4">
                   {transactions.length > 0 ? transactions.map((txn) => (
@@ -662,7 +646,7 @@ export default function AdminUserDetails() {
                         </div>
 
                         <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:grid-cols-1">
-                          <Metric label={isContributorView ? "Contributeed Amount" : "Raised Amount"} value={INR(txn?.amount || 0)} />
+                          <Metric label={isContributorView ? "Contributed Amount" : "Raised Amount"} value={INR(txn?.amount || 0)} />
                           <Metric label="Platform Fee" value={INR(txn?.fee || 0)} />
                           <Metric label="Net Amount" value={INR(txn?.netAmount || 0)} />
                           <Metric label="Processed On" value={formatDate(txn?.processedAt)} />

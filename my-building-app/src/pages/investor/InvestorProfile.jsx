@@ -18,7 +18,7 @@ import { getInvestorProfile } from "../../api/investor.api";
 
 function SectionCard({ title, icon: Icon, children }) {
   return (
-    <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
+    <div className="rounded-[24px] border border-slate-100 bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1edff] text-[#6f5cf2]">
           <Icon size={18} />
@@ -94,7 +94,7 @@ const normalizeStatus = (value, fallbackPending = false) => {
   return value || "—";
 };
 
-export default function ContributorProfile() {
+export default function ContributorProfile({ embedded = false }) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -191,8 +191,8 @@ export default function ContributorProfile() {
             "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
         }}
       >
-        <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-          <ContributorSidebar active="profile" />
+        <div className="flex h-screen w-full overflow-hidden bg-[#f5f8fc]">
+          {!embedded && <ContributorSidebar active="profile" />}
           <main className="flex-1 flex items-center justify-center">
             <div className="flex items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-[#6f5cf2]" />
@@ -213,9 +213,9 @@ export default function ContributorProfile() {
             "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
         }}
       >
-        <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-          <ContributorSidebar active="profile" />
-          <main className="flex-1 flex items-center justify-center px-6 py-6">
+        <div className="flex h-screen w-full overflow-hidden bg-[#f5f8fc]">
+          {!embedded && <ContributorSidebar active="profile" />}
+          <main className="flex-1 flex items-center justify-center px-4 py-5 md:px-5">
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 max-w-md">
               <div className="flex items-center gap-3">
                 <AlertCircle className="h-6 w-6 text-red-600" />
@@ -239,17 +239,17 @@ export default function ContributorProfile() {
           "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
       }}
     >
-      <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <ContributorSidebar active="profile" />
+      <div className="flex h-screen w-full overflow-hidden bg-[#f5f8fc]">
+        {!embedded && <ContributorSidebar active="profile" />}
 
         <main
-          className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"
+          className="scrollbar-hide flex-1 overflow-y-auto px-4 py-5 md:px-5"
           style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900">
-                Contributor Profile
+                My Account
               </h1>
               <p className="mt-1 text-sm text-slate-500">
                 View your personal details, KYC details and bank details.
@@ -447,7 +447,7 @@ export default function ContributorProfile() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900">
                   Profile Status
                 </h3>

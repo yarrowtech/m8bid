@@ -70,19 +70,10 @@ const normalizeMode = (value) => {
 };
 
 const getProfilesFromUser = (user) => {
-  const profiles = [];
-  const contributorAccess = user?.contributorAccess || user?.access?.contributor || {};
-  const raiserAccess = user?.raiserAccess || user?.access?.raiser || {};
-
-  if (contributorAccess?.enabled) {
-    profiles.push("Contributor");
-  }
-
-  if (raiserAccess?.enabled) {
-    profiles.push("Raiser");
-  }
-
-  return profiles;
+  const activities = [];
+  if (user?.activities?.raising) activities.push("Raise Funds");
+  if (user?.activities?.contributing) activities.push("Contribute Funds");
+  return activities.length ? activities : ["No activity yet"];
 };
 
 const getVerificationSummary = (user) => {
@@ -219,7 +210,7 @@ export default function AdminUsers() {
   const handleDeleteUser = async (userId) => {
     if (!userId) return;
     const shouldDelete = window.confirm(
-      "Are you sure you want to delete this user? This action cannot be undone."
+      "Disable this user account? Campaigns and financial history will be preserved."
     );
     if (!shouldDelete) return;
 
@@ -317,7 +308,7 @@ export default function AdminUsers() {
                 <tr>
                   <th className="px-4 py-3 font-semibold">User</th>
                   <th className="px-4 py-3 font-semibold">Account Type</th>
-                  <th className="px-4 py-3 font-semibold">Active Profiles</th>
+                  <th className="px-4 py-3 font-semibold">Funding Activities</th>
                   <th className="px-4 py-3 font-semibold">Verification Summary</th>
                   <th className="px-4 py-3 font-semibold">Current Mode</th>
                   <th className="px-4 py-3 font-semibold">Joined</th>
@@ -466,10 +457,10 @@ export default function AdminUsers() {
                                   ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
                                   : "bg-rose-600 text-white hover:bg-rose-700"
                               )}
-                              title="Delete user from database"
+                              title="Disable user account"
                             >
                               <FaTrash />
-                              {isDeleting ? "Deleting..." : "Delete"}
+                              {isDeleting ? "Disabling..." : "Disable"}
                             </button>
                           </div>
                         </td>

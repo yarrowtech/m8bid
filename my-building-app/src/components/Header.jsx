@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { createPortal } from "react-dom";
 import finallogo from "../assets/finallogo.png";
+import { logoutUser } from "../api/user";
 import {
   Search,
   ChevronDown,
@@ -9,8 +9,6 @@ import {
   UserCircle2,
   LogOut,
   Info,
-  HandCoins,
-  BadgeDollarSign,
   Menu,
   X,
   Mail,
@@ -246,59 +244,6 @@ function SideInfoDrawer({ open, onClose, type = "about" }) {
   );
 }
 
-function AccessModeModal({ open, onClose, onLogin, title, message, buttonLabel }) {
-  if (!open) return null;
-
-  return createPortal(
-    <div className="app-popup-backdrop fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-md transition-all duration-300">
-      <div className="app-popup-panel w-full max-w-lg rounded-[32px] border border-slate-200/80 bg-white/98 p-8 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md transform transition-all duration-500 ease-out scale-100 animate-in fade-in-0 zoom-in-95">
-        <div className="flex items-start gap-5">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/25">
-            <ShieldCheck className="h-8 w-8" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
-              Secure Access Required
-            </p>
-            <h3 className="mt-3 text-3xl font-bold text-slate-950 leading-tight">
-              {title}
-            </h3>
-            <p className="mt-4 text-base leading-relaxed text-slate-700">
-              {message}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
-            aria-label="Close notification"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-2xl border-2 border-slate-200 bg-slate-50 px-6 py-4 text-base font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-100 hover:shadow-lg"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onLogin}
-            className="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-4 text-base font-semibold text-white shadow-xl shadow-blue-500/30 transition-all hover:brightness-110 hover:shadow-2xl hover:scale-105"
-          >
-            {buttonLabel}
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
-}
-
 /* --------------------------- header --------------------------- */
 export default function Header() {
   const navigate = useNavigate();
@@ -311,8 +256,6 @@ export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerType, setDrawerType] = useState("about");
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const [raiseBlockedOpen, setRaiseBlockedOpen] = useState(false);
-  const [contributeBlockedOpen, setContributeBlockedOpen] = useState(false);
 
   const headerRef = useRef(null);
   const profileRef = useRef(null);
@@ -353,8 +296,6 @@ export default function Header() {
         setProfileOpen(false);
         setMobileOpen(false);
         setDrawerOpen(false);
-        setRaiseBlockedOpen(false);
-        setContributeBlockedOpen(false);
       }
     };
 
@@ -372,14 +313,10 @@ export default function Header() {
     setRaiseOpen(false);
     setProfileOpen(false);
     setMobileOpen(false);
-    setRaiseBlockedOpen(false);
-    setContributeBlockedOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("token");
+    logoutUser();
     setLoggedInUser(null);
     setProfileOpen(false);
     navigate("/login");
@@ -413,44 +350,8 @@ export default function Header() {
     navigate("/contact");
   };
 
-  const activeMode = loggedInUser?.activeMode || "none";
-  const hasSession = Boolean(loggedInUser && localStorage.getItem("token"));
-  const isContributorMode = activeMode === "contributor";
-  const isRaiserMode = activeMode === "raiser";
-  const dashboardPath =
-    activeMode === "raiser"
-      ? loggedInUser?.access?.raiser?.type === "company"
-        ? "/raiser/company/dashboard"
-        : "/raiser/dashboard"
-      : loggedInUser?.access?.contributor?.type === "company"
-      ? "/contributor/company/dashboard"
-      : "/contributor/dashboard";
-  const profilePath =
-    activeMode === "raiser" ? "/raiser/profile" : "/contributor/profile";
-
-  const handleRaiseRestrictedAccess = () => {
-    setContributeOpen(false);
-    setRaiseOpen(false);
-    setMobileOpen(false);
-    setRaiseBlockedOpen(true);
-  };
-
-  const handleContributeRestrictedAccess = () => {
-    setContributeOpen(false);
-    setRaiseOpen(false);
-    setMobileOpen(false);
-    setContributeBlockedOpen(true);
-  };
-
-  const handleRaiseLoginRedirect = () => {
-    setRaiseBlockedOpen(false);
-    navigate("/login");
-  };
-
-  const handleContributeLoginRedirect = () => {
-    setContributeBlockedOpen(false);
-    navigate("/login");
-  };
+  const dashboardPath = loggedInUser?.role === "admin" ? "/admin/dashboard" : "/dashboard";
+  const profilePath = "/account";
 
   const closeMenus = () => {
     setContributeOpen(false);
@@ -467,34 +368,22 @@ export default function Header() {
       onClick: closeMenus,
     },
     {
-      label: "Supporter Space",
-      desc: "Discover FAQs, updates, and how contributions work.",
-      to: !hasSession ? null : isRaiserMode ? null : "/supporter-space",
-      onClick: !hasSession
-        ? handleContributeRestrictedAccess
-        : isRaiserMode
-        ? handleContributeRestrictedAccess
-        : closeMenus,
+      label: "How to Contribute",
+      desc: "Learn how to contribute with step-by-step guidance.",
+      to: "/how-to-contribute",
+      onClick: closeMenus,
     },
     {
-      label: "Return Based Options",
-      desc: "Explore structured participation with expected returns.",
-      to: !hasSession ? null : isRaiserMode ? null : "/return-based-options",
-      onClick: !hasSession
-        ? handleContributeRestrictedAccess
-        : isRaiserMode
-        ? handleContributeRestrictedAccess
-        : closeMenus,
+      label: "Supporter Space",
+      desc: "Discover FAQs, updates, and how contributions work.",
+      to: "/supporter-space",
+      onClick: closeMenus,
     },
     {
       label: "Verified Opportunities",
       desc: "See campaigns reviewed through platform workflows.",
-      to: !hasSession ? null : isRaiserMode ? null : "/verified-opportunities",
-      onClick: !hasSession
-        ? handleContributeRestrictedAccess
-        : isRaiserMode
-        ? handleContributeRestrictedAccess
-        : closeMenus,
+      to: "/verified-opportunities",
+      onClick: closeMenus,
     },
   ];
 
@@ -514,22 +403,14 @@ export default function Header() {
     {
       label: "Cause-Based Raising",
       desc: "Create campaigns for support-oriented raising.",
-      to: !hasSession ? null : isContributorMode ? null : "/cause-based-funding",
-      onClick: !hasSession
-        ? handleRaiseRestrictedAccess
-        : isContributorMode
-        ? handleRaiseRestrictedAccess
-        : closeMenus,
+      to: "/cause-based-funding",
+      onClick: closeMenus,
     },
     {
       label: "Raising Ideas",
       desc: "Get inspired with campaign direction and planning ideas.",
-      to: !hasSession ? null : isContributorMode ? null : "/raising-ideas",
-      onClick: !hasSession
-        ? handleRaiseRestrictedAccess
-        : isContributorMode
-        ? handleRaiseRestrictedAccess
-        : closeMenus,
+      to: "/raising-ideas",
+      onClick: closeMenus,
     },
   ];
 
@@ -592,7 +473,7 @@ export default function Header() {
 
             <div className="relative">
               <NavButton
-                label="Contribute"
+                label="Contribute Funds"
                 open={contributeOpen}
                 onClick={() => toggleMenu("Contribute")}
               />
@@ -606,7 +487,7 @@ export default function Header() {
 
             <div className="relative">
               <NavButton
-                label="Raising"
+                label="Raise Funds"
                 open={raiseOpen}
                 onClick={() => toggleMenu("Raising")}
               />
@@ -752,45 +633,9 @@ export default function Header() {
                 How it Works
               </Link>
 
-              {!hasSession || !isRaiserMode ? (
-                <Link
-                  to="/browse-contributors"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-                >
-                  <BadgeDollarSign className="h-4 w-4" />
-                  Browse Contributing Opportunities
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleContributeRestrictedAccess}
-                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-                >
-                  <BadgeDollarSign className="h-4 w-4" />
-                  Browse Contributing Opportunities
-                </button>
-              )}
+<div className="space-y-2"><p className="px-4 pt-3 text-xs font-bold uppercase tracking-wider text-slate-400">Contribute</p>{contributeItems.map((item) => <Link key={item.to} to={item.to} onClick={closeMenus} className="block rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white">{item.label}</Link>)}</div>
 
-              {!hasSession || !isContributorMode ? (
-                <Link
-                  to="/raising"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-                >
-                  <HandCoins className="h-4 w-4" />
-                  Start Raising
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleRaiseRestrictedAccess}
-                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white"
-                >
-                  <HandCoins className="h-4 w-4" />
-                  Start Raising
-                </button>
-              )}
+<div className="space-y-2"><p className="px-4 pt-3 text-xs font-bold uppercase tracking-wider text-slate-400">Raising</p>{raiseItems.map((item) => <Link key={item.to} to={item.to} onClick={closeMenus} className="block rounded-2xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white">{item.label}</Link>)}</div>
 
               <button
                 type="button"
@@ -831,22 +676,8 @@ export default function Header() {
         onClose={() => setDrawerOpen(false)}
         type={drawerType}
       />
-      <AccessModeModal
-        open={raiseBlockedOpen}
-        onClose={() => setRaiseBlockedOpen(false)}
-        onLogin={handleRaiseLoginRedirect}
-        title="Raiser account needed"
-        message="You need to login or register account as a raiser to start a raising campaign."
-        buttonLabel="Go to Login"
-      />
-      <AccessModeModal
-        open={contributeBlockedOpen}
-        onClose={() => setContributeBlockedOpen(false)}
-        onLogin={handleContributeLoginRedirect}
-        title="Contributor account needed"
-        message="You need to login or register account as a contributor to contribute to a campaign."
-        buttonLabel="Go to Login"
-      />
+
+
     </>
   );
 }

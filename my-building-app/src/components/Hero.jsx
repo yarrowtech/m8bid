@@ -130,7 +130,7 @@ export default function Hero() {
   const navigate = useNavigate();
   const [raiseBlockedOpen, setRaiseBlockedOpen] = useState(false);
   const [raiseBlockedMessage, setRaiseBlockedMessage] = useState(
-    "You need to login or register account as a raiser to start a raising campaign."
+    "You need to sign in to your MateBid account to start a raising campaign."
   );
 
   const getSessionUser = () => {
@@ -149,19 +149,13 @@ export default function Hero() {
 
     if (!hasSession) {
       setRaiseBlockedMessage(
-        "You need to login or register account as a raiser to start a raising campaign."
+        "You need to sign in to your MateBid account to start a raising campaign."
       );
       setRaiseBlockedOpen(true);
       return;
     }
 
-    if (user?.activeMode === "contributor") {
-      setRaiseBlockedMessage(
-        "Warning: You are currently logged in as an contributor. A raiser account is needed to access raising actions."
-      );
-      setRaiseBlockedOpen(true);
-      return;
-    }
+
 
     navigate("/raising");
   };
@@ -370,7 +364,7 @@ export default function Hero() {
         setRaiseBlockedOpen(false);
         navigate("/login");
       }}
-      title="Raiser account needed"
+      title="Sign in to continue"
       message={raiseBlockedMessage}
       buttonLabel="Go to Login"
     />

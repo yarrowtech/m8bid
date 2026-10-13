@@ -1,35 +1,19 @@
 ﻿import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { loginUser } from "../api/user";
 
-export default function LoginPage() {
+export default function LoginPage({ adminOnly = false, setLoggedInUser }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     emailOrUsername: "",
     password: "",
-    preferredMode: "contributor", // Default back to contributor
   });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const getDashboardPath = (user, mode) => {
-    if (mode === "contributor") {
-      return user?.access?.contributor?.type === "company"
-        ? "/contributor/company/dashboard"
-        : "/contributor/dashboard";
-    }
-
-    if (mode === "raiser") {
-      return user?.access?.raiser?.type === "company"
-        ? "/raiser/company/dashboard"
-        : "/raiser/dashboard";
-    }
-
-    return "/";
-  };
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -54,10 +38,14 @@ export default function LoginPage() {
     const payload = {
       emailOrUsername: formData.emailOrUsername.trim(),
       password: formData.password,
-      preferredMode: formData.preferredMode, // Always send preferredMode, backend handles admin detection
     };
 
     const res = await loginUser(payload);
+
+    if (adminOnly && res.user?.role !== "admin") {
+      setError("Please sign in with an administrator account.");
+      return;
+    }
 
     Cookies.set("token", res.token, { expires: 7 });
     localStorage.setItem("token", res.token);
@@ -67,42 +55,20 @@ export default function LoginPage() {
     }
     localStorage.setItem("user", JSON.stringify(res.user));
     sessionStorage.setItem("user", JSON.stringify(res.user));
-
-    const hasContributor = res.user?.access?.contributor?.enabled;
-    const hasRaiser = res.user?.access?.raiser?.enabled;
-    const activeMode = res.user?.activeMode || formData.preferredMode;
+    setLoggedInUser?.(res.user);
 
     if (res.user?.role === "admin") {
-      navigate("/admin/dashboard");
+      const destination = location.state?.from;
+      navigate(
+        destination?.startsWith("/admin/") && destination !== "/admin/login"
+          ? destination
+          : "/admin/dashboard",
+        { replace: true }
+      );
       return;
     }
 
-    if (hasContributor && hasRaiser && !activeMode) {
-      navigate("/select-account-mode");
-      return;
-    }
-
-    if (activeMode === "contributor" && hasContributor) {
-      navigate(getDashboardPath(res.user, "contributor"));
-      return;
-    }
-
-    if (activeMode === "raiser" && hasRaiser) {
-      navigate(getDashboardPath(res.user, "raiser"));
-      return;
-    }
-
-    if (hasContributor) {
-      navigate(getDashboardPath(res.user, "contributor"));
-      return;
-    }
-
-    if (hasRaiser) {
-      navigate(getDashboardPath(res.user, "raiser"));
-      return;
-    }
-
-    navigate("/");
+    navigate("/dashboard", { replace: true });
   } catch (err) {
     setError(err?.message || err?.error || "Login failed");
   } finally {
@@ -130,8 +96,8 @@ export default function LoginPage() {
 
         <div className="p-6 sm:p-10">
           <div className="max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-slate-900">Login</h2>
-            <p className="mt-2 text-slate-600">Access your account</p>
+            <h2 className="text-3xl font-bold text-slate-900">{adminOnly ? "Admin Login" : "Login"}</h2>
+            <p className="mt-2 text-slate-600">{adminOnly ? "Sign in to the Building admin panel" : "Access your account"}</p>
 
             {error && (
               <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -140,43 +106,7 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleLogin} className="mt-8 space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Login as
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, preferredMode: "contributor" }))
-                    }
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.preferredMode === "contributor"
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    Contributor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, preferredMode: "raiser" }))
-                    }
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-                      formData.preferredMode === "raiser"
-                        ? "border-yellow-400 bg-yellow-300 text-slate-900"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    Raiser
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Select your preferred role. Admin users can login by selecting either option.
-                </p>
-              </div>
-
+              {!adminOnly && <p className="text-sm text-slate-600">One account to Raise Funds and Contribute Funds. <button type="button" onClick={() => navigate("/admin/login")} className="font-semibold hover:underline">Administrator sign in</button></p>}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Email or Username
@@ -213,7 +143,7 @@ export default function LoginPage() {
                 {loading ? "Logging in..." : "Login"}
               </button>
 
-              <div className="flex justify-between text-sm">
+              {!adminOnly && <div className="flex justify-between text-sm">
                 <button
                   type="button"
                   onClick={() => navigate("/register")}
@@ -229,7 +159,7 @@ export default function LoginPage() {
                 >
                   Forgot password?
                 </button>
-              </div>
+              </div>}
             </form>
           </div>
         </div>

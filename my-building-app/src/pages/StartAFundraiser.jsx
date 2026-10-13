@@ -270,8 +270,6 @@ export default function StartRaiser() {
     video: null,
     moneyToRaise: "",
     daysToRaise: "",
-    fundingType: "",
-    profitPercentage: "",
     useOfFunds: "",
     introduction: "",
     documents: {},
@@ -387,8 +385,6 @@ export default function StartRaiser() {
     if (currentStep === 2) {
       if (!String(formData.moneyToRaise).trim()) return "Money to raise is required.";
       if (!String(formData.daysToRaise).trim()) return "Days to raise funds is required.";
-      if (!formData.fundingType) return "Funding type is required.";
-      if (formData.fundingType === "Profit Return" && !String(formData.profitPercentage).trim()) return "Profit percentage is required for Profit Return.";
       if (!formData.useOfFunds.trim()) return "Use of funds is required.";
     }
 
@@ -434,11 +430,9 @@ export default function StartRaiser() {
       }
       form.append("moneyToRaise", formData.moneyToRaise);
       form.append("daysToRaise", formData.daysToRaise);
-      form.append("fundingType", formData.fundingType);
+      form.append("fundingType", "Contribution");
       form.append("useOfFunds", formData.useOfFunds);
-      if (formData.fundingType === "Profit Return" && String(formData.profitPercentage).trim()) {
-        form.append("profitPercentage", formData.profitPercentage);
-      }
+
       form.append("introduction", formData.introduction);
 
       const submittedDocuments = [];
@@ -626,23 +620,6 @@ export default function StartRaiser() {
                     </div>
 
                     <div className="lg:col-span-2">
-                      <Label htmlFor="fundingType">Funding Type</Label>
-                      <Select id="fundingType" name="fundingType" value={formData.fundingType} onChange={handleChange}>
-                        <option value="">Select funding type</option>
-                        <option value="Profit Return">Profit Return</option>
-                        <option value="Non-Profit Return">Non-Profit Return</option>
-                      </Select>
-                      <p className="mt-2 text-xs text-gray-500">Profit Return means backers expect a return. Non-Profit Return is donation style support.</p>
-                    </div>
-
-                    {formData.fundingType === "Profit Return" ? (
-                      <div className="lg:col-span-2">
-                        <Label htmlFor="profitPercentage">Profit Percentage</Label>
-                        <Input id="profitPercentage" type="number" inputMode="numeric" name="profitPercentage" value={formData.profitPercentage} onChange={handleChange} placeholder="2" />
-                      </div>
-                    ) : null}
-
-                    <div className="lg:col-span-2">
                       <Label htmlFor="useOfFunds">Use of Funds</Label>
                       <Textarea id="useOfFunds" name="useOfFunds" rows={5} value={formData.useOfFunds} onChange={handleChange} placeholder="Explain exactly where the money will go, for example fees, treatment, equipment, inventory, or construction." />
                     </div>
@@ -743,8 +720,6 @@ export default function StartRaiser() {
                           <li><strong>Location:</strong> {formData.state}, {formData.city}, {formData.country}</li>
                           <li><strong>Goal:</strong> Rs. {formData.moneyToRaise}</li>
                           <li><strong>Days:</strong> {formData.daysToRaise}</li>
-                          <li><strong>Funding Type:</strong> {formData.fundingType}</li>
-                          {formData.fundingType === "Profit Return" ? <li><strong>Profit %:</strong> {formData.profitPercentage}%</li> : null}
                           <li><strong>Use of Funds:</strong> {formData.useOfFunds || "-"}</li>
                           <li><strong>Promotion:</strong> {formData.promotion}</li>
                         </ul>

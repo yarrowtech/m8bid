@@ -1,5 +1,7 @@
 import api from "../lib/axiox";
 
+export { getWebsiteAnalytics } from "./websiteAnalytics";
+
 /* ---------------- Dashboard ---------------- */
 export const getAdminDashboard = async (range = "7d") => {
   try {

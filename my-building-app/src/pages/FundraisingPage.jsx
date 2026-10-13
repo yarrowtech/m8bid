@@ -141,7 +141,7 @@ export default function RaisingPage() {
       if (!rawUser || !rawToken) return false;
 
       const user = JSON.parse(rawUser);
-      return Boolean(user?.access?.raiser?.enabled);
+      return Boolean(user);
     } catch {
       return false;
     }
@@ -522,8 +522,8 @@ export default function RaisingPage() {
         open={raiseAccessOpen}
         onClose={() => setRaiseAccessOpen(false)}
         onLogin={() => navigate("/login")}
-        title="Raiser account needed"
-        message="You need to login or create a raiser account to start raising."
+        title="Sign in to continue"
+        message="Sign in to your MateBid account to Raise Funds."
         buttonLabel="Go to Login"
       />
 

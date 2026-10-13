@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/userSchema");
+const { normalizeUser } = require("../utils/unifiedUser");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || "default_secret", {
@@ -7,17 +8,7 @@ const generateToken = (id) => {
   });
 };
 
-const sanitizeUser = (user) => ({
-  id: user._id,
-  _id: user._id,
-  username: user.username,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  profile: user.profile,
-  access: user.access,
-  activeMode: user.activeMode,
-});
+const sanitizeUser = normalizeUser;
 
 const registerUser = async (req, res) => {
   const {
@@ -26,15 +17,14 @@ const registerUser = async (req, res) => {
     email,
     phone,
     password,
-    accountMode,
   } = req.body;
 
   try {
-    if (!username || !name || !email || !password || !accountMode) {
+    if (!username || !name || !email || !password) {
       return res.status(400).json({
         success: false,
         message:
-          "username, name, email, password, and accountMode are required",
+          "Username, name, email, and password are required",
       });
     }
 
@@ -70,10 +60,10 @@ const registerUser = async (req, res) => {
       },
       access: {
         investor: {
-          enabled: accountMode === "investor",
+          enabled: true,
         },
         fundraiser: {
-          enabled: accountMode === "fundraiser",
+          enabled: true,
         },
       },
       activeMode: "none",
@@ -93,7 +83,7 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { emailOrUsername, password, preferredMode } = req.body;
+  const { emailOrUsername, password } = req.body;
 
   try {
     const identity = (emailOrUsername || "").trim().toLowerCase();
@@ -120,6 +110,9 @@ const loginUser = async (req, res) => {
       });
     }
 
+    if (user.accountStatus === "disabled") {
+      return res.status(403).json({ success: false, message: "This account has been disabled. Contact support." });
+    }
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -129,38 +122,10 @@ const loginUser = async (req, res) => {
       });
     }
 
-    if (preferredMode) {
-      if (!["investor", "fundraiser"].includes(preferredMode)) {
-        return res.status(400).json({
-          success: false,
-          message: "Preferred mode must be investor or fundraiser",
-        });
-      }
-
-      // Allow admin users to login regardless of access settings
-      if (user.role !== "admin" && !user.access?.[preferredMode]?.enabled) {
-        return res.status(403).json({
-          success: false,
-          message: `This account does not have ${preferredMode} access`,
-        });
-      }
-    }
-
-    if (
-      preferredMode &&
-      ["investor", "fundraiser"].includes(preferredMode) &&
-      user.access?.[preferredMode]?.enabled &&
-      user.role !== "admin"
-    ) {
-      user.activeMode = preferredMode;
-      await user.save();
-    } else if (user.role !== "admin" && user.access?.investor?.enabled && !user.access?.fundraiser?.enabled) {
-      user.activeMode = "investor";
-      await user.save();
-    } else if (user.role !== "admin" && user.access?.fundraiser?.enabled && !user.access?.investor?.enabled) {
-      user.activeMode = "fundraiser";
-      await user.save();
-    }
+    user.role = user.role === "admin" ? "admin" : "user";
+    user.access.investor.enabled = true;
+    user.access.fundraiser.enabled = true;
+    await user.save();
 
     return res.status(200).json({
       success: true,
@@ -180,12 +145,13 @@ const loginUser = async (req, res) => {
 const getProfile = async (req, res) => {
   return res.status(200).json({
     success: true,
-    user: req.user,
+    user: sanitizeUser(req.user),
   });
 };
 
 const enableAccessMode = async (req, res) => {
-  const { mode, profileType } = req.body;
+  const { profileType } = req.body;
+  const mode = ({ contributor: "investor", raiser: "fundraiser" })[req.body.mode] || req.body.mode;
 
   try {
     if (!["investor", "fundraiser"].includes(mode)) {
@@ -236,7 +202,7 @@ const enableAccessMode = async (req, res) => {
 };
 
 const switchMode = async (req, res) => {
-  const { mode } = req.body;
+  const mode = ({ contributor: "investor", raiser: "fundraiser" })[req.body.mode] || req.body.mode;
 
   try {
     if (!["investor", "fundraiser"].includes(mode)) {
@@ -255,12 +221,6 @@ const switchMode = async (req, res) => {
       });
     }
 
-    if (!user.access?.[mode]?.enabled) {
-      return res.status(403).json({
-        success: false,
-        message: `You do not have ${mode} access yet`,
-      });
-    }
 
     user.activeMode = mode;
     await user.save();

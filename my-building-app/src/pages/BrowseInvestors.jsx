@@ -118,7 +118,6 @@ const QUICK_CHIPS = [
   { id: "ENDING", label: "Ending soon" },
   { id: "ALMOST", label: "Almost funded" },
   { id: "NEW", label: "New this week" },
-  { id: "PROFIT", label: "Profit return" },
 ];
 
 // category → colour identity
@@ -280,8 +279,6 @@ export default function BrowseContributors() {
         "No description available."
       );
 
-      const fundingType = pickFirst(f?.fundingType, "Donation Based");
-      const profitPercentage = Number(pickFirst(f?.profitPercentage, 0));
       const daysToRaise = pickFirst(f?.daysToRaise, f?.duration, "N/A");
       const category =
         f?.projectCategory ||
@@ -346,8 +343,6 @@ export default function BrowseContributors() {
         isEndingSoon:
           msLeft != null && msLeft > 0 && msLeft <= 7 * 24 * 60 * 60 * 1000,
         description,
-        fundingType,
-        profitPercentage,
         daysToRaise,
         legalDocs,
       };
@@ -373,8 +368,7 @@ export default function BrowseContributors() {
         quickFilter === "ALL" ||
         (quickFilter === "ENDING" && x.isEndingSoon) ||
         (quickFilter === "ALMOST" && x.progress >= 85) ||
-        (quickFilter === "NEW" && x.createdAt > 0 && x.createdAt >= weekAgo) ||
-        (quickFilter === "PROFIT" && x.fundingType === "Profit Return");
+        (quickFilter === "NEW" && x.createdAt > 0 && x.createdAt >= weekAgo);
 
       return matchesQuery && matchesLocation && matchesQuick;
     });
@@ -493,7 +487,7 @@ export default function BrowseContributors() {
                 <span className="text-blue-600"> worth backing.</span>
               </h1>
               <p className="mx-auto mt-3 max-w-lg text-[15px] leading-relaxed text-slate-600">
-                Browse verified startups and businesses raising on MateBid — live
+                Browse startups and businesses raising on MateBid — live
                 funding data, public legal status, full transparency.
               </p>
 
@@ -518,7 +512,7 @@ export default function BrowseContributors() {
               </div>
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[12px] font-medium text-slate-500">
-                {["Identity verified", "Legal status public", "Live funding data"].map(
+                {["Approval status shown", "Legal status public", "Live funding data"].map(
                   (t) => (
                     <span key={t} className="inline-flex items-center gap-1.5">
                       <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-100 text-[8px] font-bold text-emerald-700">
@@ -634,7 +628,7 @@ export default function BrowseContributors() {
               <p className="mt-1.5 text-sm text-slate-500">
                 {loading
                   ? "Loading the latest raises…"
-                  : `${filteredAndSorted.length} verified ${
+                  : `${filteredAndSorted.length} listed ${
                       filteredAndSorted.length === 1 ? "campaign" : "campaigns"
                     } open for contribution`}
               </p>
@@ -697,7 +691,9 @@ export default function BrowseContributors() {
                           <span className={`h-1.5 w-1.5 rounded-full ${cc.dot}`} />
                           {item.category}
                         </span>
-                        {funded ? (
+                        {item.raw.status === "pending" ? (
+                          <span className="absolute right-3 top-3 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800 shadow-sm">Awaiting approval</span>
+                        ) : funded ? (
                           <span className="absolute right-3 top-3 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
                             Funded
                           </span>
@@ -749,7 +745,7 @@ export default function BrowseContributors() {
                             </p>
                           </div>
                           <p className="mt-2 text-[11px] text-slate-400">
-                            {item.countdownLabel} · {item.fundingType}
+                            {item.countdownLabel}
                           </p>
                         </div>
 

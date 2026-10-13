@@ -75,7 +75,7 @@ const sections = [
 const faqs = [
   {
     q: "What is cause-based funding?",
-    a: "Cause-based funding refers to campaigns focused on support, mission, or community need rather than structured return-oriented participation.",
+    a: "Cause-based funding refers to campaigns focused on support, mission, or community need with clear funding goals and progress updates.",
   },
   {
     q: "What should supporters see on these pages?",
@@ -144,7 +144,7 @@ export default function CauseBasedFunding() {
                   name: "What is cause-based raising?",
                   acceptedAnswer: {
                     "@type": "Answer",
-                    text: "Cause-based raising refers to campaigns focused on support, mission, or community need rather than structured return-oriented participation.",
+                    text: "Cause-based raising refers to campaigns focused on support, mission, or community need with clear funding goals and progress updates.",
                   },
                 },
                 {

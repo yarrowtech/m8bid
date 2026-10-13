@@ -1,12 +1,14 @@
-const Investment = require("../models/Investment");
+const mongoose = require("mongoose");
+const Investment = require("../models/Contribution");
 const Campaign = require("../models/Fundraiser");
 const Transaction = require("../models/Transaction");
 const User = require("../models/userSchema");
+const Notification = require("../models/Notification");
+const { processPayout } = require("../services/contributionPayout");
 const {
   createOrder,
   verifyPaymentSignature,
   fetchPayment,
-  createTransferFromPayment,
 } = require("../services/razorpayService");
 
 const generateTxnId = () =>
@@ -15,7 +17,8 @@ const generateTxnId = () =>
 const calculateFees = (amount) => {
   const gross = Number(amount);
   const feePercent = Number(process.env.PLATFORM_FEE_PERCENT || 5);
-  const platformFee = Math.round((gross * feePercent) / 100);
+  if (!Number.isFinite(feePercent) || feePercent < 0 || feePercent > 100) throw new Error("Invalid platform fee configuration");
+  const platformFee = Math.round(gross * feePercent) / 100;
   const netAmount = Math.round((gross - platformFee) * 100) / 100;
 
   return {
@@ -46,9 +49,9 @@ exports.createInvestment = async (req, res) => {
       });
     }
 
-    console.log("Incoming createInvestment payload:", req.body);
-    console.log("Incoming campaignId:", campaignId);
-    console.log("Authenticated user:", req.user._id);
+
+
+
 
     if (!campaignId) {
       return res.status(400).json({
@@ -57,7 +60,7 @@ exports.createInvestment = async (req, res) => {
       });
     }
 
-    if (!amount || Number(amount) <= 0) {
+    if (!Number.isFinite(Number(amount)) || Number(amount) < 1 || Number(amount) !== Number(Number(amount).toFixed(2)) || !Number.isSafeInteger(Math.round(Number(amount) * 100))) {
       return res.status(400).json({
         success: false,
         message: "Valid amount is required",
@@ -66,7 +69,7 @@ exports.createInvestment = async (req, res) => {
 
     const campaign = await Campaign.findById(campaignId).populate("userId");
 
-    console.log("Found campaign:", campaign ? campaign._id : null);
+
 
     if (!campaign) {
       return res.status(404).json({
@@ -88,7 +91,7 @@ exports.createInvestment = async (req, res) => {
     if (!["approved", "active"].includes(campaign.status)) {
       return res.status(400).json({
         success: false,
-        message: "Campaign is not active for investment",
+        message: "Campaign is not active for contribution",
       });
     }
 
@@ -99,8 +102,8 @@ exports.createInvestment = async (req, res) => {
       });
     }
 
-    const minInvestment = Number(campaign.minInvestment || 1);
-    const maxInvestment = Number(campaign.maxInvestment || 0);
+    const minInvestment = Number(campaign.minContribution || campaign.minInvestment || 1);
+    const maxInvestment = Number(campaign.maxContribution || campaign.maxInvestment || 0);
 
     const currentFunding = Number(
       campaign.currentFunding || campaign.moneyRaised || campaign.raisedAmount || 0
@@ -113,14 +116,14 @@ exports.createInvestment = async (req, res) => {
     if (Number(amount) < minInvestment) {
       return res.status(400).json({
         success: false,
-        message: `Minimum investment is ₹${minInvestment}`,
+        message: `Minimum contribution is ₹${minInvestment}`,
       });
     }
 
     if (maxInvestment && Number(amount) > maxInvestment) {
       return res.status(400).json({
         success: false,
-        message: `Maximum investment is ₹${maxInvestment}`,
+        message: `Maximum contribution is ₹${maxInvestment}`,
       });
     }
 
@@ -160,7 +163,7 @@ exports.createInvestment = async (req, res) => {
     const transaction = await Transaction.create({
       transactionId: txnId,
       user: req.user._id,
-      type: "investment",
+      type: "contribution",
       amount: Number(amount),
       fee: platformFee,
       netAmount,
@@ -168,7 +171,7 @@ exports.createInvestment = async (req, res) => {
       campaign: campaignId,
       investment: investment._id,
       fundraiser: fundraiserUser._id || fundraiserUser,
-      description: `Investment in ${campaignTitle}`,
+      description: `Contribution to ${campaignTitle}`,
       status: "created",
       linkedAccountId,
     });
@@ -193,7 +196,8 @@ exports.createInvestment = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Investment initiated",
+      message: "Contribution initiated",
+      contributionId: investment._id,
       investmentId: investment._id,
       transactionId: txnId,
       order: {
@@ -223,207 +227,67 @@ exports.createInvestment = async (req, res) => {
     console.error("createInvestment error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message || "Failed to create investment",
+      message: err.message || "Failed to create contribution",
     });
   }
 };
 
-// POST /api/investments/:id/confirm
+// Payment confirmation is committed atomically with funding progress and its ledger.
 exports.confirmInvestment = async (req, res) => {
+  let session;
   try {
-    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
-      req.body;
-
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized. Please log in again.",
-      });
-    }
-
-    const inv = await Investment.findById(req.params.id).populate("campaign");
-
-    if (!inv) {
-      return res.status(404).json({
-        success: false,
-        message: "Investment not found",
-      });
-    }
-
-    if (String(inv.investor) !== String(req.user._id)) {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized access to this investment",
-      });
-    }
-
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    const inv = await Investment.findById(req.params.id);
+    if (!inv) return res.status(404).json({ success: false, message: "Contribution not found" });
+    if (String(inv.investor) !== String(req.user._id)) return res.status(403).json({ success: false, message: "Unauthorized contribution access" });
     if (inv.status === "confirmed" && inv.paymentStatus === "completed") {
-      return res.status(200).json({
-        success: true,
-        message: "Investment already confirmed",
-        investment: inv,
-      });
+      return res.json({ success: true, contribution: inv, investment: inv, message: "Contribution already confirmed" });
     }
-
-    if (inv.orderId !== razorpay_order_id) {
-      return res.status(400).json({
-        success: false,
-        message: "Order mismatch",
-      });
+    if (!razorpay_payment_id || inv.orderId !== razorpay_order_id || !verifyPaymentSignature(req.body)) {
+      return res.status(400).json({ success: false, message: "Payment signature or order is invalid" });
     }
-
-    const isValid = verifyPaymentSignature({
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    });
-
-    if (!isValid) {
-      await Transaction.findOneAndUpdate(
-        { investment: inv._id },
-        {
-          status: "failed",
-          failureReason: "Invalid Razorpay signature",
-          processedAt: new Date(),
-        }
-      );
-
-      inv.paymentStatus = "failed";
-      inv.status = "failed";
-      await inv.save();
-
-      return res.status(400).json({
-        success: false,
-        message: "Signature verification failed",
-      });
-    }
-
     const payment = await fetchPayment(razorpay_payment_id);
-
-    if (!payment || payment.status !== "captured") {
-      return res.status(400).json({
-        success: false,
-        message: "Payment is not captured",
-      });
+    if (payment?.status !== "captured" || payment.order_id !== inv.orderId || payment.currency !== "INR" || payment.amount !== Math.round(inv.amount * 100)) {
+      return res.status(400).json({ success: false, message: "Payment amount, currency, order, or capture status does not match" });
     }
-
-    let transferResponse = null;
-    let transfer = null;
-
-    if (inv.linkedAccountId) {
-      transferResponse = await createTransferFromPayment({
-        paymentId: razorpay_payment_id,
-        linkedAccountId: inv.linkedAccountId,
-        amount: inv.netAmount,
-        notes: {
-          investmentId: String(inv._id),
-          campaignId: String(inv.campaign?._id),
-          investorId: String(inv.investor),
-        },
-      });
-
-      transfer =
-        transferResponse?.items?.[0] ||
-        transferResponse?.transfers?.[0] ||
-        null;
-    }
-
-    inv.paymentId = razorpay_payment_id;
-    inv.paymentStatus = "completed";
-    inv.status = "confirmed";
-    inv.transferId = transfer?.id || null;
-    inv.transferStatus = transfer
-      ? "processed"
-      : inv.linkedAccountId
-      ? "unknown"
-      : "pending";
-    await inv.save();
-
-    const camp = await Campaign.findById(inv.campaign?._id || inv.campaign);
-
-    if (!camp) {
-      return res.status(400).json({
-        success: false,
-        message: "Campaign linked to investment not found",
-      });
-    }
-
-    const existingCurrent = Number(
-      camp.currentFunding || camp.moneyRaised || camp.raisedAmount || 0
-    );
-    const newFunding = existingCurrent + Number(inv.amount || 0);
-
-    camp.currentFunding = newFunding;
-    camp.moneyRaised = newFunding;
-    camp.raisedAmount = newFunding;
-    camp.totalInvestors = Number(camp.totalInvestors || 0) + 1;
-
-    if (!Array.isArray(camp.investors)) {
-      camp.investors = [];
-    }
-
-    if (!camp.investors.some((id) => String(id) === String(inv.investor))) {
-      camp.investors.push(inv.investor);
-    }
-
-    if (!Array.isArray(camp.recentDonors)) {
-      camp.recentDonors = [];
-    }
-
-    camp.recentDonors.unshift({
-      author: inv.anonymous ? "Anonymous" : req.user.name || "Investor",
-      amount: Number(inv.amount || 0),
-      userId: inv.investor,
-      paidAt: new Date(),
-    });
-
-    if (camp.recentDonors.length > 20) {
-      camp.recentDonors = camp.recentDonors.slice(0, 20);
-    }
-
-    const fundingGoal = Number(camp.fundingGoal || camp.moneyToRaise || 0);
-    if (fundingGoal && newFunding >= fundingGoal) {
-      camp.status = "completed";
-    }
-
-    await camp.save();
-
-    await User.findByIdAndUpdate(inv.investor, {
-      $inc: {
-        "investorProfile.totalInvested": Number(inv.amount || 0),
-        "investorProfile.activeInvestments": 1,
-      },
-    });
-
-    await Transaction.findOneAndUpdate(
-      { investment: inv._id },
-      {
-        status: "completed",
-        paymentGatewayId: razorpay_payment_id,
-        transferId: transfer?.id || null,
-        paymentGatewayResponse: payment,
-        transferResponse,
-        processedAt: new Date(),
+    session = await mongoose.startSession();
+    let confirmed;
+    await session.withTransaction(async () => {
+      // A concurrent confirmation conflicts and retries, then observes completion.
+      const current = await Investment.findById(inv._id).session(session);
+      if (current.paymentStatus === "completed") { confirmed = current; return; }
+      const reused = await Investment.findOne({ paymentId: razorpay_payment_id, _id: { $ne: inv._id } }).session(session);
+      if (reused) throw new Error("Payment has already been used");
+      current.paymentId = razorpay_payment_id;
+      current.paymentStatus = "completed";
+      current.status = "confirmed";
+      await current.save({ session });
+      const campaign = await Campaign.findByIdAndUpdate(current.campaign, { $inc: { raisedAmount: current.amount } }, { new: true, session });
+      if (!campaign) throw new Error("Funding campaign not found");
+      if (campaign.raisedAmount >= campaign.moneyToRaise) {
+        campaign.status = "completed";
+        await campaign.save({ session });
       }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: inv.linkedAccountId
-        ? "Investment confirmed and payout transferred"
-        : "Investment confirmed. Payout transfer will complete after Razorpay linked account setup.",
-      investment: inv,
-      payment,
-      transfer: transfer || transferResponse,
-      payoutConfigured: Boolean(inv.linkedAccountId),
+      const supportedCampaigns = await Investment.distinct("campaign", { investor: current.investor, status: "confirmed", paymentStatus: "completed" }).session(session);
+      await User.findByIdAndUpdate(current.investor, { $inc: { "contributorProfile.totalContributed": current.amount }, $set: { "contributorProfile.supportedCampaigns": supportedCampaigns.length } }, { session });
+      await User.findByIdAndUpdate(campaign.userId, { $inc: { "fundraiserProfile.totalRaised": current.amount } }, { session });
+      const ledger = await Transaction.findOneAndUpdate({ investment: current._id }, {
+        status: "completed", type: "contribution", paymentGatewayId: razorpay_payment_id,
+        paymentGatewayResponse: payment, processedAt: new Date(),
+      }, { session });
+      if (!ledger) throw new Error("Contribution ledger record is missing");
+      await Notification.create([
+        { user: current.investor, campaign: campaign._id, message: `Your contribution to ${campaign.projectTitle} is confirmed.` },
+        { user: campaign.userId, campaign: campaign._id, message: `Your funding campaign ${campaign.projectTitle} received a contribution.` },
+      ], { session });
+      confirmed = current;
     });
+    const payoutStatus = await processPayout(confirmed);
+    return res.json({ success: true, contribution: confirmed, investment: confirmed, payment, payoutStatus, message: "Contribution confirmed." });
   } catch (err) {
-    console.error("confirmInvestment error:", err);
-    return res.status(500).json({
-      success: false,
-      message: err.message || "Failed to confirm investment",
-    });
-  }
+    console.error("Contribution confirmation failed:", err.message);
+    return res.status(500).json({ success: false, message: "Unable to confirm contribution. Please retry or contact support." });
+  } finally { if (session) await session.endSession(); }
 };
 
 // GET /api/investments/my
@@ -441,19 +305,20 @@ exports.getMyInvestments = async (req, res) => {
       .populate({
         path: "campaign",
         select:
-          "projectTitle moneyToRaise fundingGoal moneyRaised raisedAmount currentFunding deadline status photo imageUrl",
+          "projectTitle projectCategory moneyToRaise fundingGoal moneyRaised raisedAmount currentFunding deadline status photo imageUrl",
       });
 
     return res.status(200).json({
       success: true,
       count: investments.length,
+      contributions: investments,
       investments,
     });
   } catch (err) {
     console.error("getMyInvestments error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message || "Failed to fetch investments",
+      message: err.message || "Failed to fetch contributions",
     });
   }
 };

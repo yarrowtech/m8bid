@@ -114,7 +114,7 @@ function SummaryRow({ label, value }) {
   );
 }
 
-export default function ContributorBank() {
+export default function ContributorBank({ embedded = false }) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -240,7 +240,7 @@ export default function ContributorBank() {
       }}
     >
       <div className="flex h-screen w-full overflow-hidden bg-[#f7f7fb]">
-        <ContributorSidebar active="profile" />
+        {!embedded && <ContributorSidebar active="profile" />}
 
         <main
           className="scrollbar-hide flex-1 overflow-y-auto px-6 py-6"

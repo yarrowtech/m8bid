@@ -22,7 +22,7 @@ const fundRaiserRouter = express.Router();
    CREATE FUNDRAISER
 ========================= */
 fundRaiserRouter.post(
-  "/create-fundraiser/:id",
+   ["/create-fundraiser/:id", "/create-raiser/:id"],
   protect,
   requireFundraiser,
   upload.any(),
@@ -32,11 +32,12 @@ fundRaiserRouter.post(
 /* =========================
    FUNDRAISER / CAMPAIGNS
 ========================= */
-fundRaiserRouter.get("/fundraiser/:id", getFundraisersByUser);
+fundRaiserRouter.get("/raiser/:id", protect, getFundraisersByUser);
+fundRaiserRouter.get("/fundraiser/:id", protect, getFundraisersByUser);
 fundRaiserRouter.get("/all", getAllFundraisers);
 fundRaiserRouter.get("/campaigns", getAllFundraisers);
 fundRaiserRouter.get("/campaigns/:id", getFundraiserById);
-fundRaiserRouter.delete("/campaigns/:id", deleteFundraiserById);
+fundRaiserRouter.delete("/campaigns/:id", protect, deleteFundraiserById);
 
 /* =========================
    PROFILE

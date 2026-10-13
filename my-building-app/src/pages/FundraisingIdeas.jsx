@@ -12,6 +12,22 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import SEO from "../components/SEO.jsx";
+import { useState } from "react";
+
+const ideaCategories = [
+  { title: "Startups & technology", ideas: ["Build a product prototype", "Launch an app or software tool", "Develop a hardware pilot", "Test a service with your first customers"] },
+  { title: "Small businesses", ideas: ["Open a local shop", "Expand an existing business", "Buy equipment or tools", "Build an online store"] },
+  { title: "Food & hospitality", ideas: ["Launch a bakery or café", "Start a food truck", "Upgrade a catering kitchen", "Create a packaged food brand"] },
+  { title: "Education & learning", ideas: ["Fund course fees or study materials", "Create a learning app", "Set up a tutoring space", "Run practical skills workshops"] },
+  { title: "Art & design", ideas: ["Produce an art exhibition", "Launch a handmade collection", "Create a design studio", "Buy materials for a public art project"] },
+  { title: "Film, music & publishing", ideas: ["Produce a short film", "Record an independent album", "Publish a book or comic", "Launch a podcast or documentary series"] },
+  { title: "Agriculture & food production", ideas: ["Install farm irrigation", "Build a greenhouse", "Buy processing or storage equipment", "Start a local produce delivery service"] },
+  { title: "Environment & sustainability", ideas: ["Develop reusable packaging", "Start a repair and reuse workshop", "Install rainwater collection", "Pilot a recycling service"] },
+  { title: "Sports & recreation", ideas: ["Buy team equipment", "Support tournament participation", "Build a training space", "Organize a local sports event"] },
+  { title: "Community spaces & events", ideas: ["Create a shared workshop", "Improve a neighborhood reading space", "Organize a cultural festival", "Build a community garden"] },
+  { title: "Fashion & handmade products", ideas: ["Launch a clothing collection", "Buy sewing or crafting equipment", "Create a local artisan marketplace", "Produce a first batch of accessories"] },
+  { title: "Personal projects & careers", ideas: ["Build a professional portfolio", "Fund a certification course", "Buy tools for freelance work", "Develop an independent research project"] },
+];
 
 const ideaCards = [
   {
@@ -121,11 +137,19 @@ function SectionCard({ icon: Icon, title, points }) {
 }
 
 export default function RaisingIdeas() {
+  const [search, setSearch] = useState("");
+  const query = search.trim().toLowerCase();
+  const visibleCategories = ideaCategories.map((category) => ({
+    ...category,
+    ideas: category.title.toLowerCase().includes(query)
+      ? category.ideas
+      : category.ideas.filter((idea) => idea.toLowerCase().includes(query)),
+  })).filter((category) => category.ideas.length > 0);
   return (
     <>
       <SEO
-        title="Raising Campaign Ideas — Direction, Storytelling & Promotion Tips"
-        description="Get raising campaign ideas on MateBid — storytelling tips, page-building direction, and promotion strategies to launch a clear and credible raising campaign."
+        title="Raising Ideas — Business, Education & Creative Projects"
+        description="Explore 48 raising ideas across business, education, art, agriculture, sports, and community projects. Find your next campaign idea on MateBid."
         keywords="raising campaign ideas, how to start a raising campaign, campaign direction tips, storytelling for raising, raising page ideas, MateBid raising, crowdfunding ideas India, campaign promotion tips, startup raising ideas, business campaign ideas"
         canonical="/raising-ideas"
         jsonLd={{
@@ -135,9 +159,9 @@ export default function RaisingIdeas() {
               "@type": "WebPage",
               "@id": "https://www.matebid.com/raising-ideas",
               url: "https://www.matebid.com/raising-ideas",
-              name: "Raising Campaign Ideas — Direction, Storytelling & Promotion Tips | M8BID",
+              name: "Raising Ideas — Business, Education & Creative Projects | M8BID",
               description:
-                "Get raising campaign ideas on MateBid — storytelling tips, page-building direction, and promotion strategies to launch a clear and credible raising campaign.",
+                "Explore 48 raising ideas across business, education, art, agriculture, sports, and community projects on MateBid.",
               isPartOf: { "@id": "https://www.matebid.com/#website" },
               breadcrumb: {
                 "@type": "BreadcrumbList",
@@ -194,15 +218,35 @@ export default function RaisingIdeas() {
           </div>
 
           <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-            Better ideas lead to stronger raising pages
+            Find an idea worth raising for
           </h1>
 
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
-            A good raising idea does not need to be complicated. It needs to be
-            clear, timely, and easy for others to understand. This page helps you
-            shape stronger campaign direction before you launch.
+            Explore practical ideas for business, education, creative work,
+            agriculture, sports, and community projects. Choose a purpose,
+            explain the costs, and show supporters what their contribution helps achieve.
           </p>
         </div>
+
+        <section className="mt-12" aria-labelledby="idea-catalog-title">
+          <h2 id="idea-catalog-title" className="text-2xl font-bold text-slate-900">Explore raising ideas</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Browse 12 categories and 48 starting points for your campaign.</p>
+          <label htmlFor="raising-idea-search" className="mt-6 block text-sm font-semibold text-slate-700">Search ideas or categories</label>
+          <input id="raising-idea-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Try equipment, education, art, or business" className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-200" />
+          <p role="status" className="mt-3 text-sm text-slate-500">{visibleCategories.reduce((total, category) => total + category.ideas.length, 0)} ideas found</p>
+          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {visibleCategories.map((category) => (
+              <article key={category.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <Lightbulb className="h-6 w-6 text-amber-600" />
+                <h3 className="mt-4 text-lg font-bold text-slate-900">{category.title}</h3>
+                <ul className="mt-4 space-y-3">
+                  {category.ideas.map((idea) => <li key={idea} className="flex items-start gap-2 text-sm leading-6 text-slate-600"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-amber-600" /><span>{idea}</span></li>)}
+                </ul>
+              </article>
+            ))}
+          </div>
+          {visibleCategories.length === 0 && <p className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">No ideas match your search. Try another word or clear the search to see all ideas.</p>}
+        </section>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {ideaCards.map((item, idx) => {

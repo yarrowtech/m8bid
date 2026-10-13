@@ -48,7 +48,8 @@ const fundraiserSchema = new mongoose.Schema(
 
     fundingType: {
       type: String,
-      enum: ["Profit Return", "Non-Profit Return"],
+      enum: ["Contribution", "Profit Return", "Non-Profit Return"],
+      default: "Contribution",
       required: true,
     },
 
@@ -68,11 +69,12 @@ const fundraiserSchema = new mongoose.Schema(
 
 
     raisedAmount: { type: Number, default: 0 },
+    updates: [{ message: { type: String, maxlength: 2000 }, date: { type: Date, default: Date.now } }],
 
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "approved",
+      enum: ["pending", "approved", "rejected", "completed"],
+      default: "pending",
     },
 
     promoteCampaign: { type: Boolean, default: false },

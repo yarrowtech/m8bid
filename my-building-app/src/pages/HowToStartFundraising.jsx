@@ -190,9 +190,7 @@ export default function HowToStartRaising() {
   const handleRaiserAction = (path) => {
     const user = getSessionUser();
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const hasRaiserAccount = Boolean(
-      user?.access?.raiser?.enabled && user?.activeMode === "raiser"
-    );
+    const hasRaiserAccount = Boolean(user);
 
     if (!user || !token || !hasRaiserAccount) {
       setRaiserAccessOpen(true);
@@ -211,7 +209,7 @@ export default function HowToStartRaising() {
       <SEO
         title="How to Start Raising — Complete Step-by-Step Guide for Founders"
         description="Learn how to start a raising campaign on MateBid. Define your goal, build your raiser page, share with supporters, and collect contributions securely. A complete guide for founders and businesses."
-        keywords="how to start raising, start a raiser, raising guide India, raising campaign steps, raiser page tips, MateBid raising, donation based raising, contribution based raising, raising for startups, how to raise funds online, crowdfunding guide"
+        keywords="how to start raising, start a raiser, raising guide India, raising campaign steps, raiser page tips, MateBid raising, contribution based raising, contribution based raising, raising for startups, how to raise funds online, crowdfunding guide"
         canonical="/how-to-start-a-raising"
         jsonLd={{
           "@context": "https://schema.org",
@@ -314,7 +312,7 @@ export default function HowToStartRaising() {
         title="How Raising Helps"
         text="Raising helps founders and creators move faster from idea to execution. It also builds trust because your campaign stays transparent with progress and updates."
         image={helpsImage}
-        alt="Supporters contributing through donation-based raising"
+        alt="Supporters contributing through contribution-based raising"
         reverse
       >
         <ul className="mt-4 list-disc space-y-2 pl-6 text-sm leading-8 text-slate-700 md:text-base">
@@ -372,7 +370,7 @@ export default function HowToStartRaising() {
           Common Types Of Raisers
         </h2>
         <p className="mt-4 text-sm leading-8 text-slate-700 md:text-base">
-          Before choosing donation-based or contribution-based raising, it helps
+          Before creating a funding campaign, it helps
           to identify your raiser category. Different categories attract
           different supporter behavior and communication style.
         </p>
@@ -445,34 +443,15 @@ export default function HowToStartRaising() {
 
         <div className="mt-8 space-y-10">
           <div className="grid items-center gap-8 lg:grid-cols-2">
-            <div>
-              <h3 className="text-xl font-bold text-slate-900">1. Donation-Based Raising</h3>
-              <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-                Donation-based raising is support-first. People contribute because they believe in your mission
-                and impact, not because they expect financial return.
-              </p>
-              <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-                Example: Raising Rs 300,000 for medical support with weekly treatment updates.
-              </p>
-            </div>
-            <img
-              src={donationImage}
-              alt="Donation model for raising"
-              className="h-[210px] w-full rounded-2xl object-cover shadow-md md:h-[250px]"
-            />
-          </div>
-
-          <div className="grid items-center gap-8 lg:grid-cols-2">
             <img
               src={contributionImage}
               alt="Contribution model for raising"
               className="order-1 h-[210px] w-full rounded-2xl object-cover shadow-md md:h-[250px] lg:order-2"
             />
             <div className="order-2 lg:order-1">
-              <h3 className="text-xl font-bold text-slate-900">2. Contribution-Based Raising</h3>
+              <h3 className="text-xl font-bold text-slate-900">Contribution-Based Funding</h3>
               <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
-                Contribution-based raising is growth-first. Contributors back campaigns with a business mindset,
-                so your milestones, plan, and execution quality matter more.
+                People contribute to help your funding campaign achieve its goal. Explain your purpose, costs, timeline, and milestones clearly.
               </p>
               <p className="mt-3 text-sm leading-8 text-slate-700 md:text-base">
                 Example: Raising Rs 1,000,000 for expanding production and entering two new markets.
@@ -579,8 +558,8 @@ export default function HowToStartRaising() {
         setRaiserAccessOpen(false);
         navigate("/login");
       }}
-      title="Raiser account needed"
-      message="You need a raiser account to start raising. Please login with a raiser account or create one first."
+      title="Sign in to continue"
+      message="Sign in to your MateBid account to create a funding campaign."
       buttonLabel="Go to Login"
     />
     </>

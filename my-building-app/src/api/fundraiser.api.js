@@ -56,7 +56,7 @@ export const getCampaigns = async () => {
 /* 🔥 FIXED ROUTES (IMPORTANT) */
 export const getCampaignById = async (id) => {
   try {
-    const response = await api.get(`/raiser/campaigns/${id}`);
+    const response = await api.get(`/fundraiser/campaigns/${id}`);
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error("Failed to fetch campaign details");
