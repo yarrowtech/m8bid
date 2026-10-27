@@ -1,724 +1,83 @@
-﻿import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import {
-  FaArrowLeft,
-  FaBars,
-  FaCalendarAlt,
-  FaEnvelope,
-  FaEye,
-  FaFileAlt,
-  FaFolderOpen,
-  FaIdCard,
-  FaMapMarkerAlt,
-  FaMoneyBillWave,
-  FaPhone,
-  FaReceipt,
-  FaShieldAlt,
-  FaUniversity,
-  FaUser,
-  FaUserTie,
-} from "react-icons/fa";
-import {
-  approveCampaign,
-  deleteCampaign,
-  getAdminUserDetails,
-  rejectCampaign,
-  updateUserDocumentStatus,
-} from "../../api/admin";
+import AdminCampaignRecord from "./AdminCampaignRecord";
+import "./AdminUserRecords.css";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, ArrowUpRight, UserRound, Mail, Phone, ShieldCheck, Landmark, FolderKanban, HeartHandshake, Receipt, FileText, ExternalLink } from "lucide-react";
+import { getAdminUserDetails, updateUserDocumentStatus, approveCampaign, rejectCampaign, deleteCampaign } from "../../api/admin";
+import AdminRecordHeader from "./AdminRecordHeader";
 
-const cn = (...classes) => classes.filter(Boolean).join(" ");
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "http://localhost:5000";
-const STATUS_OPTIONS = ["NONE", "PENDING", "VERIFIED", "REJECTED"];
-
-const INR = (value) => {
-  const num = Number(value || 0);
-  try {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(num);
-  } catch {
-    return `Rs. ${num}`;
-  }
-};
-
-const formatDate = (value) => {
-  if (!value) return "--";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--";
-  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-};
-
-const tone = (status = "") => {
-  const v = String(status).toLowerCase();
-  if (["approved", "verified", "active", "success"].includes(v)) return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (["pending", "review", "processing", "under_review", "under review"].includes(v)) return "border-amber-200 bg-amber-50 text-amber-700";
-  if (["rejected", "failed", "inactive", "blocked", "deleted"].includes(v)) return "border-rose-200 bg-rose-50 text-rose-700";
-  return "border-slate-200 bg-slate-50 text-slate-700";
-};
-
-const normalizeUrl = (value) => {
-  if (!value) return "";
-  const raw = String(value).trim();
+const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
+const date = (value) => value ? new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const card = "rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm";
+const statuses = ["NONE", "PENDING", "VERIFIED", "REJECTED"];
+const title = (value) => String(value).replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ");
+function Badge({ value = "NONE" }) {
+  const status = String(value).toLowerCase();
+  const color = ["verified", "approved", "completed", "confirmed", "active", "processed"].includes(status) ? "bg-emerald-50 text-emerald-700" : ["pending", "processing", "created"].includes(status) ? "bg-amber-50 text-amber-700" : ["rejected", "disabled", "failed", "refunded"].includes(status) ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500";
+  return <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${color}`}>{status === "none" ? "Not submitted" : status}</span>;
+}
+function Fields({ entries }) {
+  return <dl className="mt-4 grid gap-x-6 gap-y-5 sm:grid-cols-2">{entries.map(([label, value]) => <div key={label}><dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</dt><dd className="mt-1.5 break-words text-sm font-medium text-slate-800">{value || "—"}</dd></div>)}</dl>;
+}
+function Records({ columns, rows, empty }) {
+  return <div className="overflow-x-auto rounded-2xl border border-slate-200"><table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr>{columns.map((label) => <th key={label} className="px-4 py-3 font-semibold">{label}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{rows.map(([id, cells]) => <tr key={id} className="hover:bg-slate-50/50">{cells.map((cell, index) => <td key={index} className="px-4 py-4 align-top text-sm text-slate-600">{cell}</td>)}</tr>)}</tbody></table>{!rows.length && <p className="py-10 text-center text-sm text-slate-400">{empty}</p>}</div>;
+}
+function documentUrl(value) {
+  const raw = typeof value === "string" ? value : value?.url || value?.secure_url || "";
   if (!raw) return "";
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  if (raw.startsWith("/")) return `${API_BASE}${raw}`;
-  return `${API_BASE}/${raw}`;
-};
-
-const isImageFile = (value = "") => [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"].some((ext) => String(value).toLowerCase().includes(ext));
-const pretty = (value = "") => String(value).replace(/([A-Z])/g, " $1").replace(/[_-]/g, " ").trim().replace(/\b\w/g, (c) => c.toUpperCase());
-
-const accessFrom = (details) => {
-  const access = details?.raiserAccess || details?.access?.raiser || {};
-  return {
-    enabled: Boolean(access.enabled),
-    type: access.type || "individual",
-    kycStatus: access.kycStatus || "NONE",
-    panStatus: access.panStatus || "NONE",
-    bankStatus: access.bankStatus || "NONE",
-    companyStatus: access.companyStatus || "NONE",
-    details: access.details || {},
-    documents: access.documents || {},
-  };
-};
-
-const contributorAccessFrom = (details) => {
-  const access = details?.contributorAccess || details?.access?.contributor || {};
-  return {
-    enabled: Boolean(access.enabled),
-    type: access.type || "individual",
-    kycStatus: access.kycStatus || "NONE",
-    bankStatus: access.bankStatus || "NONE",
-    details: access.details || {},
-    documents: access.documents || {},
-  };
-};
-
-const campaignDocs = (campaign) => [
-  { label: "License", url: campaign?.documents?.license },
-  { label: "GST Certificate", url: campaign?.documents?.gst },
-  { label: "Company Registration", url: campaign?.documents?.companyRegistration },
-  { label: "Legal Document", url: campaign?.documents?.legalDocument },
-  { label: "Project Video", url: campaign?.documents?.video },
-].filter((item) => item.url);
-
-const campaignGallery = (campaign) => [
-  { label: "Cover Photo", url: campaign?.documents?.photo },
-  ...(campaign?.documents?.projectPhotos || []).map((url, index) => ({ label: `Project Photo ${index + 1}`, url })),
-].filter((item) => item.url);
-
-export default function AdminUserDetails() {
-  const { setSidebarOpen } = useOutletContext();
-  const navigate = useNavigate();
-  const { userId } = useParams();
-
-  const [loading, setLoading] = useState(true);
-  const [details, setDetails] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [expandedCampaign, setExpandedCampaign] = useState(null);
-  const [statusLoading, setStatusLoading] = useState({});
-  const [campaignLoading, setCampaignLoading] = useState({});
-
-  const fetchDetails = async () => {
-    try {
-      setLoading(true);
-      const res = await getAdminUserDetails(userId);
-      setDetails(res?.user || res?.data?.user || res?.data || res || null);
-    } catch (error) {
-      console.error("Admin user details fetch error:", error);
-      setDetails(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDetails();
-  }, [userId]);
-
-  const raiserAccess = useMemo(() => accessFrom(details), [details]);
-  const contributorAccess = useMemo(() => contributorAccessFrom(details), [details]);
-  const [profileMode, setProfileMode] = useState("raiser");
-  const isContributorView = profileMode === "contributor";
-
-  const campaigns = details?.campaigns || [];
-  const contributions = details?.contributions || [];
-  const contributorTransactions = details?.contributorTransactions || [];
-  const raiserTransactions = details?.raiserTransactions || [];
-  const transactions = isContributorView ? contributorTransactions : raiserTransactions;
-  const totalRaised = campaigns.reduce((sum, c) => sum + Number(c?.moneyRaised || c?.currentFunding || 0), 0);
-  const totalGoal = campaigns.reduce((sum, c) => sum + Number(c?.fundingGoal || c?.moneyToRaise || 0), 0);
-  const transactionRaised = transactions.reduce((sum, txn) => sum + Number(txn?.amount || 0), 0);
-  const completedTransactions = transactions.filter((txn) => txn?.status === "completed").length;
-  const pendingTransactions = transactions.filter((txn) => ["created", "pending"].includes(String(txn?.status || "").toLowerCase())).length;
-  const failedTransactions = transactions.filter((txn) => ["failed", "cancelled", "refunded"].includes(String(txn?.status || "").toLowerCase())).length;
-  const totalContributed = contributions.filter((inv) => inv.paymentStatus === "completed").reduce((sum, inv) => sum + Number(inv?.amount || 0), 0);
-  const activeContributions = contributions.filter((inv) => {
-    const paymentStatus = String(inv?.paymentStatus || "").toLowerCase();
-    const status = String(inv?.status || "").toLowerCase();
-    return paymentStatus === "completed" || status === "confirmed";
-  }).length;
-  const counts = {
-    approved: campaigns.filter((c) => c?.status === "approved").length,
-    pending: campaigns.filter((c) => c?.status === "pending").length,
-    rejected: campaigns.filter((c) => c?.status === "rejected").length,
-  };
-  const completion = totalGoal > 0 ? Math.min((totalRaised / totalGoal) * 100, 100) : 0;
-  const address = [details?.profile?.addressLine, details?.profile?.city, details?.profile?.state, details?.profile?.pincode].filter(Boolean).join(", ");
-
-  const userDocs = isContributorView
-    ? [
-        { title: "KYC Document", url: contributorAccess.documents?.kyc, status: contributorAccess.kycStatus },
-        { title: "PAN Document", url: contributorAccess.documents?.pan, status: contributorAccess.kycStatus },
-        { title: "Address Proof", url: contributorAccess.documents?.addressProof, status: contributorAccess.kycStatus },
-        { title: "Bank Proof", url: contributorAccess.documents?.bankProof, status: contributorAccess.bankStatus },
-      ].filter((item) => item.url)
-    : [
-        { title: "KYC Document", url: raiserAccess.documents?.kyc, status: raiserAccess.kycStatus },
-        { title: "PAN Document", url: raiserAccess.documents?.pan, status: raiserAccess.panStatus },
-        { title: "Address Proof", url: raiserAccess.documents?.addressProof, status: raiserAccess.kycStatus },
-        { title: "Bank Proof", url: raiserAccess.documents?.bankProof, status: raiserAccess.bankStatus },
-        { title: "GST Certificate", url: raiserAccess.documents?.gst, status: raiserAccess.companyStatus },
-        { title: "Business License", url: raiserAccess.documents?.license, status: raiserAccess.companyStatus },
-        { title: "Incorporation Certificate", url: raiserAccess.documents?.incorporation, status: raiserAccess.companyStatus },
-      ].filter((item) => item.url);
-
-  const tabs = isContributorView
-    ? [
-        ["overview", "Overview", FaUser],
-        ["access", "Profile Access", FaUserTie],
-        ["activity", "Contributor Activity", FaFolderOpen],
-        ["campaigns", "Contributor Campaigns", FaMoneyBillWave],
-        ["transactions", "Transactions", FaReceipt],
-        ["kyc", "KYC & Documents", FaShieldAlt],
-      ]
-    : [
-        ["overview", "Overview", FaUser],
-        ["access", "Profile Access", FaUserTie],
-        ["activity", "Raiser Activity", FaFolderOpen],
-        ["campaigns", "Campaigns Listed", FaMoneyBillWave],
-        ["transactions", "Transactions", FaReceipt],
-        ["kyc", "KYC & Documents", FaShieldAlt],
-      ];
-
-  const patchLocalStatus = (key, value) => {
-    setDetails((prev) => {
-      if (!prev) return prev;
-      if (isContributorView) {
-        const current = contributorAccessFrom(prev);
-        return { ...prev, contributorAccess: { ...current, [key]: value } };
-      }
-      const current = accessFrom(prev);
-      return { ...prev, raiserAccess: { ...current, [key]: value } };
-    });
-  };
-
-  const handleStatusUpdate = async (documentType, key, status) => {
-    const loadingKey = `${documentType}-${status}`;
-    try {
-      setStatusLoading((prev) => ({ ...prev, [loadingKey]: true }));
-      patchLocalStatus(key, status);
-      await updateUserDocumentStatus(
-        userId,
-        isContributorView ? "contributor" : "raiser",
-        documentType,
-        status
-      );
-      await fetchDetails();
-    } catch (error) {
-      console.error("Document status update error:", error);
-      await fetchDetails();
-    } finally {
-      setStatusLoading((prev) => ({ ...prev, [loadingKey]: false }));
-    }
-  };
-
-  const handleCampaignAction = async (campaignId, action) => {
-    try {
-      setCampaignLoading((prev) => ({ ...prev, [`${campaignId}-${action}`]: true }));
-      if (action === "approve") await approveCampaign(campaignId);
-      if (action === "reject") await rejectCampaign(campaignId);
-      if (action === "delete") await deleteCampaign(campaignId);
-      await fetchDetails();
-    } catch (error) {
-      console.error(`Campaign ${action} error:`, error);
-    } finally {
-      setCampaignLoading((prev) => ({ ...prev, [`${campaignId}-${action}`]: false }));
-    }
-  };
-
-  return (
-    <>
-      <div className="mb-6 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-        <div className="bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.22),_transparent_28%),linear-gradient(135deg,#082f49_0%,#0f172a_46%,#111827_100%)] px-5 py-6 text-white sm:px-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/10 text-white hover:bg-white/15 lg:hidden"><FaBars /></button>
-              <button onClick={() => navigate("/admin/users")} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15"><FaArrowLeft />Back</button>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">{isContributorView ? "Contributor Admin Profile" : "Raiser Admin Profile"}</p>
-                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{details?.name || (isContributorView ? "Contributor User" : "Raiser User")}</h1>
-                <p className="mt-2 text-sm text-slate-300">
-                  {isContributorView
-                    ? "Contributor overview, access, activity, portfolio, transactions, KYC, and documents are shown here."
-                    : "Raiser overview, access, activity, campaigns, KYC, and documents are shown here."}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {[
-                    isContributorView
-                      ? contributorAccess.enabled ? "Can Contribute Funds" : "Contributor Disabled"
-                      : raiserAccess.enabled ? "Can Raise Funds" : "Raiser Disabled",
-                    `Type: ${pretty(isContributorView ? contributorAccess.type : raiserAccess.type)}`,
-                    "Role: User",
-                    isContributorView ? `Contributions: ${contributions.length}` : `Campaigns: ${campaigns.length}`,
-                  ].map((item) => <span key={item} className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/95">{item}</span>)}
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2"><button onClick={() => setProfileMode("raiser")} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold">Raise Funds activity</button><button onClick={() => setProfileMode("contributor")} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold">Contribute Funds activity</button></div>
-            <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm text-slate-200 sm:min-w-[290px]">
-              <HeroInfo icon={FaEnvelope} label="Email" value={details?.email} />
-              <HeroInfo icon={FaPhone} label="Phone" value={details?.profile?.phone || details?.phone} />
-              <HeroInfo icon={FaCalendarAlt} label="Joined" value={formatDate(details?.createdAt)} />
-              <HeroInfo icon={FaIdCard} label="User ID" value={details?._id} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {loading ? <Card className="p-10 text-center text-slate-500">Loading raiser profile...</Card> : !details ? <Card className="p-10 text-center text-slate-500">User details not found.</Card> : (
-        <>
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat
-              title={isContributorView ? "Contributions Made" : "Campaigns Created"}
-              value={isContributorView ? contributions.length : campaigns.length}
-              accent="from-sky-500 to-cyan-500"
-            />
-            <Stat
-              title={isContributorView ? "Total Contributed" : "Total Goal"}
-              value={INR(isContributorView ? totalContributed : totalGoal)}
-              accent="from-blue-600 to-indigo-600"
-            />
-            <Stat
-              title={isContributorView ? "Portfolio Value" : "Total Raised"}
-              value={INR(isContributorView ? totalContributed : totalRaised)}
-              accent="from-emerald-500 to-green-600"
-            />
-            <Stat
-              title={isContributorView ? "Transactions" : "Completion Rate"}
-              value={isContributorView ? transactions.length : `${completion.toFixed(0)}%`}
-              accent="from-amber-500 to-orange-500"
-            />
-          </div>
-
-          <Card className="mb-6 p-4">
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
-              {tabs.map(([key, label, Icon]) => (
-                <button key={key} onClick={() => setActiveTab(key)} className={cn("flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition", activeTab === key ? "bg-slate-900 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}>
-                  <Icon className="text-sm" />
-                  <span className="truncate">{label}</span>
-                </button>
-              ))}
-            </div>
-          </Card>
-
-          {activeTab === "overview" && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-              <Card className="p-6">
-                <SectionTitle
-                  icon={FaUser}
-                  title={isContributorView ? "Contributor Overview" : "Raiser Overview"}
-                  subtitle={isContributorView ? "Identity, contact, address, bank, and contributor account information." : "Identity, contact, address, and bank information."}
-                />
-                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <Info label="Full Name" value={details?.name} icon={FaUser} />
-                  <Info label="Email" value={details?.email} icon={FaEnvelope} />
-                  <Info label="Phone" value={details?.profile?.phone || details?.phone} icon={FaPhone} />
-                  <Info label="Address" value={address || "--"} icon={FaMapMarkerAlt} />
-                  <Info label="Bank Name" value={details?.bankDetails?.bankName || "--"} icon={FaUniversity} />
-                  <Info label="Account Holder" value={details?.bankDetails?.accountHolderName || "--"} icon={FaUniversity} />
-                  {isContributorView ? <Info label="Total Contributed" value={INR(totalContributed)} icon={FaMoneyBillWave} /> : null}
-                  {isContributorView ? <Info label="Active Contributions" value={activeContributions} icon={FaReceipt} /> : null}
-                </div>
-              </Card>
-              <div className="space-y-6">
-                <Card className="p-6">
-                  <SectionTitle
-                    icon={FaShieldAlt}
-                    title="Verification Snapshot"
-                    subtitle={isContributorView ? "Live contributor verification state." : "Live raiser verification state."}
-                  />
-                  <div className="mt-5 space-y-3">
-                    <StatusRow label="KYC Status" value={isContributorView ? contributorAccess.kycStatus : raiserAccess.kycStatus} />
-                    {isContributorView ? null : <StatusRow label="PAN Status" value={raiserAccess.panStatus} />}
-                    <StatusRow label="Bank Status" value={isContributorView ? contributorAccess.bankStatus : raiserAccess.bankStatus} />
-                    {isContributorView ? null : <StatusRow label="Company Status" value={raiserAccess.companyStatus} />}
-                  </div>
-                </Card>
-                <Card className="p-6">
-                  <SectionTitle
-                    icon={FaMoneyBillWave}
-                    title={isContributorView ? "Portfolio Summary" : "Campaign Summary"}
-                    subtitle={isContributorView ? "Quick contributor portfolio and transaction numbers." : "Quick raiser numbers."}
-                  />
-                  <div className="mt-5 grid grid-cols-2 gap-3">
-                    {isContributorView ? (
-                      <>
-                        <Metric label="Contributions" value={contributions.length} />
-                        <Metric label="Portfolio Value" value={INR(totalContributed)} />
-                        <Metric label="Active" value={activeContributions} />
-                        <Metric label="Transactions" value={transactions.length} />
-                      </>
-                    ) : (
-                      <>
-                        <Metric label="Approved" value={counts.approved} />
-                        <Metric label="Pending" value={counts.pending} />
-                        <Metric label="Rejected" value={counts.rejected} />
-                        <Metric label="Transactions" value={transactions.length} />
-                      </>
-                    )}
-                  </div>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "access" && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <Card className="p-6">
-                <SectionTitle
-                  icon={FaUserTie}
-                  title="Profile Access"
-                  subtitle={isContributorView ? "Contributor-specific access configuration." : "Raiser-specific access configuration."}
-                />
-                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <Info label={isContributorView ? "Can Contribute Funds" : "Can Raise Funds"} value={isContributorView ? contributorAccess.enabled ? "Yes" : "No" : raiserAccess.enabled ? "Yes" : "No"} />
-                  <Info label="Profile Type" value={pretty(isContributorView ? contributorAccess.type : raiserAccess.type)} />
-                  <Info label="Active Mode" value={pretty(details?.activeMode || "none")} />
-                  <Info label="Account Role" value={pretty(details?.role || "user")} />
-                </div>
-              </Card>
-              <Card className="p-6">
-                <SectionTitle
-                  icon={FaShieldAlt}
-                  title="Access Review"
-                  subtitle={isContributorView ? "Approval states tied to contributor documents." : "Approval states tied to raiser documents."}
-                />
-                <div className="mt-5 space-y-3">
-                  <StatusRow label="KYC" value={isContributorView ? contributorAccess.kycStatus : raiserAccess.kycStatus} />
-                  {isContributorView ? null : <StatusRow label="PAN" value={raiserAccess.panStatus} />}
-                  <StatusRow label="Bank" value={isContributorView ? contributorAccess.bankStatus : raiserAccess.bankStatus} />
-                  {isContributorView ? null : <StatusRow label="Company" value={raiserAccess.companyStatus} />}
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "activity" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {isContributorView ? (
-                  <>
-                    <Info label="Total Contributions" value={contributions.length} />
-                    <Info label="Total Contributed" value={INR(totalContributed)} />
-                    <Info label="Active Contributions" value={activeContributions} />
-                    <Info label="Contributor Transactions" value={transactions.length} />
-                  </>
-                ) : (
-                  <>
-                    <Info label="Total Campaigns" value={campaigns.length} />
-                    <Info label="Approved Campaigns" value={counts.approved} />
-                    <Info label="Pending Campaigns" value={counts.pending} />
-                    <Info label="Rejected Campaigns" value={counts.rejected} />
-                  </>
-                )}
-              </div>
-              <Card className="p-6">
-                <SectionTitle
-                  icon={FaFolderOpen}
-                  title={isContributorView ? "Contributor Activity" : "Raiser Activity"}
-                  subtitle={isContributorView ? "See where and how much money this contributor has contributed." : "Campaign creation and status activity timeline."}
-                />
-                <div className="mt-5 space-y-3">
-                  {isContributorView ? (
-                    contributions.length > 0 ? contributions.map((contribution) => {
-                      const campaign = contribution?.campaign || {};
-                      return (
-                        <div key={contribution?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="font-semibold text-slate-900">{campaign?.projectTitle || "Campaign"}</p>
-                            <p className="text-sm text-slate-500">Contributed {INR(contribution?.amount || 0)} in {pretty(campaign?.projectCategory || "general")}</p>
-                            <p className="mt-1 text-xs text-slate-400">{formatDate(contribution?.createdAt)}</p>
-                          </div>
-                          <div className="text-left sm:text-right">
-                            <p className="text-sm font-bold text-slate-900">{INR(contribution?.amount || 0)}</p>
-                            <span className={cn("mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(contribution?.paymentStatus || contribution?.status))}>
-                              {contribution?.paymentStatus || contribution?.status || "pending"}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    }) : <Empty text="No contributor activity is available for this user yet." />
-                  ) : (
-                    campaigns.length > 0 ? campaigns.map((campaign) => (
-                      <div key={campaign?._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="font-semibold text-slate-900">{campaign?.projectTitle || "Campaign"}</p>
-                          <p className="text-sm text-slate-500">{pretty(campaign?.status || "pending")} campaign update</p>
-                          <p className="mt-1 text-xs text-slate-400">{formatDate(campaign?.createdAt)}</p>
-                        </div>
-                        <div className="text-left sm:text-right">
-                          <p className="text-sm font-bold text-slate-900">{INR(campaign?.moneyRaised || campaign?.currentFunding || 0)}</p>
-                          <span className={cn("mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(campaign?.status))}>{campaign?.status || "pending"}</span>
-                        </div>
-                      </div>
-                    )) : <Empty text="No raiser activity available for this user yet." />
-                  )}
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "campaigns" && (
-            <div className="space-y-4">
-              {isContributorView ? (
-                contributions.length > 0 ? contributions.map((contribution) => {
-                  const campaign = contribution?.campaign || {};
-                  const goal = Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
-                  const raised = Number(campaign?.currentFunding || campaign?.moneyRaised || 0);
-                  const progress = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
-
-                  const gallery = campaignGallery({
-                    documents: {
-                      photo: campaign?.photo,
-                      projectPhotos: campaign?.projectPhotos || [],
-                    },
-                  });
-
-                  return (
-                    <Card key={contribution?._id} className="overflow-hidden">
-                      <div className="p-5">
-                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-3 flex flex-wrap gap-2">
-                              <Tag text={campaign?.status || "pending"} className={tone(campaign?.status)} />
-                              <Tag text={pretty(campaign?.projectCategory || "general")} />
-                              <Tag text={formatDate(contribution?.createdAt)} />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900">{campaign?.projectTitle || "Campaign"}</h3>
-                            <p className="mt-2 text-sm leading-6 text-slate-600">{campaign?.projectOverview || "No campaign overview available."}</p>
-                            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                              <Metric label="Contributed" value={INR(contribution?.amount || 0)} />
-                              <Metric label="Current Raise" value={INR(raised)} />
-                              <Metric label="Payment Status" value={contribution?.paymentStatus || "--"} />
-                            </div>
-                            <div className="mt-4">
-                              <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Campaign progress</span><span>{progress.toFixed(0)}%</span></div>
-                              <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500" style={{ width: `${progress}%` }} /></div>
-                            </div>
-                          </div>
-                          <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:grid-cols-1">
-                            <Metric label="Goal" value={INR(goal)} />
-                            <Metric label="Funding Type" value={campaign?.fundingType || "--"} />
-                            <Metric label="Transfer Status" value={contribution?.transferStatus || "--"} />
-                            <Metric label="Order ID" value={contribution?.orderId || "--"} />
-                          </div>
-                        </div>
-                        <div className="mt-5">
-                          <Media title="Campaign Media" items={gallery} emptyText="No campaign media available." />
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                }) : <Empty text="No contributor campaign details found for this user yet." />
-              ) : (
-                campaigns.length > 0 ? campaigns.map((campaign) => {
-                  const goal = Number(campaign?.fundingGoal || campaign?.moneyToRaise || 0);
-                  const raised = Number(campaign?.moneyRaised || campaign?.currentFunding || 0);
-                  const progress = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
-                  const docs = campaignDocs(campaign);
-                  const gallery = campaignGallery(campaign);
-                  const expanded = expandedCampaign === campaign?._id;
-                  return (
-                    <Card key={campaign?._id} className="overflow-hidden">
-                      <div className="p-5">
-                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-3 flex flex-wrap gap-2">
-                              <Tag text={campaign?.status || "pending"} className={tone(campaign?.status)} />
-                              <Tag text={pretty(campaign?.projectCategory || "general")} />
-                              <Tag text={formatDate(campaign?.createdAt)} />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900">{campaign?.projectTitle || "Campaign"}</h3>
-                            <p className="mt-2 text-sm leading-6 text-slate-600">{campaign?.projectOverview || "No project overview available."}</p>
-                            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                              <Metric label="Goal" value={INR(goal)} />
-                              <Metric label="Raised" value={INR(raised)} />
-                              <Metric label="Funding Type" value={campaign?.fundingType || "--"} />
-                              <Metric label="Documents" value={docs.length} />
-                            </div>
-                            <div className="mt-4">
-                              <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Funding progress</span><span>{progress.toFixed(0)}%</span></div>
-                              <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500" style={{ width: `${progress}%` }} /></div>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2 lg:justify-end">
-                            <SmallButton label={expanded ? "Hide Details" : "View Details"} onClick={() => setExpandedCampaign(expanded ? null : campaign?._id)} />
-                            <SmallButton label="Approve" tone="success" onClick={() => handleCampaignAction(campaign?._id, "approve")} loading={campaignLoading[`${campaign?._id}-approve`]} />
-                            <SmallButton label="Reject" tone="danger" onClick={() => handleCampaignAction(campaign?._id, "reject")} loading={campaignLoading[`${campaign?._id}-reject`]} />
-                            <SmallButton label="Delete" tone="dark" onClick={() => handleCampaignAction(campaign?._id, "delete")} loading={campaignLoading[`${campaign?._id}-delete`]} />
-                          </div>
-                        </div>
-                      </div>
-                      {expanded && (
-                        <div className="border-t border-slate-200 bg-slate-50/70 p-5">
-                          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                            <div className="space-y-4">
-                              <Info label="Category" value={pretty(campaign?.projectCategory || "--")} />
-                              <Info label="Funding Type" value={campaign?.fundingType || "--"} />
-                              <Info label="Created On" value={formatDate(campaign?.createdAt)} />
-                              <Info label="Deadline" value={formatDate(campaign?.deadline)} />
-                            </div>
-                            <div className="space-y-4">
-                              <Media title="Campaign Gallery" items={gallery} emptyText="No campaign images uploaded." />
-                              <Media title="Attached Campaign Documents" items={docs} emptyText="No campaign documents uploaded." />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Card>
-                  );
-                }) : <Empty text="No campaigns have been created by this raiser yet." />
-              )}
-            </div>
-          )}
-
-          {activeTab === "transactions" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <Info label="Total Transactions" value={transactions.length} />
-                <Info label={isContributorView ? "Total Contributed via Transactions" : "Total Raised via Transactions"} value={INR(transactionRaised)} />
-                <Info label="Completed" value={completedTransactions} />
-                <Info label="Pending / Failed" value={`${pendingTransactions} / ${failedTransactions}`} />
-              </div>
-
-              <Card className="p-6">
-                <SectionTitle
-                  icon={FaReceipt}
-                  title={isContributorView ? "Contributor Transactions" : "Raiser Transactions"}
-                  subtitle={isContributorView ? "Full contribution transaction history showing where money was contributed and whether payment was completed or not." : "Full transaction history showing raised amount and whether each payment was completed or not."}
-                />
-                <div className="mt-5 space-y-4">
-                  {transactions.length > 0 ? transactions.map((txn) => (
-                    <div key={txn?._id || txn?.transactionId} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-2 flex flex-wrap gap-2">
-                            <Tag text={txn?.status || "pending"} className={tone(txn?.status)} />
-                            <Tag text={pretty(txn?.type || "contribution")} />
-                            <Tag text={pretty(txn?.paymentMethod || "razorpay")} />
-                            <Tag text={formatDate(txn?.createdAt)} />
-                          </div>
-
-                          <h3 className="text-lg font-bold text-slate-900">
-                            {txn?.campaign?.title || "Unknown Campaign"}
-                          </h3>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {txn?.description || "Raiser transaction record"}
-                          </p>
-
-                          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            <Info label="Transaction ID" value={txn?.transactionId || "--"} />
-                            <Info label={isContributorView ? "Raiser" : "Contributor"} value={isContributorView ? txn?.raiser?.name || "--" : txn?.contributor?.name || "--"} />
-                            <Info label={isContributorView ? "Raiser Email" : "Contributor Email"} value={isContributorView ? txn?.raiser?.email || "--" : txn?.contributor?.email || "--"} />
-                            <Info label="Order ID" value={txn?.orderId || "--"} />
-                            <Info label="Gateway Payment ID" value={txn?.paymentGatewayId || "--"} />
-                            <Info label="Transfer ID" value={txn?.transferId || "--"} />
-                          </div>
-
-                          {txn?.failureReason ? (
-                            <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                              Failure reason: {txn.failureReason}
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="grid min-w-[220px] grid-cols-2 gap-3 lg:grid-cols-1">
-                          <Metric label={isContributorView ? "Contributed Amount" : "Raised Amount"} value={INR(txn?.amount || 0)} />
-                          <Metric label="Platform Fee" value={INR(txn?.fee || 0)} />
-                          <Metric label="Net Amount" value={INR(txn?.netAmount || 0)} />
-                          <Metric label="Processed On" value={formatDate(txn?.processedAt)} />
-                        </div>
-                      </div>
-                    </div>
-                  )) : <Empty text={isContributorView ? "No contributor transactions found for this user yet." : "No raiser transactions found for this user yet."} />}
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "kyc" && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-              <div className="space-y-6">
-                <Card className="p-6">
-                  <SectionTitle
-                    icon={FaShieldAlt}
-                    title="KYC Details"
-                    subtitle={isContributorView ? "Contributor KYC details fetched from the backend." : "Raiser KYC details fetched from the backend."}
-                  />
-                  <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Info label="Aadhaar Number" value={isContributorView ? contributorAccess.details?.aadhaarNumber || "--" : raiserAccess.details?.aadhaarNumber || "--"} icon={FaIdCard} />
-                    <Info label="PAN Number" value={isContributorView ? contributorAccess.details?.panNumber || "--" : raiserAccess.details?.panNumber || "--"} icon={FaIdCard} />
-                    <Info label="Address Proof Type" value={isContributorView ? contributorAccess.details?.addressProofType || "--" : raiserAccess.details?.addressProofType || "--"} icon={FaMapMarkerAlt} />
-                    <Info label="Bank Account Number" value={details?.bankDetails?.accountNumber || "--"} icon={FaUniversity} />
-                    <Info label="IFSC Code" value={details?.bankDetails?.ifscCode || "--"} icon={FaUniversity} />
-                    <Info label="Branch Name" value={details?.bankDetails?.branchName || "--"} icon={FaUniversity} />
-                  </div>
-                </Card>
-                <Card className="p-6">
-                  <SectionTitle
-                    icon={FaShieldAlt}
-                    title="Live Status Controls"
-                    subtitle={isContributorView ? "Update contributor KYC and bank statuses in real time." : "Update raiser KYC statuses in real time."}
-                  />
-                  <div className="mt-5 space-y-4">
-                    <Approve label="KYC Status" value={isContributorView ? contributorAccess.kycStatus : raiserAccess.kycStatus} disabled={isContributorView ? !contributorAccess.documents?.kyc && !contributorAccess.documents?.pan && !contributorAccess.documents?.addressProof : !raiserAccess.documents?.kyc} loading={Object.keys(statusLoading).some((key) => key.startsWith("kyc-"))} onPick={(status) => handleStatusUpdate("kyc", "kycStatus", status)} />
-                    {isContributorView ? null : <Approve label="PAN Status" value={raiserAccess.panStatus} disabled={!raiserAccess.documents?.pan} loading={Object.keys(statusLoading).some((key) => key.startsWith("pan-"))} onPick={(status) => handleStatusUpdate("pan", "panStatus", status)} />}
-                    <Approve label="Bank Status" value={isContributorView ? contributorAccess.bankStatus : raiserAccess.bankStatus} disabled={isContributorView ? !contributorAccess.documents?.bankProof : !raiserAccess.documents?.bankProof} loading={Object.keys(statusLoading).some((key) => key.startsWith("bank-"))} onPick={(status) => handleStatusUpdate("bank", "bankStatus", status)} />
-                    {isContributorView ? null : <Approve label="Company Status" value={raiserAccess.companyStatus} disabled={!raiserAccess.documents?.gst && !raiserAccess.documents?.license && !raiserAccess.documents?.incorporation} loading={Object.keys(statusLoading).some((key) => key.startsWith("company-"))} onPick={(status) => handleStatusUpdate("company", "companyStatus", status)} />}
-                  </div>
-                </Card>
-              </div>
-              <Card className="p-6">
-                <SectionTitle
-                  icon={FaFileAlt}
-                  title={isContributorView ? "Contributor Documents" : "Raiser Documents"}
-                  subtitle="All user documents are listed here and can be viewed."
-                />
-                <div className="mt-5 space-y-4">
-                  {userDocs.length > 0 ? userDocs.map((doc) => <Doc key={`${doc.title}-${doc.url}`} title={doc.title} url={doc.url} status={doc.status} />) : <Empty text={isContributorView ? "No contributor KYC documents have been uploaded." : "No raiser KYC documents have been uploaded."} />}
-                </div>
-              </Card>
-            </div>
-          )}
-        </>
-      )}
-    </>
-  );
+  try { const base = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "/"); const url = new URL(raw, base); return ["http:", "https:"].includes(url.protocol) ? url.href : ""; } catch { return ""; }
 }
 
-function Card({ className, children }) { return <div className={cn("rounded-[28px] border border-slate-200 bg-white shadow-sm", className)}>{children}</div>; }
-function SectionTitle({ icon: Icon, title, subtitle }) { return <div className="flex items-start gap-3"><div className="grid h-11 w-11 place-items-center rounded-2xl bg-sky-100 text-sky-700"><Icon /></div><div><h2 className="text-lg font-bold text-slate-900">{title}</h2><p className="text-sm text-slate-500">{subtitle}</p></div></div>; }
-function HeroInfo({ icon: Icon, label, value }) { return <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3"><div className="mt-0.5 text-sky-200"><Icon /></div><div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">{label}</p><p className="mt-1 break-all text-sm font-medium text-white">{value || "--"}</p></div></div>; }
-function Stat({ title, value, accent }) { return <Card className="overflow-hidden"><div className={cn("h-1.5 bg-gradient-to-r", accent)} /><div className="p-4"><p className="text-sm font-medium text-slate-500">{title}</p><h3 className="mt-2 text-2xl font-bold text-slate-900">{value}</h3></div></Card>; }
-function Info({ label, value, icon: Icon }) { return <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-start gap-3">{Icon ? <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white text-slate-500"><Icon /></div> : null}<div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p><p className="mt-2 break-words text-sm font-semibold text-slate-900">{value || "--"}</p></div></div></div>; }
-function Metric({ label, value }) { return <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3"><p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 text-sm font-bold text-slate-900">{value}</p></div>; }
-function Tag({ text, className }) { return <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", className || "border-slate-200 bg-slate-50 text-slate-700")}>{text}</span>; }
-function StatusRow({ label, value }) { return <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"><span className="text-sm font-medium text-slate-600">{label}</span><span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(value))}>{value || "NONE"}</span></div>; }
-function SmallButton({ label, onClick, loading, tone: variant = "default" }) { const styles = { default: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50", success: "bg-emerald-600 text-white hover:bg-emerald-700", danger: "bg-rose-600 text-white hover:bg-rose-700", dark: "bg-slate-900 text-white hover:bg-slate-800" }; return <button onClick={onClick} disabled={loading} className={cn("rounded-xl px-3.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60", styles[variant])}>{loading ? "Please wait..." : label}</button>; }
-function Approve({ label, value, disabled, loading, onPick }) { return <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold text-slate-900">{label}</p><span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(value))}>{value || "NONE"}</span></div><div className="mt-4 flex flex-wrap gap-2">{STATUS_OPTIONS.map((status) => <button key={status} onClick={() => onPick(status)} disabled={disabled || loading} className={cn("rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition", value === status ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50", (disabled || loading) && "cursor-not-allowed opacity-60")}>{status}</button>)}</div>{disabled ? <p className="mt-3 text-xs text-amber-600">No matching document uploaded for this status yet.</p> : null}</div>; }
-function Media({ title, items, emptyText }) { return <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm font-semibold text-slate-900">{title}</p>{items.length > 0 ? <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{items.map((item) => { const url = normalizeUrl(item.url); const isImage = isImageFile(url); return <a key={`${item.label}-${url}`} href={url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">{isImage ? <img src={url} alt={item.label} className="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.03]" /> : <div className="grid h-40 place-items-center bg-slate-100 text-slate-400"><FaFileAlt className="text-3xl" /></div>}<div className="border-t border-slate-200 px-3 py-2"><p className="truncate text-xs font-medium text-slate-700">{item.label}</p></div></a>; })}</div> : <p className="mt-3 text-sm text-slate-500">{emptyText}</p>}</div>; }
-function Doc({ title, url, status }) { const href = normalizeUrl(url); const image = isImageFile(href); return <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"><div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between"><div className="min-w-0"><p className="text-sm font-semibold text-slate-900">{title}</p><p className="mt-1 break-all text-xs text-slate-500">{href}</p><span className={cn("mt-3 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone(status))}>{status || "NONE"}</span></div><a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"><FaEye />View Document</a></div>{image ? <div className="border-t border-slate-200 bg-white p-4"><img src={href} alt={title} className="max-h-72 w-full rounded-2xl bg-slate-100 object-contain" /></div> : null}</div>; }
-function Empty({ text }) { return <Card className="border-dashed bg-slate-50 p-6 text-sm text-slate-500">{text}</Card>; }
+export default function AdminUserDetails() {
+  const { userId } = useParams();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState("");
+  const [tab, setTab] = useState("profile");
+  const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    let active = true; setLoading(true); setError(""); setUser(null);
+    getAdminUserDetails(userId).then((response) => { if (active) setUser(response.user); }).catch((err) => { if (active) setError(err.response?.data?.message || "Unable to load this user."); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [userId, revision]);
+  const refresh = async () => { const response = await getAdminUserDetails(userId); setUser(response.user); };
+  const verify = async (kind, status) => {
+    setBusy(kind); setError(""); setNotice("");
+    try { await updateUserDocumentStatus(userId, kind === "company" ? "raiser" : "contributor", kind, status); await refresh(); setNotice(`${title(kind)} status updated.`); }
+    catch (err) { setError(err.response?.data?.message || "Unable to update verification."); }
+    finally { setBusy(""); }
+  };
+  const campaignAction = async (entry, action) => {
+    if (action === "delete" && !window.confirm(`Delete ${entry.projectTitle}? Campaigns with contribution history cannot be deleted.`)) return;
+    setBusy(entry._id); setError(""); setNotice("");
+    try { await ({ approve: approveCampaign, reject: rejectCampaign, delete: deleteCampaign })[action](entry._id); await refresh(); setNotice("Campaign updated."); }
+    catch (err) { setError(err.response?.data?.message || "Unable to update campaign."); }
+    finally { setBusy(""); }
+  };
+  const raiser = user?.raiserAccess || user?.fundraiserAccess || {};
+  const contributor = user?.contributorAccess || user?.investorAccess || {};
+  const profile = user?.profile || {}, bank = user?.bankDetails || {};
+  const campaigns = user?.campaigns || [], contributions = user?.contributions || [], transactions = user?.transactions || [];
+  const confirmed = contributions.filter((entry) => entry.paymentStatus === "completed" && entry.status === "confirmed");
+  const docs = { ...raiser.documents, ...Object.fromEntries(Object.entries(contributor.documents || {}).filter(([, value]) => value)) };
+  const shared = [["kyc", "Identity verification", user?.kycStatus || contributor.kycStatus || raiser.kycStatus || "NONE", docs.kyc || docs.addressProof], ["pan", "PAN verification", contributor.panStatus || raiser.panStatus || "NONE", docs.pan], ["bank", "Bank verification", contributor.bankStatus || raiser.bankStatus || "NONE", docs.bankProof]];
+  if (raiser.type === "company") shared.push(["company", "Company documents", raiser.companyStatus || "NONE", docs.gst || docs.license || docs.incorporation]);
+  const tabs = [["profile", "Profile & Bank", UserRound], ["verification", "Verification & Documents", ShieldCheck], ["campaigns", `Campaigns (${campaigns.length})`, FolderKanban], ["contributions", `Contributions (${contributions.length})`, HeartHandshake], ["transactions", `Transactions (${transactions.length})`, Receipt]];
+  return <div className="admin-user-records admin-user-detail space-y-6">
+    <AdminRecordHeader title="Account Workspace" description="Profile, verification and financial activity in one place." refreshing={loading} onRefresh={() => setRevision(revision + 1)}><Link to="/admin/users" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500"><ArrowLeft size={16} />All users</Link></AdminRecordHeader>
+    {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}{notice && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
+    {!user ? <p role="status" className={`${card} py-12 text-center text-slate-500`}>{loading ? "Loading user records..." : "User records unavailable."}</p> : <>
+      <section className="user-identity-card overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm"><div className="user-identity-banner flex flex-wrap items-center justify-between gap-5 p-6 sm:p-7"><div className="flex items-center gap-4"><div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-indigo-100 text-2xl font-semibold text-slate-600">{user.photo ? <img src={user.photo} alt="" className="h-full w-full object-cover" /> : user.name?.charAt(0) || "U"}</div><div><h2 className="user-identity-name text-[28px] font-bold tracking-tight text-slate-900">{user.name || "Unnamed user"}</h2><p className="user-identity-contact mt-1 flex items-center gap-1.5 text-sm text-slate-500"><Mail size={13} />{user.email}</p><p className="user-identity-contact mt-1 flex items-center gap-1.5 text-xs text-slate-400"><Phone size={12} />{user.phone || profile.phone || "Phone not provided"}</p></div></div><div className="space-y-2 text-right"><Badge value={user.accountStatus || "active"} /><p className="user-identity-contact text-xs text-slate-400">Joined {date(user.createdAt)}</p></div></div><div className="flex flex-wrap justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-3 text-xs text-slate-500"><span className="break-all">Account ID: {user._id}</span><span>Role: {user.role || "user"}</span><span>Updated {date(user.updatedAt)}</span></div></section>
+      <section aria-label="Funding summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["Campaigns created", campaigns.length], ["Total raised", money(campaigns.reduce((sum, entry) => sum + Number(entry.moneyRaised || entry.currentFunding || 0), 0))], ["Confirmed contributions", confirmed.length], ["Total contributed", money(confirmed.reduce((sum, entry) => sum + Number(entry.amount), 0))]].map(([label, value]) => <div key={label} className={`${card} user-summary-card`}><p className="text-xs font-medium text-slate-500">{label}</p><p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{value}</p></div>)}</section>
+      <nav aria-label="User record sections" className="user-record-tabs flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white p-2">{tabs.map(([id, label, Icon]) => <button key={id} onClick={() => setTab(id)} aria-pressed={tab === id} className={`inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold ${tab === id ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "text-slate-500 hover:bg-slate-50"}`}><Icon size={15} />{label}</button>)}</nav>
+      {tab === "profile" && <div className="grid items-start gap-5 xl:grid-cols-2"><section className={card}><h3 className="flex items-center gap-2 text-base font-semibold"><UserRound size={17} className="text-indigo-500" />Personal information</h3><Fields entries={[["Full name", user.name], ["Username", user.username], ["Email", user.email], ["Phone", profile.phone || user.phone], ["Address", profile.addressLine], ["City", profile.city], ["State", profile.state], ["PIN code", profile.pincode], ["Saved campaigns", String(user.savedCampaigns?.length || 0)]]} /></section><section className={card}><h3 className="flex items-center gap-2 text-base font-semibold"><Landmark size={17} className="text-indigo-500" />Shared bank account</h3><Fields entries={[["Account holder", bank.accountHolderName], ["Bank", bank.bankName], ["Account number", bank.accountNumber], ["IFSC", bank.ifscCode], ["Branch", bank.branchName]]} /><div className="mt-5 border-t border-slate-100 pt-4"><Badge value={contributor.bankStatus || raiser.bankStatus} /></div></section>{[...Object.entries(raiser.details || {}), ...Object.entries(contributor.details || {})].length > 0 && <section className={`${card} xl:col-span-2`}><h3 className="text-base font-semibold">Additional account details</h3><Fields entries={Object.entries({ ...raiser.details, ...contributor.details }).filter(([, value]) => value && typeof value !== "object").map(([key, value]) => [title(key), String(value)])} /></section>}</div>}
+      {tab === "verification" && <div className="space-y-5"><section className={card}><h3 className="text-base font-semibold">Shared verification</h3><p className="mt-1 text-xs text-slate-500">Identity and bank approvals apply to both funding activities.</p><div className="mt-5 grid gap-4 lg:grid-cols-2">{shared.map(([kind, label, status, document]) => <div key={kind} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4"><div className="flex justify-between gap-3"><h4 className="text-sm font-semibold">{label}</h4><Badge value={status} /></div><div className="mt-4 flex flex-wrap gap-2">{statuses.map((value) => <button key={value} disabled={Boolean(busy) || (!document && value === "VERIFIED")} onClick={() => verify(kind, value)} className={`rounded-lg border px-2.5 py-2 text-[10px] font-semibold disabled:opacity-40 ${value === status ? "border-slate-900 bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "border-slate-200 bg-white text-slate-500"}`}>{value === "NONE" ? "Not submitted" : value.toLowerCase()}</button>)}</div>{!document && <p className="mt-3 text-xs text-slate-400">No matching document uploaded.</p>}</div>)}</div></section><section className={card}><h3 className="text-base font-semibold">Uploaded documents</h3><div className="mt-4 grid gap-3 sm:grid-cols-2">{Object.entries(docs).filter(([, value]) => documentUrl(value)).map(([key, value]) => <a key={key} href={documentUrl(value)} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-4 hover:bg-slate-50"><span className="flex items-center gap-3 text-sm font-medium capitalize"><FileText size={18} className="text-indigo-500" />{title(key)}</span><ExternalLink size={15} className="text-slate-400" /></a>)}</div>{!Object.values(docs).some(documentUrl) && <p className="py-8 text-center text-sm text-slate-400">No documents uploaded.</p>}</section></div>}
+      {tab === "campaigns" && <div className="space-y-4"><div className="flex items-center justify-between"><h3 className="text-base font-bold">Created campaigns</h3><span className="text-xs text-slate-400">{campaigns.length} records</span></div>{campaigns.length ? campaigns.map((entry, index) => <AdminCampaignRecord key={entry._id} campaign={entry} defaultOpen={index === 0} busy={busy} onAction={campaignAction} />) : <p className={`${card} py-10 text-center text-sm text-slate-400`}>No campaigns created.</p>}</div>}
+
+      {tab === "contributions" && <Records columns={["Campaign", "Amount", "Payment", "Payout", "Refund", "Date"]} empty="No contributions recorded." rows={contributions.map((entry) => [entry._id, [entry.campaign?._id ? <Link to={`/contribution-detail/${entry.campaign._id}`} className="font-semibold hover:text-indigo-600">{entry.campaign.projectTitle}<ArrowUpRight size={12} className="ml-1 inline" /></Link> : "Campaign unavailable", <span>{money(entry.amount)}<span className="mt-1 block text-xs text-slate-400">Fee {money(entry.platformFee)}</span></span>, <span><Badge value={entry.paymentStatus} /><span className="mt-2 block break-all text-[10px] text-slate-400">{entry.paymentId || entry.orderId}</span></span>, <Badge value={entry.transferStatus} />, <span><Badge value={entry.refundStatus} />{entry.refundId && <span className="mt-1 block text-xs">{entry.refundId}</span>}</span>, date(entry.createdAt)]])} />}
+      {tab === "transactions" && <Records columns={["Reference", "Campaign", "Type", "Amount", "Status", "Date"]} empty="No financial transactions." rows={transactions.map((entry) => [entry._id, [<span className="break-all text-xs">{entry.transactionId}</span>, entry.campaign?.title || "Account transaction", <span className="capitalize">{entry.type === "investment" ? "contribution" : entry.type}</span>, <span>{money(entry.amount)}<span className="mt-1 block text-xs text-slate-400">Net {money(entry.netAmount)}</span></span>, <Badge value={entry.status} />, date(entry.createdAt)]])} />}
+    </>}
+  </div>;
+}

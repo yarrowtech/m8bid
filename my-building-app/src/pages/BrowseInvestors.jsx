@@ -1,8 +1,9 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ArrowRight } from "lucide-react";
-import heroImg from "../assets/investors-hero.jpg";
-import sampleImg from "../assets/fundraising-example.jpg";
+import { cldImage } from "../utils/cloudinary";
+const heroImg = cldImage("building-app/pages/investors-hero", 1920);
+const sampleImg = cldImage("building-app/home/fundraising-example", 800);
 import { getAllCampaigns } from "../api/campaign";
 import SEO from "../components/SEO.jsx";
 

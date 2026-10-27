@@ -43,6 +43,7 @@ app.use("/api/contributions", investmentRoutes);
 app.use("/api/admin/contributions", require("./routes/contributionAdmin"));
 app.use("/api/investments", investmentRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/analytics", require("./routes/analyticsRoutes")); // Public visitor tracking beacon
 
 
 

@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { getCampaignById } from "../api/fundraiser.api";
 import api from "../lib/axiox";
-import sampleImg from "../assets/fundraising-example.jpg";
+import { cldImage } from "../utils/cloudinary";
+const sampleImg = cldImage("building-app/home/fundraising-example", 800);
 import AccessModeModal from "../components/AccessModeModal.jsx";
 
 const INR = (n) => {

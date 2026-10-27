@@ -7,6 +7,9 @@ const Model = require("../models/WebsiteAnalyticsDaily");
 const User = require("../models/userSchema");
 const { decodeToken, isAdmin } = require("../middleware/authmiddleware");
 const controller = require("../controllers/adminController/WebsiteAnalytics");
+const Session = require("../models/WebsiteVisitSession");
+// Report handlers roll up tracked visits first; with no sessions stored, that is a no-op.
+Session.findOne = () => ({ sort: () => ({ lean: async () => null }) });
 
 const search = (clicks, impressions, position) => ({ clicks, impressions, position });
 const traffic = (entries, exits, views, engaged, engagementSeconds) => ({ entries, exits, views, engaged, engagementSeconds });
@@ -63,7 +66,8 @@ test("HTTP API enforces admin access, returns real stored reports, and persists 
   const oldBulk = Model.bulkWrite;
   const oldUser = User.findById;
   let writes = [];
-  Model.find = () => ({ sort: () => ({ lean: async () => [record] }) });
+  // Honour the date range like MongoDB: current and comparison periods are read separately.
+  Model.find = (match) => ({ sort: () => ({ lean: async () => [record].filter((row) => row.date >= match.date.$gte && row.date <= match.date.$lte) }) });
   Model.bulkWrite = async (operations) => { writes = operations; };
   User.findById = (id) => ({ select: async () => ({ _id: id, role: id === "admin" ? "admin" : "user" }) });
   const app = express(); app.use(express.json());
@@ -77,6 +81,12 @@ test("HTTP API enforces admin access, returns real stored reports, and persists 
     assert.equal((await fetch(url)).status, 401);
     assert.equal((await fetch(url, { headers: auth("user") })).status, 403);
     assert.equal((await fetch(`${url}?days=100`, { headers: auth("admin") })).status, 400);
+    for (const days of [90, 180, 365]) {
+      const long = await (await fetch(`${url}?days=${days}&endDate=2026-10-06`, { headers: auth("admin") })).json();
+      assert.equal(long.data.filters.days, days);
+      assert.equal(long.data.totals.clicks, 10);
+      assert.equal(long.data.comparison.clicks, undefined); // nothing stored for the previous period
+    }
     const response = await fetch(url, { headers: auth("admin") });
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "private, no-store");

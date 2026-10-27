@@ -13,7 +13,8 @@ import {
   BarChart3,
 } from "lucide-react";
 
-import heroImage from "../assets/fundraising-hero.jpg";
+import { cldImage } from "../utils/cloudinary";
+const heroImage = cldImage("building-app/pages/fundraising-hero", 1920);
 import AccessModeModal from "../components/AccessModeModal.jsx";
 import SEO from "../components/SEO.jsx";
 

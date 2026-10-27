@@ -12,6 +12,7 @@ import {
   FaFolderOpen,
   FaRightFromBracket,
   FaUserShield,
+  FaHandHoldingDollar,
 } from "react-icons/fa6";
 import { logoutUser } from "../../api/user";
 
@@ -27,14 +28,20 @@ export default function AdminSidebar({
 }) {
   const navigate = useNavigate();
 
-  const items = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: FaFolderOpen },
-    { label: "Users", path: "/admin/users", icon: FaUsers },
-    { label: "Campaigns", path: "/admin/campaigns", icon: FaBullhorn },
-    { label: "Transactions", path: "/admin/transactions", icon: FaWallet },
-    { label: "Contributions & Refunds", path: "/admin/contributions", icon: FaWallet },
-    { label: "Analytics", path: "/admin/analytics", icon: FaChartLine },
-    { label: "Website Analytics", path: "/admin/website-analytics", icon: FaGlobe },
+  const sections = [
+    { title: "Overview", items: [
+      { label: "Dashboard", path: "/admin/dashboard", icon: FaFolderOpen },
+      { label: "Analytics", path: "/admin/analytics", icon: FaChartLine },
+      { label: "Website Analytics", path: "/admin/website-analytics", icon: FaGlobe },
+    ] },
+    { title: "Manage", items: [
+      { label: "Users", path: "/admin/users", icon: FaUsers },
+      { label: "Campaigns", path: "/admin/campaigns", icon: FaBullhorn, badge: pendingApprovals },
+    ] },
+    { title: "Finance", items: [
+      { label: "Transactions", path: "/admin/transactions", icon: FaWallet },
+      { label: "Contributions & Refunds", path: "/admin/contributions", icon: FaHandHoldingDollar },
+    ] },
   ];
 
   const handleLogout = () => {
@@ -56,20 +63,21 @@ export default function AdminSidebar({
 
       <aside
         className={cn(
-          "admin-sidebar fixed left-0 top-0 z-40 h-dvh w-72 border-r border-white/10 bg-[#0f172a] text-white shadow-xl transition-[transform,visibility] duration-200 motion-reduce:transition-none lg:visible lg:translate-x-0 lg:transition-none",
+          "admin-sidebar fixed left-0 top-0 z-40 h-dvh w-72 border-r border-white/5 bg-[linear-gradient(180deg,#1e1b4b_0%,#172554_55%,#0f172a_100%)] text-white shadow-2xl transition-[transform,visibility] duration-200 motion-reduce:transition-none lg:visible lg:translate-x-0 lg:transition-none",
           open ? "visible translate-x-0" : "invisible -translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="shrink-0 border-b border-white/10 p-6">
+          <div className="shrink-0 px-6 pb-5 pt-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-300">
-                  Admin Panel
-                </p>
-                <h2 className="mt-2 text-2xl font-bold tracking-tight">
-                  Control Center
-                </h2>
+              <div className="flex items-center gap-3">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-500 text-lg text-white shadow-lg shadow-indigo-900/50">
+                  <FaUserShield />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-indigo-300">Admin Panel</p>
+                  <h2 className="text-lg font-extrabold tracking-tight">Control Center</h2>
+                </div>
               </div>
 
               <button
@@ -82,45 +90,52 @@ export default function AdminSidebar({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5">
-            <nav aria-label="Admin navigation" className="space-y-2">
-              {items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.label}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors duration-150",
-                        isActive
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-300 hover:bg-white/10 hover:text-white"
-                      )
-                    }
-                    onClick={() => setOpen(false)}
-                  >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/10">
-                      <Icon />
-                    </span>
-                    <span>{item.label}</span>
-                  </NavLink>
-                );
-              })}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-5">
+            <nav aria-label="Admin navigation" className="space-y-5">
+              {sections.map((section) => (
+                <div key={section.title}>
+                  <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300/60">{section.title}</p>
+                  <div className="space-y-1">
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <NavLink
+                          key={item.label}
+                          to={item.path}
+                          className={({ isActive }) =>
+                            cn(
+                              "group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors duration-150",
+                              isActive
+                                ? "bg-gradient-to-r from-indigo-500/90 to-blue-500/70 text-white shadow-lg shadow-indigo-950/40"
+                                : "text-slate-300 hover:bg-white/[0.07] hover:text-white"
+                            )
+                          }
+                          onClick={() => setOpen(false)}
+                        >
+                          {({ isActive }) => (
+                            <>
+                              <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[13px]", isActive ? "bg-white/20" : "bg-white/5 text-indigo-200 group-hover:bg-white/10")}>
+                                <Icon />
+                              </span>
+                              <span className="flex-1">{item.label}</span>
+                              {Number(item.badge) > 0 && <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-amber-950">{item.badge}</span>}
+                            </>
+                          )}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
 
-            <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 p-4">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-amber-400/20 text-amber-300">
-                  <FaUserShield />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Overview</p>
-                  <p className="text-xs text-slate-400">Live metrics</p>
-                </div>
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs font-bold text-white">Live metrics</p>
+                <span className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 motion-reduce:animate-none" />Live</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <MiniDarkStat label="Users" value={totalUsers} />
                 <MiniDarkStat label="Campaigns" value={totalCampaigns} />
                 <MiniDarkStat label="Pending" value={pendingApprovals} />
@@ -132,7 +147,7 @@ export default function AdminSidebar({
           <div className="shrink-0 border-t border-white/10 p-4">
             <button
               onClick={handleLogout}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 px-4 py-3 text-sm font-semibold text-white"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-rose-200 transition hover:border-rose-400/40 hover:bg-rose-500/15 hover:text-white"
             >
               <FaRightFromBracket />
               Logout
@@ -146,11 +161,9 @@ export default function AdminSidebar({
 
 function MiniDarkStat({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3">
-      <p className="text-[11px] uppercase tracking-wide text-slate-400">
-        {label}
-      </p>
-      <p className="mt-1 text-base font-bold text-white">{value}</p>
+    <div className="rounded-xl bg-white/[0.06] px-3 py-2.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-200/70">{label}</p>
+      <p className="mt-0.5 truncate text-base font-extrabold text-white">{value}</p>
     </div>
   );
 }

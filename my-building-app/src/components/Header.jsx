@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import finallogo from "../assets/finallogo.png";
+import { cldImage } from "../utils/cloudinary";
+const finallogo = cldImage("building-app/home/finallogo", 400);
 import { logoutUser } from "../api/user";
 import {
   Search,

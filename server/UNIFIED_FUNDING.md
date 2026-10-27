@@ -76,6 +76,14 @@ The current five accounts were migrated and their IDs and password hashes verifi
 
 ## Validation
 
+The admin overview counts regular accounts once, with overlapping Raise Funds and
+Contribute Funds activity counts. It shows shared pending KYC, campaign reviews,
+confirmed contributions, platform fees, payouts and refunds separately. Overall
+cards use all-time totals; the 24h/7d/30d/90d selector applies to contribution activity
+using contribution dates, rather than assigning funding to campaign creation months.
+Refunded and unconfirmed payments are excluded from contribution and fee totals.
+Campaign review controls retain the owner KYC requirement before approval.
+
 ```powershell
 node --test tests/authmiddleware.test.js tests/unifiedFunding.test.js tests/websiteAnalytics.test.js
 ```

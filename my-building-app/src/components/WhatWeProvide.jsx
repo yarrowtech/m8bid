@@ -7,8 +7,9 @@ import {
   Workflow,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import raisingImage from "../assets/starter.jpg";
-import contributingImage from "../assets/growth-chart.jpg";
+import { cldImage } from "../utils/cloudinary";
+const raisingImage = cldImage("building-app/home/starter", 1000);
+const contributingImage = cldImage("building-app/home/growth-chart", 1000);
 export default function WhatWeProvide() {
   const navigate = useNavigate();
   const navigateFromHome = (path) => {

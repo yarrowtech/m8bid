@@ -8,10 +8,11 @@ import {
   Wallet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroImage from "../assets/investors-hero.jpg";
-import compareImage from "../assets/growth-chart.jpg";
-import secureImage from "../assets/secure.png";
-import campaignImage from "../assets/fundraising-example.jpg";
+import { cldImage } from "../utils/cloudinary";
+const heroImage = cldImage("building-app/pages/investors-hero", 1920);
+const compareImage = cldImage("building-app/home/growth-chart", 1000);
+const secureImage = cldImage("building-app/pages/secure", 400);
+const campaignImage = cldImage("building-app/home/fundraising-example", 1000);
 import AccessModeModal from "../components/AccessModeModal.jsx";
 
 function ZigSection({ title, text, image, alt, reverse = false, children }) {

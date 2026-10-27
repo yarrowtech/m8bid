@@ -8,13 +8,14 @@ import {
   Users,
 } from "lucide-react";
 
-import heroBg from "../assets/hero-bg.jpg";
-import img1 from "../assets/img1.jpg";
-import img2 from "../assets/img2.jpg";
-import img3 from "../assets/img3.jpg";
-import img4 from "../assets/img4.jpg";
-import img5 from "../assets/img5.jpg";
-import img6 from "../assets/img6.jpg";
+import { cldImage } from "../utils/cloudinary";
+const heroBg = cldImage("building-app/home/hero-bg", 1920);
+const img1 = cldImage("building-app/home/img1", 600);
+const img2 = cldImage("building-app/home/img2", 600);
+const img3 = cldImage("building-app/home/img3", 600);
+const img4 = cldImage("building-app/home/img4", 600);
+const img5 = cldImage("building-app/home/img5", 600);
+const img6 = cldImage("building-app/home/img6", 600);
 import AccessModeModal from "./AccessModeModal.jsx";
 
 /* ----------------------------- Circular Card ----------------------------- */

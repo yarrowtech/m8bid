@@ -8,7 +8,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import demoVideo from "../assets/how_it_works.mp4";
+import { cldVideo } from "../utils/cloudinary";
+const demoVideo = cldVideo("building-app/home/how_it_works");
 
 function StepCard({ step, icon: Icon, title, desc, isLast = false }) {
   return (

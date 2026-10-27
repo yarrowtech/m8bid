@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { ArrowDownToLine, ArrowUpRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Globe2, Info, Menu, MousePointer2, Search, Smartphone, TrendingUp, X } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ArrowDownToLine, ArrowUpRight, BarChart3, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Globe2, Info, Menu, MousePointer2, Search, Smartphone, TrendingUp, X } from "lucide-react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { getWebsiteAnalyticsSections, getPageDetails, syncWebsiteSearch } from "../../api/websiteAnalytics";
 import "./WebsiteAnalytics.css";
 
@@ -11,6 +11,19 @@ const percent = (value) => `${value.toFixed(1)}%`;
 const shortDate = (value) => new Date(`${value}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
 const duration = (seconds) => `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 const devices = ["Mobile", "Desktop", "Tablet"];
+const rangeOptions = [[7, "Last 7 days"], [28, "Last 28 days"], [30, "Last 30 days"], [90, "Last 3 months"], [180, "Last 6 months"], [365, "Last 12 months"]];
+const rangeButtons = [[7, "7 days"], [28, "28 days"], [90, "3 months"], [180, "6 months"], [365, "12 months"]];
+// Search Console's metric colours and order. Position is drawn inverted because 1 is best.
+const searchSeries = [
+  { key: "clicks", label: "Total clicks", color: "#4285f4", icon: MousePointer2 },
+  { key: "impressions", label: "Total impressions", color: "#5e35b1", icon: Search },
+  { key: "ctr", label: "Average CTR", color: "#00897b", icon: TrendingUp },
+  { key: "position", label: "Average position", color: "#e8710a", icon: BarChart3, lowerBetter: true },
+];
+const axisTick = (key) => (value) => key === "ctr" ? `${value.toFixed(value < 10 ? 1 : 0)}%` : key === "position" ? value.toFixed(0) : compact(value);
+// Google keeps ~16 months; the full import also fills the comparison period for 12-month reports.
+const syncOptions = [[7, "Sync last 7 days"], [90, "Import 3 months"], [180, "Import 6 months"], [365, "Import 12 months"], [480, "Import all available · 16 months"]];
+const periodLabel = (days) => rangeOptions.find(([value]) => value === days)?.[1].replace("Last ", "") || `${days} days`;
 const percentage = (value, total) => total ? value / total * 100 : 0;
 const emptyReport = { totals: {}, comparison: {}, daily: [], pages: [], queries: [], sources: [], devices: [], entryPages: [], exitPages: [], sectionErrors: [], availability: {} };
 const definitions = {
@@ -20,7 +33,7 @@ const definitions = {
   position: "Average search result position, weighted by impressions. Lower is better.",
   entries: "Sessions that started on this page.",
   views: "Page views, including repeated views.",
-  engagementRate: "Engaged sessions divided by sessions. Engagement rules will be defined by the connected analytics source.",
+  engagementRate: "Engaged sessions divided by sessions. A session is engaged after 10 seconds of visible time or 2+ page views.",
   engagementSeconds: "Average engagement time per session.",
   exits: "Sessions whose final recorded page was this page.",
   exitRate: "Exits divided by page views. An exit does not necessarily mean a visitor had a poor experience.",
@@ -40,15 +53,14 @@ function display(value, key) {
   return typeof value === "number" ? number(value) : value;
 }
 
-function Metric({ label, value, previous, metric, color, icon, lowerBetter = false }) {
-  const Icon = icon;
+function SearchTile({ item, value, previous, selected, onToggle }) {
   const delta = Number.isFinite(value) && previous ? (value - previous) / previous * 100 : null;
-  const improved = delta !== null && (lowerBetter ? delta < 0 : delta > 0);
-  return <article className={`wa-metric wa-${color}`}>
-    <div className="wa-metric-label"><span>{label}</span><span className="wa-metric-icon"><Icon size={17} aria-hidden="true" /></span></div>
-    <div className="wa-metric-value">{display(value, metric)}</div>
-    <div className="wa-metric-foot"><span className={delta === null || delta === 0 ? "" : improved ? "wa-positive" : "wa-negative"}>{delta === null ? "No comparison" : `${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`}</span><span>vs previous period</span><Info size={13} aria-label={definitions[metric]}><title>{definitions[metric]}</title></Info></div>
-  </article>;
+  const improved = delta !== null && (item.lowerBetter ? delta < 0 : delta > 0);
+  return <button type="button" role="switch" aria-checked={selected} onClick={onToggle} className={`wa-gsc-tile${selected ? " is-selected" : ""}`} style={{ "--tile": item.color }}>
+    <span className="wa-gsc-tile-label"><span className="wa-gsc-check">{selected && <Check size={12} strokeWidth={3} />}</span>{item.label}<span title={definitions[item.key]} className="wa-gsc-help"><Info size={13} /></span></span>
+    <span className="wa-gsc-tile-value">{display(value, item.key)}</span>
+    <span className={`wa-gsc-delta${delta === null || delta === 0 ? "" : improved ? " is-up" : " is-down"}`}>{delta === null ? "No previous data" : `${delta > 0 ? "▲" : "▼"} ${Math.abs(delta).toFixed(1)}% vs previous`}</span>
+  </button>;
 }
 
 export default function WebsiteAnalytics() {
@@ -60,7 +72,7 @@ export default function WebsiteAnalytics() {
   const [sort, setSort] = useState({ key: "clicks", descending: true });
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedPage, setSelectedPage] = useState(null);
-  const [series, setSeries] = useState({ clicks: true, impressions: true });
+  const [series, setSeries] = useState({ clicks: true, impressions: true, ctr: false, position: false });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -150,23 +162,24 @@ export default function WebsiteAnalytics() {
     {!!report.sectionErrors.length && <div className="wa-demo-banner" role="alert"><span>Some sections could not load: {report.sectionErrors.join("; ")}. Use Refresh to retry.</span></div>}
     {selectedPage && !detail && <div className="wa-demo-banner" role="status"><span>{detailLoading ? "Loading page details…" : detailError || "No data for the selected page."}</span><button className="wa-button" onClick={() => setSelectedPage(null)}>Close details</button></div>}
     <section className="wa-sync-panel" aria-label="Search Console sync">
-      <div><strong>Google Search Console</strong><p>Import finalized search data for all devices. Use 60 days for the first import; recent days may still be unavailable.</p></div>
-      <div className="wa-filters"><label className="wa-select"><select aria-label="Search sync period" value={syncDays} disabled={syncing} onChange={(event) => setSyncDays(Number(event.target.value))}><option value={7}>Sync last 7 days</option><option value={60}>Initial import · 60 days</option></select><ChevronDown size={14} /></label><button className="wa-button" disabled={syncing} onClick={handleSearchSync}>{syncing ? "Syncing Search Console…" : "Sync Search Console"}</button></div>
+      <div><strong>Google Search Console</strong><p>Import finalized search data for all devices. For 3, 6 or 12-month reports, import that period first; "all available" also fills the comparison period. Longer imports take several minutes, and the last 2–3 days are not final yet.</p></div>
+      <div className="wa-filters"><label className="wa-select"><select aria-label="Search sync period" value={syncDays} disabled={syncing} onChange={(event) => setSyncDays(Number(event.target.value))}>{syncOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><ChevronDown size={14} /></label><button className="wa-button" disabled={syncing} onClick={handleSearchSync}>{syncing ? "Syncing Search Console…" : "Sync Search Console"}</button></div>
       {syncMessage && <p className={syncError ? "wa-sync-error" : "wa-sync-success"} role={syncError ? "alert" : "status"}>{syncMessage}</p>}
     </section>
 
-    <div className="wa-toolbar"><div className="wa-filters"><label className="wa-select"><CalendarDays size={16} /><select aria-label="Date range" value={days} onChange={(event) => { setDays(Number(event.target.value)); setPageNumber(1); }}><option value={7}>Last 7 days</option><option value={28}>Last 28 days</option><option value={30}>Last 30 days</option></select><ChevronDown size={14} /></label><label className="wa-select"><Smartphone size={16} /><select aria-label="Device" value={device} onChange={(event) => { setDevice(event.target.value); setPageNumber(1); }}><option>All devices</option>{devices.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={14} /></label>{(days !== 28 || device !== "All devices") && <button className="wa-reset" onClick={() => { setDays(28); setDevice("All devices"); setPageNumber(1); }}>Reset filters</button>}</div><span className="wa-date">{startDate && endDate ? `${shortDate(startDate)} – ${shortDate(endDate)}, ${endDate.slice(0, 4)}` : "Reporting period loading…"} <span>· Completed days</span></span></div>
+    <div className="wa-toolbar"><div className="wa-filters"><div className="wa-range" role="group" aria-label="Date range"><CalendarDays size={15} aria-hidden="true" />{rangeButtons.map(([value, label]) => <button key={value} type="button" aria-pressed={days === value} onClick={() => { setDays(value); setPageNumber(1); }}>{label}</button>)}</div><label className="wa-select"><Smartphone size={16} /><select aria-label="Device" value={device} onChange={(event) => { setDevice(event.target.value); setPageNumber(1); }}><option>All devices</option>{devices.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={14} /></label>{(days !== 28 || device !== "All devices") && <button className="wa-reset" onClick={() => { setDays(28); setDevice("All devices"); setPageNumber(1); }}>Reset filters</button>}</div><span className="wa-date">{startDate && endDate ? `${shortDate(startDate)} – ${shortDate(endDate)}, ${endDate.slice(0, 4)}` : "Reporting period loading…"} <span>· Completed days</span></span></div>
 
     <div className="wa-section-heading"><h2>Search performance</h2><span>Search data · {availabilityLabel("search")}</span></div>
-    <div className="wa-metrics">
-      <Metric label="Search clicks" value={totals.clicks} previous={comparison.clicks} metric="clicks" color="blue" icon={MousePointer2} />
-      <Metric label="Search impressions" value={totals.impressions} previous={comparison.impressions} metric="impressions" color="purple" icon={Search} />
-      <Metric label="Average CTR" value={totals.ctr} previous={comparison.ctr} metric="ctr" color="teal" icon={TrendingUp} />
-      <Metric label="Average position" value={totals.position} previous={comparison.position} metric="position" color="amber" icon={BarChart3} lowerBetter />
-    </div>
-
-    <section className="wa-panel wa-trend"><div className="wa-panel-heading"><div><h2>Search visibility over time</h2><p>Daily clicks and impressions from organic search.</p></div><div className="wa-legend">{[["clicks", "Clicks"], ["impressions", "Impressions"]].map(([key, label]) => <label key={key}><input type="checkbox" checked={series[key]} onChange={() => setSeries((value) => ({ ...value, [key]: !value[key] }))} /><span className={`wa-dot wa-dot-${key}`} />{label}</label>)}</div></div>
-      <div className="wa-chart" role="img" aria-label={`Search performance for ${days} days`}>{!daily.length ? <div className="wa-empty">{loading ? "Loading search performance…" : "No search data is available for this period."}</div> : !series.clicks && !series.impressions ? <div className="wa-empty">Select Clicks or Impressions to show a trend.</div> : <ResponsiveContainer width="100%" height="100%"><AreaChart data={daily} margin={{ top: 12, right: 8, bottom: 8, left: 0 }}><defs><linearGradient id="waClicks" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2563eb" stopOpacity={0.28} /><stop offset="100%" stopColor="#2563eb" stopOpacity={0} /></linearGradient><linearGradient id="waImpr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6366f1" stopOpacity={0.18} /><stop offset="100%" stopColor="#6366f1" stopOpacity={0} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#edf0f5" /><XAxis dataKey="name" tickFormatter={shortDate} minTickGap={34} axisLine={false} tickLine={false} tick={{ fill: "#7b8799", fontSize: 11 }} /><YAxis yAxisId="clicks" tickFormatter={compact} axisLine={false} tickLine={false} width={42} tick={{ fill: "#2563eb", fontSize: 11 }} /><YAxis yAxisId="impressions" orientation="right" tickFormatter={compact} axisLine={false} tickLine={false} width={46} tick={{ fill: "#6366f1", fontSize: 11 }} /><Tooltip labelFormatter={shortDate} formatter={(value, name) => [number(value), name]} contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 12, boxShadow: "0 12px 28px -12px rgba(30,41,90,.25)" }} cursor={{ stroke: "#c7d2fe", strokeDasharray: "4 4" }} />{series.clicks && <Area yAxisId="clicks" name="Clicks" type="monotone" dataKey="clicks" stroke="#2563eb" fill="url(#waClicks)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }} isAnimationActive={false} />}{series.impressions && <Area yAxisId="impressions" name="Impressions" type="monotone" dataKey="impressions" stroke="#6366f1" fill="url(#waImpr)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }} isAnimationActive={false} />}</AreaChart></ResponsiveContainer>}</div><div className="wa-chart-note">Clicks use the left axis; impressions use the right axis. Search clicks and website sessions are different measures.</div>
+    <section className="wa-panel wa-gsc" aria-label="Search performance">
+      <div className="wa-gsc-tiles">{searchSeries.map((item) => <SearchTile key={item.key} item={item} value={totals[item.key]} previous={comparison[item.key]} selected={series[item.key]} onToggle={() => setSeries((value) => ({ ...value, [item.key]: !value[item.key] }))} />)}</div>
+      <div className="wa-chart wa-gsc-chart" role="img" aria-label={`Daily search performance for ${periodLabel(days)}`}>{!daily.length ? <div className="wa-empty">{loading ? "Loading search performance…" : "No search data is available for this period. Run a Search Console sync above."}</div> : !searchSeries.filter((item) => series[item.key]).length ? <div className="wa-empty">Select a metric above to show it on the chart.</div> : <ResponsiveContainer width="100%" height="100%"><LineChart data={daily} margin={{ top: 22, right: 4, bottom: 4, left: 4 }}>
+        <CartesianGrid vertical={false} stroke="#eef1f6" />
+        <XAxis dataKey="name" tickFormatter={(value) => new Date(`${value}T00:00:00Z`).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" })} minTickGap={40} axisLine={{ stroke: "#dadce0" }} tickLine={false} tick={{ fill: "#5f6368", fontSize: 11 }} />
+        {searchSeries.filter((item) => series[item.key]).map((item, index) => <YAxis key={item.key} yAxisId={item.key} orientation={index === 1 ? "right" : "left"} hide={index > 1} reversed={item.key === "position"} domain={item.key === "position" ? [1, "auto"] : [0, "auto"]} allowDecimals={item.key !== "clicks" && item.key !== "impressions"} tickFormatter={axisTick(item.key)} axisLine={false} tickLine={false} width={44} tick={{ fill: "#5f6368", fontSize: 11 }} label={{ value: item.label.replace(/^(Total|Average) /, "").replace(/^./, (c) => c.toUpperCase()), position: "top", offset: 10, fill: "#5f6368", fontSize: 11, dx: index === 1 ? -6 : 6 }} />)}
+        <Tooltip labelFormatter={(value) => new Date(`${value}T00:00:00Z`).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })} formatter={(value, name, entry) => [value === null || value === undefined ? "—" : display(value, entry.dataKey), name]} contentStyle={{ borderRadius: 10, border: "1px solid #dadce0", fontSize: 12, boxShadow: "0 8px 24px -10px rgba(60,64,67,.35)" }} cursor={{ stroke: "#bdc1c6" }} />
+        {searchSeries.filter((item) => series[item.key]).map((item) => <Line key={item.key} yAxisId={item.key} name={item.label.replace(/^(Total|Average) /, "").replace(/^./, (c) => c.toUpperCase())} type="linear" dataKey={item.key} stroke={item.color} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff" }} connectNulls={false} isAnimationActive={false} />)}
+      </LineChart></ResponsiveContainer>}</div>
+      <div className="wa-chart-note">Daily values from Google Search Console. Click a metric to show or hide it; each metric has its own scale, and position is inverted (1 is the top result).</div>
     </section>
 
     <div className="wa-section-heading wa-spaced"><h2>Visitor behaviour</h2><span>Visitor data · {availabilityLabel("traffic")}</span></div>
@@ -176,7 +189,7 @@ export default function WebsiteAnalytics() {
 
     <section className="wa-panel wa-detail-table"><div className="wa-panel-heading"><div><h2>Explore performance</h2><p>Compare pages, search queries, and visitor entry and exit points.</p></div></div><div className="wa-tabs" role="tablist" aria-label="Analytics breakdown">{tabs.map((item) => <button key={item.id} id={`wa-tab-${item.id}`} role="tab" aria-selected={tab === item.id} aria-controls="wa-table-panel" onClick={() => selectTab(item.id)}>{item.label}</button>)}</div><div className="wa-table-controls"><span>{tab === "exits" ? "Exits are final recorded page visits, not proof of abandonment." : tab === "entries" ? "Entry pages are where sessions begin." : tab === "queries" ? "Reported search queries; withheld queries may not appear in this breakdown." : tab === "sources" ? "Sessions across all website traffic sources." : "Click a page to inspect its search and visitor performance."}</span><label className="wa-search"><Search size={15} /><input aria-label="Search analytics table" placeholder={tab === "queries" ? "Search queries…" : tab === "sources" ? "Search sources…" : "Search pages…"} value={search} onChange={(event) => { setSearch(event.target.value); setPageNumber(1); }} /></label></div><div role="tabpanel" id="wa-table-panel" aria-labelledby={`wa-tab-${tab}`} className="wa-table-scroll"><table><thead><tr>{activeTab.columns.map(([key, label]) => <th key={key} aria-sort={sort.key === key ? sort.descending ? "descending" : "ascending" : "none"}><button title={definitions[key]} onClick={() => { setSort({ key, descending: sort.key === key ? !sort.descending : key !== "name" }); setPageNumber(1); }}>{label}{sort.key === key && <span>{sort.descending ? " ↓" : " ↑"}</span>}</button></th>)}</tr></thead><tbody>{visibleRows.map((row) => <tr key={row.name}>{activeTab.columns.map(([key]) => <td key={key}>{key === "name" && !["queries", "sources"].includes(tab) ? <button className="wa-page-link" onClick={() => setSelectedPage(row.name)}><span>{row.title}<small>{row.name}</small></span><ArrowUpRight size={14} /></button> : display(row[key], key)}</td>)}</tr>)}{!visibleRows.length && <tr><td colSpan={activeTab.columns.length}><div className="wa-empty">{loading ? "Loading analytics…" : error ? "Analytics could not be loaded. Use Retry above." : search ? `No results match “${search}”.` : "No analytics records for this period and device."} {search && <button className="wa-reset" onClick={() => setSearch("")}>Clear search</button>}</div></td></tr>}</tbody></table></div><div className="wa-pagination"><span>{tableRows.length ? `${(pageNumber - 1) * 5 + 1}–${Math.min(pageNumber * 5, tableRows.length)} of ${tableRows.length}` : "0 results"}</span><div><button className="wa-icon-button" aria-label="Previous table page" disabled={pageNumber === 1} onClick={() => setPageNumber((value) => value - 1)}><ChevronLeft size={16} /></button><span>Page {pageNumber} of {pageCount}</span><button className="wa-icon-button" aria-label="Next table page" disabled={pageNumber >= pageCount} onClick={() => setPageNumber((value) => value + 1)}><ChevronRight size={16} /></button></div></div></section>
 
-    {detail && <section className="wa-panel wa-page-detail" aria-label="Selected page details"><div className="wa-panel-heading"><div><h2>{detail.title}</h2><p>{detail.name} · {days} days · {device}</p></div><button className="wa-icon-button" aria-label="Close page details" onClick={() => setSelectedPage(null)}><X size={18} /></button></div><div className="wa-detail-metrics">{[["clicks", "Search clicks"], ["impressions", "Impressions"], ["entries", "Entrances"], ["exits", "Exits"], ["exitRate", "Exit rate"], ["engagementRate", "Engagement rate"]].map(([key, label]) => <div key={key}><span title={definitions[key]}>{label}</span><strong>{display(detail[key], key)}</strong></div>)}</div></section>}
-    <footer className="wa-footer"><Info size={14} /><span>Search and visitor metrics are fetched from the backend. Real source records must be imported before data appears. Search queries may be incomplete due to source privacy thresholds.</span></footer>
+    {detail && <section className="wa-panel wa-page-detail" aria-label="Selected page details"><div className="wa-panel-heading"><div><h2>{detail.title}</h2><p>{detail.name} · {periodLabel(days)} · {device}</p></div><button className="wa-icon-button" aria-label="Close page details" onClick={() => setSelectedPage(null)}><X size={18} /></button></div><div className="wa-detail-metrics">{[["clicks", "Search clicks"], ["impressions", "Impressions"], ["entries", "Entrances"], ["exits", "Exits"], ["exitRate", "Exit rate"], ["engagementRate", "Engagement rate"]].map(([key, label]) => <div key={key}><span title={definitions[key]}>{label}</span><strong>{display(detail[key], key)}</strong></div>)}</div></section>}
+    <footer className="wa-footer"><Info size={14} /><span>Visitor metrics come from the site's own page-view tracking and cover completed days (India time); today appears tomorrow. Search metrics come from Google Search Console syncs and may omit queries below Google's privacy thresholds.</span></footer>
   </div>;
 }

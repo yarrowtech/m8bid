@@ -12,7 +12,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import sampleImg from "../assets/fundraising-example.jpg";
+import { cldImage } from "../utils/cloudinary";
+const sampleImg = cldImage("building-app/home/fundraising-example", 800);
 
 const API_URL = "http://localhost:5000/api/campaigns"; // change if needed
 

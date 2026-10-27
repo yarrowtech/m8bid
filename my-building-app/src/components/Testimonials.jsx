@@ -1,9 +1,10 @@
 ﻿// src/components/Testimonials.jsx
 import React from "react";
 import { BadgeCheck, Quote, Star } from "lucide-react";
-import contributor1 from "../assets/investor3.jpg";
-import contributor2 from "../assets/investor2.jpg";
-import contributor3 from "../assets/investor1.jpg";
+import { cldImage } from "../utils/cloudinary";
+const contributor1 = cldImage("building-app/home/investor3", 200);
+const contributor2 = cldImage("building-app/home/investor2", 200);
+const contributor3 = cldImage("building-app/home/investor1", 200);
 
 const testimonials = [
   {

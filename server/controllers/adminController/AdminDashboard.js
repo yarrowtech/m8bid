@@ -61,127 +61,19 @@ const isUserApproved = (user) => {
 };
 
 const AdminDashboard = async (req, res) => {
+  const range = req.query.range || "30d";
+  if (!["24h", "7d", "30d", "90d"].includes(range)) return res.status(400).json({ success: false, message: "Invalid reporting range" });
   try {
-    const totalUsers = await User.countDocuments();
-    const totalFundraisers = await Fundraiser.countDocuments();
-
-    const [users, fundraisers] = await Promise.all([
-      User.find({})
-        .sort({ createdAt: -1 })
-        .select("username name email role profile access activeMode createdAt updatedAt"),
-      Fundraiser.find({})
-        .populate("userId", "username name email profile access activeMode")
-        .sort({ createdAt: -1 }),
+    const [users, campaigns, contributions] = await Promise.all([
+      User.find({}).sort({ createdAt: -1 }).select("name email role accountStatus kycStatus access createdAt").lean(),
+      Fundraiser.find({}).populate("userId", "name").sort({ createdAt: -1 }).lean(),
+      Investment.find({}).select("investor amount platformFee netAmount paymentStatus status transferStatus date").lean(),
     ]);
-
-    const totalMoneyRaised = fundraisers.reduce(
-      (sum, item) => sum + Number(item.raisedAmount || 0),
-      0
-    );
-
-    const totalFundingGoal = fundraisers.reduce(
-      (sum, item) => sum + Number(item.moneyToRaise || 0),
-      0
-    );
-
-    const approvedCampaigns = fundraisers.filter((f) => f.status === "approved").length;
-    const pendingCampaigns = fundraisers.filter((f) => f.status === "pending").length;
-    const rejectedCampaigns = fundraisers.filter((f) => f.status === "rejected").length;
-
-    const monthlyRaisedMap = {};
-    const monthlyUsersMap = {};
-
-    users.forEach((user) => {
-      const monthKey = formatMonthKey(user.createdAt);
-      monthlyUsersMap[monthKey] = (monthlyUsersMap[monthKey] || 0) + 1;
-    });
-
-    fundraisers.forEach((fundraiser) => {
-      const monthKey = formatMonthKey(fundraiser.createdAt);
-      monthlyRaisedMap[monthKey] =
-        (monthlyRaisedMap[monthKey] || 0) + Number(fundraiser.raisedAmount || 0);
-    });
-
-    const monthlyRaised = Object.entries(monthlyRaisedMap).map(([month, raised]) => ({
-      month,
-      raised,
-    }));
-
-    const monthlyUsers = Object.entries(monthlyUsersMap).map(([month, count]) => ({
-      month,
-      users: count,
-    }));
-
-    const recentFundraisers = fundraisers.slice(0, 5).map((fundraiser) => ({
-      _id: fundraiser._id,
-      projectTitle: fundraiser.projectTitle || "Untitled",
-      projectCategory: fundraiser.projectCategory || "others",
-      status: fundraiser.status || "pending",
-      moneyToRaise: Number(fundraiser.moneyToRaise || 0),
-      raisedAmount: Number(fundraiser.raisedAmount || 0),
-      creator: {
-        _id: fundraiser.userId?._id || null,
-        name: fundraiser.userId?.name || "Unknown",
-        email: fundraiser.userId?.email || "Unknown",
-      },
-      createdAt: fundraiser.createdAt,
-    }));
-
-    const recentUsers = users.slice(0, 5).map((user) => ({
-      _id: user._id,
-      username: user.username,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      activeMode: user.activeMode,
-      phone: getUserPhone(user),
-      photo: getUserPhoto(user),
-      createdAt: user.createdAt,
-    }));
-
-    const topFundraisers = [...fundraisers]
-      .sort((a, b) => Number(b.raisedAmount || 0) - Number(a.raisedAmount || 0))
-      .slice(0, 5)
-      .map((fundraiser) => ({
-        _id: fundraiser._id,
-        projectTitle: fundraiser.projectTitle || "Untitled",
-        moneyRaised: Number(fundraiser.raisedAmount || 0),
-        moneyToRaise: Number(fundraiser.moneyToRaise || 0),
-        status: fundraiser.status || "pending",
-      }));
-
-    const contributionSummary = await Transaction.aggregate([
-      { $match: { type: { $in: ["investment", "contribution"] }, status: "completed" } },
-      { $group: { _id: null, count: { $sum: 1 }, fees: { $sum: "$fee" } } },
-    ]);
-    return res.status(200).json({
-      success: true,
-      stats: {
-        totalUsers,
-        totalFundraisers,
-        totalMoneyRaised,
-        totalRevenue: contributionSummary[0]?.fees || 0,
-        totalCampaigns: totalFundraisers,
-        totalFundingGoal,
-        totalContributions: contributionSummary[0]?.count || 0,
-        approvedCampaigns,
-        pendingCampaigns,
-        rejectedCampaigns,
-        activeUsers: users.filter((u) => u.role !== "admin").length,
-        activeCampaigns: approvedCampaigns,
-        recentFundraisers,
-        recentUsers,
-        monthlyRaised,
-        monthlyUsers,
-        topFundraisers,
-      },
-    });
+    const stats = require("../../services/adminFundingSummary").summarizeFunding({ users, campaigns, contributions, range });
+    return res.json({ success: true, stats });
   } catch (error) {
-    console.error("Admin Dashboard Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error while fetching admin stats.",
-    });
+    console.error("Admin funding summary failed:", error.message);
+    return res.status(500).json({ success: false, message: "Unable to load funding summary" });
   }
 };
 
@@ -189,7 +81,7 @@ const getAdminUsers = async (req, res) => {
   try {
     const users = await User.find({ role: { $ne: "admin" } })
       .sort({ createdAt: -1 })
-      .select("username name email role profile access activeMode createdAt updatedAt");
+      .select("username name email role accountStatus kycStatus profile access activeMode createdAt updatedAt");
 
     const [raisedByUser, contributedByUser] = await Promise.all([
       Fundraiser.aggregate([{ $group: { _id: "$userId", count: { $sum: 1 } } }]),
@@ -203,6 +95,8 @@ const getAdminUsers = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      accountStatus: user.accountStatus || "active",
+      kycStatus: user.kycStatus || "NONE",
       activeMode: user.activeMode,
       phone: getUserPhone(user),
       photo: getUserPhoto(user),
@@ -228,31 +122,76 @@ const getAdminUsers = async (req, res) => {
   }
 };
 
+const formatAdminCampaign = (campaign) => ({
+  _id: campaign._id,
+  projectTitle: campaign.projectTitle || "Fundraiser",
+  projectOverview: campaign.projectOverview || "",
+  projectCategory: campaign.projectCategory || "",
+  campaignType: campaign.campaignType || "",
+  campaignSubcategory: campaign.campaignSubcategory || "",
+  entityName: campaign.entityName || "",
+  introduction: campaign.introduction || "",
+  useOfFunds: campaign.useOfFunds || "",
+  projectLocation: campaign.projectLocation || {},
+  daysToRaise: campaign.daysToRaise,
+  photo: campaign.photo || "",
+  projectPhotos: campaign.projectPhotos || [],
+  video: campaign.video || "",
+  promoVideo: campaign.promoVideo || "",
+  promoPoster: campaign.promoPoster || "",
+  promoteCampaign: campaign.promoteCampaign,
+  promotion: campaign.promotion,
+  uploadedDocuments: campaign.documents || [],
+  documentProfile: campaign.documentProfile || [],
+  updates: campaign.updates || [],
+  updatedAt: campaign.updatedAt,
+  status: campaign.status || "pending",
+  fundingGoal: Number(campaign.moneyToRaise || 0),
+  moneyRaised: Number(campaign.raisedAmount || 0),
+  currentFunding: Number(campaign.raisedAmount || 0),
+  fundingType: campaign.fundingType || "",
+  deadline: campaign.deadline || null,
+  createdAt: campaign.createdAt,
+  documents: {
+    license: campaign.license || "",
+    gst: campaign.gst || "",
+    companyRegistration: campaign.companyRegistration || "",
+    legalDocument: campaign.legalDocument || "",
+    photo: campaign.photo || "",
+    projectPhotos: campaign.projectPhotos || [],
+    video: campaign.video || "",
+  },
+});
+
 const getAdminCampaigns = async (req, res) => {
   try {
     const campaigns = await Fundraiser.find({})
-      .populate("userId", "username name email profile")
+      .populate("userId", "username name email profile kycStatus createdAt")
       .sort({ createdAt: -1 });
 
+    // Contribution count per campaign; also tells the UI whether delete is allowed.
+    const contributionCounts = await Investment.aggregate([
+      { $match: { campaign: { $in: campaigns.map((campaign) => campaign._id) } } },
+      { $group: { _id: "$campaign", count: { $sum: 1 } } },
+    ]);
+    const countByCampaign = new Map(contributionCounts.map((entry) => [String(entry._id), entry.count]));
+
     const formatted = campaigns.map((campaign) => ({
-      _id: campaign._id,
-      projectTitle: campaign.projectTitle || "Untitled",
+      ...formatAdminCampaign(campaign),
       title: campaign.projectTitle || "Untitled",
-      projectCategory: campaign.projectCategory || "others",
-      status: campaign.status || "pending",
+      moneyToRaise: Number(campaign.moneyToRaise || 0),
+      raisedAmount: Number(campaign.raisedAmount || 0),
+      contributionCount: countByCampaign.get(String(campaign._id)) || 0,
       creator: {
         _id: campaign.userId?._id || null,
         username: campaign.userId?.username || "",
         name: campaign.userId?.name || "Unknown",
         email: campaign.userId?.email || "Unknown",
+        phone: getUserPhone(campaign.userId),
+        photo: getUserPhoto(campaign.userId),
+        kycStatus: campaign.userId?.kycStatus || "NONE",
+        joinedAt: campaign.userId?.createdAt || null,
       },
-      moneyToRaise: Number(campaign.moneyToRaise || 0),
-      raisedAmount: Number(campaign.raisedAmount || 0),
-      currentFunding: Number(campaign.raisedAmount || 0),
-      fundingType: campaign.fundingType || "",
-      daysToRaise: Number(campaign.daysToRaise || 0),
-      deadline: campaign.deadline || null,
-      createdAt: campaign.createdAt,
     }));
 
     return res.status(200).json({
@@ -284,63 +223,10 @@ const getAdminTransactions = async (req, res) => {
   }
 };
 
-const getAdminAnalytics = async (req, res) => {
-  try {
-    const [totalUsers, totalFundraisers, fundraisers] = await Promise.all([
-      User.countDocuments(),
-      Fundraiser.countDocuments(),
-      Fundraiser.find({}).sort({ createdAt: -1 }),
-    ]);
-
-    const contributionSummary = await Transaction.aggregate([
-      { $match: { type: { $in: ["investment", "contribution"] }, status: "completed" } },
-      { $group: { _id: null, count: { $sum: 1 }, fees: { $sum: "$fee" } } },
-    ]);
-
-    const totalRevenue = fundraisers.reduce(
-      (sum, item) => sum + Number(item.raisedAmount || 0),
-      0
-    );
-
-    const approvedCampaigns = fundraisers.filter((f) => f.status === "approved").length;
-    const pendingCampaigns = fundraisers.filter((f) => f.status === "pending").length;
-    const rejectedCampaigns = fundraisers.filter((f) => f.status === "rejected").length;
-
-    const monthlyRaisedMap = {};
-
-    fundraisers.forEach((fundraiser) => {
-      const monthKey = formatMonthKey(fundraiser.createdAt);
-      monthlyRaisedMap[monthKey] =
-        (monthlyRaisedMap[monthKey] || 0) + Number(fundraiser.raisedAmount || 0);
-    });
-
-    const monthlyRaised = Object.entries(monthlyRaisedMap).map(([month, raised]) => ({
-      month,
-      raised,
-    }));
-
-    return res.status(200).json({
-      success: true,
-      overview: {
-        totalUsers,
-        totalFundraisers,
-        totalContributions: contributionSummary[0]?.count || 0,
-        totalRevenue,
-        platformFees: contributionSummary[0]?.fees || 0,
-        approvedCampaigns,
-        pendingCampaigns,
-        rejectedCampaigns,
-      },
-      monthlyRaised,
-    });
-  } catch (error) {
-    console.error("Get Admin Analytics Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error while fetching analytics.",
-    });
-  }
-};
+const getAdminAnalytics = async (req, res) => AdminDashboard(req, {
+  status: (code) => res.status(code),
+  json: (body) => body.success ? res.json({ ...body, overview: body.stats, monthlyRaised: body.stats.monthlyRaised }) : res.json(body),
+});
 
 const getAdminUserDetails = async (req, res) => {
   try {
@@ -354,7 +240,7 @@ const getAdminUserDetails = async (req, res) => {
     }
 
     const user = await User.findById(userId).select(
-      "username name email role profile bankDetails access activeMode createdAt updatedAt"
+      "username name email role accountStatus kycStatus profile bankDetails access activeMode savedCampaigns createdAt updatedAt"
     );
 
     if (!user) {
@@ -403,28 +289,7 @@ const getAdminUserDetails = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    const campaigns = userFundraisers.map((campaign) => ({
-      _id: campaign._id,
-      projectTitle: campaign.projectTitle || "Fundraiser",
-      projectOverview: campaign.projectOverview || "",
-      projectCategory: campaign.projectCategory || "",
-      status: campaign.status || "pending",
-      fundingGoal: Number(campaign.moneyToRaise || 0),
-      moneyRaised: Number(campaign.raisedAmount || 0),
-      currentFunding: Number(campaign.raisedAmount || 0),
-      fundingType: campaign.fundingType || "",
-      deadline: campaign.deadline || null,
-      createdAt: campaign.createdAt,
-      documents: {
-        license: campaign.license || "",
-        gst: campaign.gst || "",
-        companyRegistration: campaign.companyRegistration || "",
-        legalDocument: campaign.legalDocument || "",
-        photo: campaign.photo || "",
-        projectPhotos: campaign.projectPhotos || [],
-        video: campaign.video || "",
-      },
-    }));
+    const campaigns = userFundraisers.map(formatAdminCampaign);
 
     const investments = userInvestments.map((investment) => ({
       _id: investment._id,
@@ -435,6 +300,8 @@ const getAdminUserDetails = async (req, res) => {
       orderId: investment.orderId || "",
       paymentId: investment.paymentId || "",
       transferId: investment.transferId || "",
+      refundId: investment.refundId || "",
+      refundStatus: investment.refundStatus || "none",
       linkedAccountId: investment.linkedAccountId || "",
       platformFee: Number(investment.platformFee || 0),
       netAmount: Number(investment.netAmount || 0),
@@ -533,11 +400,14 @@ const getAdminUserDetails = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        accountStatus: user.accountStatus || "active",
+        kycStatus: user.kycStatus || "NONE",
         activeMode: user.activeMode,
         profile: user.profile || {},
         phone: getUserPhone(user),
         photo: getUserPhoto(user),
         bankDetails: user.bankDetails || {},
+        savedCampaigns: user.savedCampaigns || [],
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         contributorAccess: getInvestorAccessSummary(user),
@@ -641,6 +511,36 @@ const rejectCampaign = async (req, res) => {
       success: false,
       message: "Server error while rejecting campaign.",
     });
+  }
+};
+
+const CAMPAIGN_STATUSES = ["pending", "approved", "rejected", "completed"];
+
+const updateCampaignStatus = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    const { status } = req.body || {};
+
+    if (!mongoose.Types.ObjectId.isValid(campaignId)) {
+      return res.status(400).json({ success: false, message: "Invalid campaign id." });
+    }
+    if (!CAMPAIGN_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, message: `Status must be one of: ${CAMPAIGN_STATUSES.join(", ")}.` });
+    }
+
+    const campaign = await Fundraiser.findById(campaignId).populate("userId", "kycStatus");
+    if (!campaign) return res.status(404).json({ success: false, message: "Campaign not found." });
+    if (status === "approved" && campaign.userId?.kycStatus !== "VERIFIED") {
+      return res.status(409).json({ success: false, message: "Verify the campaign owner's identity before approving the funding campaign" });
+    }
+
+    campaign.status = status;
+    await campaign.save({ validateModifiedOnly: true });
+
+    return res.status(200).json({ success: true, message: `Campaign marked as ${status}.`, campaign });
+  } catch (error) {
+    console.error("Update Campaign Status Error:", error);
+    return res.status(500).json({ success: false, message: "Server error while updating campaign status." });
   }
 };
 
@@ -824,6 +724,11 @@ const updateAdminUserOverview = async (req, res) => {
     }
 
     const updateData = {};
+    if (req.body.accountStatus !== undefined) {
+      if (!["active", "disabled"].includes(req.body.accountStatus)) return res.status(400).json({ success: false, message: "Account status must be active or disabled" });
+      if (String(userId) === String(req.user?._id) && req.body.accountStatus === "disabled") return res.status(409).json({ success: false, message: "You cannot disable your own administrator account" });
+      updateData.accountStatus = req.body.accountStatus;
+    }
 
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
@@ -895,6 +800,7 @@ module.exports = {
   getAdminUserDetails,
   approveCampaign,
   rejectCampaign,
+  updateCampaignStatus,
   deleteCampaign,
   deleteAdminUser,
   updateUserDocumentStatus,

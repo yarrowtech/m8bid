@@ -2,7 +2,8 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Flame, TrendingUp } from "lucide-react";
 import AccessModeModal from "./AccessModeModal.jsx";
-import sampleImg from "../assets/fundraising-example.jpg";
+import { cldImage } from "../utils/cloudinary";
+const sampleImg = cldImage("building-app/home/fundraising-example", 800);
 
 const INR = (n) => {
   const num = Number(n || 0);

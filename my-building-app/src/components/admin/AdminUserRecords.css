@@ -1,0 +1,68 @@
+.admin-user-records {
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  color: #243349;
+  -webkit-font-smoothing: antialiased;
+}
+.admin-user-records h2, .admin-user-records h3 { font-family: "Manrope", sans-serif; letter-spacing: -.5px; font-weight: 800; }
+.admin-user-records .user-summary-card {
+  border-color: #e0e6ef;
+  border-radius: 20px;
+  padding: 22px;
+  background: #fff;
+  box-shadow: 0 8px 25px -22px #334155;
+}
+.admin-user-records .user-summary-card p:first-child { font-size: 11px; font-weight: 600; color: #79869b; }
+.admin-user-records .user-summary-card p:last-child { font-size: 31px; font-weight: 800; letter-spacing: -1.2px; }
+.admin-user-directory .user-summary-card:first-child { background: linear-gradient(135deg, #312e81, #4338ca 60%, #2563eb); border-color: transparent; box-shadow: 0 18px 36px -24px #3730a3; }
+.admin-user-directory .user-summary-card:first-child p:first-child { color: #c7d2fe; }
+.admin-user-directory .user-summary-card:first-child p { color: #fff; }
+.admin-user-directory .user-summary-card:first-child p:last-child { color: #fff; }
+.admin-user-directory .user-summary-card:first-child > span { background: #ffffff22; color: #e0e7ff; }
+.admin-user-directory .user-summary-card:nth-child(2) { border-top: 3px solid #10b981; }
+.admin-user-directory .user-summary-card:nth-child(3) { border-top: 3px solid #f59e0b; }
+.admin-user-directory .user-summary-card:nth-child(4) { border-top: 3px solid #8b5cf6; }
+.admin-user-records .user-directory-table {
+  border-color: #dce4ee;
+  box-shadow: 0 12px 40px -30px #334155;
+}
+.admin-user-directory .user-directory-table > div:first-child { padding: 23px 25px; }
+.admin-user-directory .user-directory-table > div:nth-child(2) { background: #f1f4f8; padding: 15px 25px; }
+.admin-user-records input, .admin-user-records select { font-family: "Manrope", sans-serif; }
+.admin-user-records table { font-family: "Manrope", sans-serif; }
+.admin-user-records table thead { background: #f4f6fb; }
+.admin-user-records table th { padding-top: 15px; padding-bottom: 15px; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #718098; }
+.admin-user-records table td { padding-top: 20px; padding-bottom: 20px; }
+.admin-user-records table tbody tr { transition: background 160ms ease; }
+.admin-user-records table tbody tr:hover { background: #f7f8ff; }
+.admin-user-records table td:first-child a { font-size: 14px; font-weight: 800; letter-spacing: -.3px; }
+.admin-user-records table td:first-child p { font-size: 11px; color: #8290a4; }
+.admin-user-records table td:last-child a { background: #eef2ff; color: #4338ca; border-color: transparent; }
+.admin-user-records table td:last-child a:hover { background: #e0e7ff; }
+.admin-user-records .user-identity-card { border-color: #dce4ee; box-shadow: 0 14px 40px -30px #17283f; }
+.admin-user-records .user-identity-banner {
+  padding: 30px;
+  background: radial-gradient(ellipse at 90% 5%, #6366f1aa, transparent 60%), linear-gradient(120deg, #1e1b4b, #3730a3 55%, #2563eb);
+}
+.admin-user-records .user-identity-name { font-size: 32px; letter-spacing: -1px; color: #fff; }
+.admin-user-records .user-identity-contact { color: #c7d2fe; }
+.admin-user-records .user-identity-banner > div:first-child > div:first-child { border-radius: 24px; background: #ffffff14; border: 1px solid #ffffff30; color: #e0e7ff; }
+.admin-user-records .user-identity-card > div:last-child { background: #f5f7ff; font-family: "Inter", sans-serif; font-size: 11px; padding: 16px 26px; }
+.admin-user-detail .user-summary-card { border-left: 3px solid #6366f1; }
+.admin-user-detail .user-summary-card:nth-child(2) { border-left-color: #10b981; }
+.admin-user-detail .user-summary-card:nth-child(3) { border-left-color: #8b5cf6; }
+.admin-user-detail .user-summary-card:nth-child(4) { border-left-color: #f59e0b; }
+.admin-user-records .user-record-tabs { padding: 7px; border: 1px solid #dce4ee; border-radius: 17px; background: #eef2ff; box-shadow: none; }
+.admin-user-records .user-record-tabs button { font-size: 12px; font-weight: 700; padding: 12px 15px; border-radius: 12px; }
+.admin-user-records .user-record-tabs button[aria-pressed="true"] { background: #fff; color: #3730a3; box-shadow: 0 4px 12px #3730a31f; }
+.admin-user-records dl { gap: 12px; }
+.admin-user-records dl > div { padding: 13px 15px; border: 1px solid #edf1f6; border-radius: 11px; background: #f8fafc; }
+.admin-user-records dl dt { color: #7c8ba1; font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+.admin-user-records dl dd { color: #24364c; font-size: 14px; font-weight: 650; }
+@media (max-width: 640px) {
+  .admin-user-records .user-identity-banner { padding: 22px; }
+  .admin-user-records .user-identity-name { font-size: 25px; }
+  .admin-user-records .user-summary-card { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-user-records table tbody tr { transition: none; }
+}

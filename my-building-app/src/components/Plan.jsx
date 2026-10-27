@@ -6,9 +6,10 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import starterImg from "../assets/donation.jpg";
-import incomeImg from "../assets/invest.webp";
-import planIcon from "../assets/plan.png";
+import { cldImage } from "../utils/cloudinary";
+const starterImg = cldImage("building-app/home/donation", 800);
+const incomeImg = cldImage("building-app/home/invest", 800);
+const planIcon = cldImage("building-app/home/plan", 64);
 
 const plans = [
   {

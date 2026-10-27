@@ -4,19 +4,25 @@
 
 The backend service is `services/searchConsole.js`. Enable the Google Search Console API in your Google Cloud project, create a service account, and give its email access to the exact Search Console property. Save its JSON credential file outside the repository. Copy the settings from `.env.analytics.example` into `server/.env`, using the actual credential path. Restart the backend.
 
-Call `POST /api/admin/website-analytics/sync-search` with an admin bearer token and JSON `{ "days": 7 }`. Allowed windows are 7, 28, 30, and 60 days; use 60 for the first import to cover current and previous reporting periods. Optional `endDate` must be at least three days old in Pacific time. The sync returns the date range and number of imported date/device records. It updates search data while preserving traffic data. Requests can be long-running for initial imports; trigger this endpoint from a backend job or API client with an appropriate timeout. It does not run automatically on page visits. Schedule an authenticated daily call for ongoing updates. A process-local lock prevents overlapping runs in one server process; a multi-instance deployment needs a distributed job lock.
+Call `POST /api/admin/website-analytics/sync-search` with an admin bearer token and JSON `{ "days": 7 }`. Allowed windows are 7, 28, 30, 60, 90, 180, 365 and 480 days (Google keeps about 16 months). Import at least twice the report period to get comparisons; 480 covers a 12-month report plus most of its previous year. Four days are fetched in parallel. Optional `endDate` must be at least three days old in Pacific time. The sync returns the date range and number of imported date/device records. It updates search data while preserving traffic data. Requests can be long-running for initial imports; trigger this endpoint from a backend job or API client with an appropriate timeout. It does not run automatically on page visits. Schedule an authenticated daily call for ongoing updates. A process-local lock prevents overlapping runs in one server process; a multi-instance deployment needs a distributed job lock.
 
 Google supplies Search Console dates in America/Los_Angeles. These are retained as provider dates; do not interpret them as India-local days. Recent dashboard days can remain unavailable until finalized data arrives. The service saves the top 1,000 page/query rows per day/device; those breakdowns are intentionally incomplete. Property-level totals remain independent of page totals, because Google can count impressions differently at those grains. Search Console query privacy limitations also mean query rows may not reconcile to headline totals. The manual import endpoint's stricter breakdown validation is intended for normalized records; this sync preserves Google's separate native aggregation grains.
 
 Google authorization and API references: https://developers.google.com/identity/protocols/oauth2/service-account and https://developers.google.com/webmaster-tools/v1/searchanalytics/query.
 
-Search Console only fills search metrics. Traffic, engagement, and exits still require a separate visitor analytics source; do not fabricate these from search clicks.
+Search Console only fills search metrics. Traffic, engagement, and exits come from the first-party visitor tracker below; do not fabricate these from search clicks.
+
+## Visitor tracking
+
+The website sends page views to the public `POST /api/analytics/collect` endpoint (`routes/analyticsRoutes.js`) via `my-building-app/src/lib/visitorTracking.js`. Beacons are `text/plain` JSON so they stay simple cross-origin requests. Each session (30 idle minutes ends it) is stored in `WebsiteVisitSession` with its device (from the user agent), channel (Direct, Organic search, Social, Referral, Email, Campaigns, Paid campaigns), entry/exit pages, per-page views and visible seconds. Only paths are kept, never query strings; `/admin` pages and bot user agents are ignored. The endpoint always answers 204.
+
+`services/visitorTracking.js` rolls sessions up into `WebsiteAnalyticsDaily.traffic` (provider "Matebid visitor tracking") for completed Asia/Kolkata days. It runs before every website analytics report request, rebuilds only days with changed sessions, and writes confirmed zeros for tracked days with no visits. A session is engaged after 10 visible seconds or 2+ page views. Page and source rows attribute session engagement to the entry page/source, so averages read per entrance.
 
 The admin page now requests `GET /api/admin/website-analytics` using its existing bearer token. Both reporting and import routes require an authenticated administrator. No generated demo values are returned.
 
 Query parameters:
 
-- `days`: 7, 28 (default), or 30.
+- `days`: 7, 28 (default), 30, 90, 180, or 365.
 - `device`: `All devices` (default), `Mobile`, `Desktop`, or `Tablet`.
 - `endDate`: optional completed date in YYYY-MM-DD format. Defaults to yesterday in Asia/Kolkata.
 
@@ -24,7 +30,7 @@ The response has `success` and `data`. Data contains `filters`, `totals`, `compa
 
 ## Loading real records
 
-`POST /api/admin/website-analytics/import` accepts `{ "records": [...] }`. Import verified daily aggregates from your real search and visitor providers. The importer must normalize providers' reporting dates into the same reporting calendar; do not mix different date/timezone definitions. There is currently no automatic Google connection or visitor tracking script.
+`POST /api/admin/website-analytics/import` accepts `{ "records": [...] }`. Import verified daily aggregates from your real search and visitor providers. The importer must normalize providers' reporting dates into the same reporting calendar; do not mix different date/timezone definitions. Visitor traffic is normally filled by the tracker above; use this import only for historical data from another provider.
 
 An example of the request shape (the numbers below are illustrative, not website measurements):
 

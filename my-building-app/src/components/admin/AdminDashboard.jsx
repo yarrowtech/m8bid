@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   ResponsiveContainer,
@@ -33,7 +33,7 @@ import {
 import { getAdminDashboard, getAdminUsers } from "../../api/admin";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
-const PIE_COLORS = ["#0f172a", "#f59e0b"];
+const PIE_COLORS = ["#0f172a", "#f59e0b", "#10b981", "#f43f5e"];
 
 const INR = (value) => {
   const num = Number(value || 0);
@@ -80,7 +80,7 @@ const getStatusTone = (status = "") => {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { setSidebarOpen } = useOutletContext();
+  const { setSidebarOpen, setSummary } = useOutletContext();
 
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState({});
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [userSearch, setUserSearch] = useState("");
 
-  const fetchDashboardData = async (range = "7d") => {
+  const fetchDashboardData = useCallback(async (range = "7d") => {
     try {
       setLoading(true);
       setError("");
@@ -104,6 +104,7 @@ export default function AdminDashboard() {
         {};
 
       setDashboard(normalizedDashboard);
+      setSummary?.(normalizedDashboard);
 
       try {
         const usersRes = await getAdminUsers();
@@ -120,11 +121,11 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setSummary]);
 
   useEffect(() => {
     fetchDashboardData(timeRange);
-  }, [timeRange]);
+  }, [timeRange, fetchDashboardData]);
 
   const overview = dashboard?.overview || {};
   const recentActivities = dashboard?.recentActivities || {};
@@ -144,7 +145,6 @@ export default function AdminDashboard() {
   const totalRevenue =
     overview.totalRevenue ??
     dashboard?.totalRevenue ??
-    dashboard?.totalMoneyRaised ??
     0;
 
   const activeCampaigns =
@@ -152,10 +152,10 @@ export default function AdminDashboard() {
   const activeUsers = growth?.activeUsers ?? dashboard?.activeUsers ?? 0;
 
   const recentCampaigns =
-    recentActivities.campaigns || dashboard?.recentRaisers || [];
+    recentActivities.campaigns || dashboard?.recentFundraisers || [];
 
-  const monthlyRaised = dashboard?.monthlyRaised || [];
-  const monthlyUsers = dashboard?.monthlyUsers || growth?.monthlyUsers || [];
+  const monthlyRaised = useMemo(() => dashboard?.monthlyRaised || [], [dashboard]);
+  const monthlyUsers = useMemo(() => dashboard?.monthlyUsers || [], [dashboard]);
 
   const chartData = useMemo(() => {
     if (Array.isArray(monthlyRaised) && monthlyRaised.length > 0) {
@@ -165,14 +165,7 @@ export default function AdminDashboard() {
       }));
     }
 
-    return [
-      { month: "Jan", raised: 0 },
-      { month: "Feb", raised: 0 },
-      { month: "Mar", raised: 0 },
-      { month: "Apr", raised: 0 },
-      { month: "May", raised: 0 },
-      { month: "Jun", raised: 0 },
-    ];
+    return [];
   }, [monthlyRaised]);
 
   const usersChartData = useMemo(() => {
@@ -183,32 +176,15 @@ export default function AdminDashboard() {
       }));
     }
 
-    return [
-      { month: "Jan", users: 0 },
-      { month: "Feb", users: 0 },
-      { month: "Mar", users: 0 },
-      { month: "Apr", users: 0 },
-      { month: "May", users: 0 },
-      { month: "Jun", users: 0 },
-    ];
+    return [];
   }, [monthlyUsers]);
 
-  const pieData = useMemo(() => {
-    const contributions = Number(totalContributions || 0);
-    const raising = Number(totalRevenue || 0);
-
-    if (contributions === 0 && raising === 0) {
-      return [
-        { name: "Contributions", value: 1 },
-        { name: "Raising", value: 1 },
-      ];
-    }
-
-    return [
-      { name: "Contributions", value: contributions },
-      { name: "Raising", value: raising },
-    ];
-  }, [totalContributions, totalRevenue]);
+  const pieData = useMemo(() => [
+    { name: "Approved", value: dashboard?.approvedCampaigns || 0 },
+    { name: "Pending", value: dashboard?.pendingCampaigns || 0 },
+    { name: "Completed", value: dashboard?.completedCampaigns || 0 },
+    { name: "Rejected", value: dashboard?.rejectedCampaigns || 0 },
+  ].filter((entry) => entry.value > 0), [dashboard]);
 
   const filteredUsers = useMemo(() => {
     const nonAdminUsers = allUsers.filter((user) => {
@@ -216,9 +192,9 @@ export default function AdminDashboard() {
       const name = String(user?.name || "").toLowerCase();
       const email = String(user?.email || "").toLowerCase();
 
-      if (role === "admin" || role === "superadmin") return false;
-      if (name === "admin") return false;
-      if (email.includes("admin")) return false;
+      if (role === "admin") return false;
+
+
 
       return true;
     });
@@ -259,7 +235,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-[70vh] grid place-items-center">
         <div className="rounded-[30px] bg-white px-8 py-10 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-          <div className="mx-auto mb-4 h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-300 to-yellow-500 animate-pulse" />
+          <div className="mx-auto mb-4 h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-500 animate-pulse" />
           <p className="text-lg font-semibold text-slate-800">
             Loading dashboard...
           </p>
@@ -289,18 +265,20 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <div className="mb-6 rounded-[28px] border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-4 px-5 py-5 sm:px-6 sm:py-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="admin-page-header mb-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 lg:hidden"
+              aria-label="Open navigation"
+              className="grid h-11 w-11 place-items-center rounded-2xl border lg:hidden"
             >
               <FaBars />
             </button>
 
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              <p className="mb-1 text-[10px] font-semibold uppercase">Administration</p>
+              <h1 className="text-2xl sm:text-3xl">
                 Admin Dashboard
               </h1>
               <p className="mt-1 text-sm text-slate-500">
@@ -314,6 +292,7 @@ export default function AdminDashboard() {
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
+                aria-pressed={timeRange === range}
                 className={cn(
                   "rounded-xl px-4 py-2 text-sm font-semibold transition",
                   timeRange === range
@@ -351,9 +330,9 @@ export default function AdminDashboard() {
           theme="emerald"
         />
         <KpiCard
-          title="Revenue"
+          title="Platform Fees"
           value={INR(totalRevenue)}
-          subtitle="Platform total"
+          subtitle="From confirmed contributions"
           icon={FaWallet}
           theme="violet"
         />
@@ -406,7 +385,8 @@ export default function AdminDashboard() {
                     <span>{formatDate(campaign?.createdAt)}</span>
                     <span className="font-semibold text-emerald-600">
                       {INR(
-                        campaign?.moneyRaised ||
+                        campaign?.raisedAmount ||
+                          campaign?.moneyRaised ||
                           campaign?.currentFunding ||
                           campaign?.raised ||
                           0
@@ -560,13 +540,13 @@ export default function AdminDashboard() {
                           className={cn(
                             "rounded-full border px-2.5 py-1 text-[11px] font-semibold",
                             getStatusTone(
-                              user?.status ||
-                                (user?.isActive ? "active" : "inactive")
+                              user?.accountStatus ||
+                                "active"
                             )
                           )}
                         >
-                          {user?.status ||
-                            (user?.isActive ? "active" : "inactive")}
+                          {user?.accountStatus ||
+                            "active"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-500">
@@ -656,10 +636,10 @@ export default function AdminDashboard() {
           <div className="mb-5 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold tracking-tight text-slate-900">
-                Contributions vs Raising
+                Campaign Status
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Distribution overview
+                Approval status across all campaigns
               </p>
             </div>
             <FaChartLine className="text-slate-400 text-lg" />
@@ -684,7 +664,7 @@ export default function AdminDashboard() {
                     />
                   ))}
                 </Pie>
-                <Tooltip formatter={(val) => INR(val)} />
+                <Tooltip formatter={(val) => formatNumber(val)} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -720,7 +700,7 @@ export default function AdminDashboard() {
               <DetailCard
                 label="Status"
                 value={
-                  selectedUser?.status ||
+                  selectedUser?.accountStatus ||
                   (selectedUser?.isActive ? "active" : "inactive")
                 }
               />

@@ -14,7 +14,8 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import sampleImg from "../assets/fundraising-example.jpg";
+import { cldImage } from "../utils/cloudinary";
+const sampleImg = cldImage("building-app/home/fundraising-example", 800);
 import SEO from "../components/SEO.jsx";
 
 const API_URL = "http://localhost:5000/api/campaigns"; // change if needed

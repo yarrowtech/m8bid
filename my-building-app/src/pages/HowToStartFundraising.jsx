@@ -8,10 +8,11 @@ import {
   Target,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroImage from "../assets/fundraising-hero.jpg";
-import helpsImage from "../assets/startup-sample.jpg";
-import donationImage from "../assets/donation.jpg";
-import contributionImage from "../assets/investors-hero.jpg";
+import { cldImage } from "../utils/cloudinary";
+const heroImage = cldImage("building-app/pages/fundraising-hero", 1920);
+const helpsImage = cldImage("building-app/pages/startup-sample", 1000);
+const donationImage = cldImage("building-app/home/donation", 1000);
+const contributionImage = cldImage("building-app/pages/investors-hero", 1000);
 import AccessModeModal from "../components/AccessModeModal.jsx";
 import SEO from "../components/SEO.jsx";
 

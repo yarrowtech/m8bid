@@ -31,6 +31,7 @@ import GlobalScrollMotion from "./components/GlobalScrollMotion.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
 import AccessModeModal from "./components/AccessModeModal.jsx";
 import SEO from "./components/SEO.jsx";
+import { useVisitorTracking } from "./lib/visitorTracking";
 
 // Pages
 import BrowseContributors from "./pages/BrowseInvestors.jsx";
@@ -215,6 +216,7 @@ function getContributorSidebarActive(pathname) {
 
 function AppRoutes({ loggedInUser, setLoggedInUser }) {
   const location = useLocation();
+  useVisitorTracking(location.pathname);
 
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isUserDashboardRoute = ["/dashboard", "/account", "/raiser/", "/contributor/"].some((path) => location.pathname === path || location.pathname.startsWith(path.endsWith("/") ? path : `${path}/`));

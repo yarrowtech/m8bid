@@ -1,11 +1,12 @@
 ﻿// src/components/FeaturedProperties.jsx
 import React from "react";
-import property1 from "../assets/property1.jpg";
-import property2 from "../assets/property2.jpg";
-import property3 from "../assets/property3.jpg";
-import property4 from "../assets/property4.jpg";
-import property5 from "../assets/property5.jpg";
-import property6 from "../assets/property6.jpg";
+import { cldImage } from "../utils/cloudinary";
+const property1 = cldImage("building-app/home/property1", 800);
+const property2 = cldImage("building-app/home/property2", 800);
+const property3 = cldImage("building-app/home/property3", 800);
+const property4 = cldImage("building-app/home/property4", 800);
+const property5 = cldImage("building-app/home/property5", 800);
+const property6 = cldImage("building-app/home/property6", 800);
 
 const properties = [
   {

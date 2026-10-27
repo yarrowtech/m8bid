@@ -99,6 +99,16 @@ export const rejectCampaign = async (campaignId) => {
   }
 };
 
+export const updateCampaignStatus = async (campaignId, status) => {
+  try {
+    const response = await api.patch(`/admin/campaigns/${campaignId}/status`, { status });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating campaign status:", error);
+    throw error;
+  }
+};
+
 export const deleteCampaign = async (campaignId) => {
   try {
     const response = await api.delete(`/admin/campaigns/${campaignId}`);
@@ -121,9 +131,9 @@ export const getAdminTransactions = async () => {
 };
 
 /* ---------------- Analytics ---------------- */
-export const getAdminAnalytics = async () => {
+export const getAdminAnalytics = async (range = "30d") => {
   try {
-    const response = await api.get("/admin/analytics");
+    const response = await api.get("/admin/analytics", { params: { range } });
     return response.data;
   } catch (error) {
     console.error("Error fetching admin analytics:", error);

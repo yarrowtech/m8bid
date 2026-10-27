@@ -10,6 +10,7 @@ const {
   deleteAdminUser,
   approveCampaign,
   rejectCampaign,
+  updateCampaignStatus,
   deleteCampaign,
   updateUserDocumentStatus,
   updateAdminUserOverview,
@@ -38,6 +39,7 @@ router.patch("/users/:userId/document-status", decodeToken, isAdmin, updateUserD
 router.get("/campaigns", decodeToken, isAdmin, getAdminCampaigns);
 router.patch("/campaigns/:campaignId/approve", decodeToken, isAdmin, approveCampaign);
 router.patch("/campaigns/:campaignId/reject", decodeToken, isAdmin, rejectCampaign);
+router.patch("/campaigns/:campaignId/status", decodeToken, isAdmin, updateCampaignStatus);
 router.delete("/campaigns/:campaignId", decodeToken, isAdmin, deleteCampaign);
 
 router.get("/transactions", decodeToken, isAdmin, getAdminTransactions);

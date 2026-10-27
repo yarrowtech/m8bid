@@ -1,4 +1,5 @@
 const DEVICES = ["Mobile", "Desktop", "Tablet"];
+const REPORT_DAYS = [7, 28, 30, 90, 180, 365];
 const searchKeys = ["clicks", "impressions", "positionWeight", "positionImpressions"];
 const trafficKeys = ["entries", "exits", "views", "engaged", "engagementSeconds"];
 const rate = (value, total) => total ? value / total * 100 : 0;
@@ -7,7 +8,7 @@ const shift = (date, days) => new Date(Date.parse(`${date}T00:00:00Z`) + days * 
 
 function parseFilters(query, now = new Date()) {
   const days = query.days === undefined ? 28 : Number(query.days);
-  if (![7, 28, 30].includes(days)) throw new Error("days must be 7, 28, or 30");
+  if (!REPORT_DAYS.includes(days)) throw new Error(`days must be one of ${REPORT_DAYS.join(", ")}`);
   const device = query.device || "All devices";
   if (device !== "All devices" && !DEVICES.includes(device)) throw new Error("Invalid device filter");
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
@@ -105,4 +106,4 @@ function validateImport(records) {
     }
   }
 }
-module.exports = { parseFilters, report, validateImport };
+module.exports = { parseFilters, report, validateImport, REPORT_DAYS };

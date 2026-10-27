@@ -10,7 +10,12 @@ function config() {
     const error = new Error("Set GOOGLE_SERVICE_ACCOUNT_FILE to your backend service-account JSON file");
     error.status = 503; throw error;
   }
-  const credentials = JSON.parse(readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_FILE, "utf8"));
+  let credentials;
+  try { credentials = JSON.parse(readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_FILE, "utf8")); }
+  catch (cause) {
+    const error = new Error(cause.code === "ENOENT" ? "GOOGLE_SERVICE_ACCOUNT_FILE points to a file that does not exist. Check the path, including the .json extension." : "GOOGLE_SERVICE_ACCOUNT_FILE is not a valid JSON credential file.");
+    error.status = 503; throw error;
+  }
   if (!credentials.client_email || !credentials.private_key) throw new Error("Invalid service-account configuration");
   return { credentials, property: process.env.GSC_SITE_URL || "https://www.matebid.com/" };
 }
@@ -59,8 +64,12 @@ function pageRows(rows) {
   return [...groups.values()].map(({ name, title, metrics }) => ({ name, title, metrics }));
 }
 
+// Google keeps about 16 months of data; 480 days covers a 12-month report plus most of its comparison year.
+const SYNC_DAYS = [7, 28, 30, 60, 90, 180, 365, 480];
+const PARALLEL_DAYS = 4; // Stays well under Search Console's per-site query quota.
+
 async function syncSearchConsole({ days = 7, endDate } = {}) {
-  if (![7, 28, 30, 60].includes(Number(days))) { const error = new Error("days must be 7, 28, 30, or 60"); error.status = 400; throw error; }
+  if (!SYNC_DAYS.includes(Number(days))) { const error = new Error(`days must be one of ${SYNC_DAYS.join(", ")}`); error.status = 400; throw error; }
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   endDate = endDate || shift(today, -3);
   if (typeof endDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || Number.isNaN(Date.parse(endDate)) || new Date(endDate).toISOString().slice(0, 10) !== endDate || endDate > shift(today, -3)) {
@@ -72,8 +81,8 @@ async function syncSearchConsole({ days = 7, endDate } = {}) {
     const { credentials, property } = config();
     const token = await accessToken(credentials);
     let imported = 0;
-    for (let day = Number(days) - 1; day >= 0; day--) {
-      const date = shift(endDate, -day);
+    const dates = Array.from({ length: Number(days) }, (_, index) => shift(endDate, index + 1 - Number(days)));
+    const syncDate = async (date) => {
       for (const device of ["Mobile", "Desktop", "Tablet"]) {
         const base = { startDate: date, endDate: date, type: "web", dataState: "final", dimensionFilterGroups: [{ groupType: "and", filters: [{ dimension: "device", operator: "equals", expression: device.toUpperCase() }] }] };
         const totals = await query(property, token, { ...base, aggregationType: "byProperty", rowLimit: 1 });
@@ -84,7 +93,9 @@ async function syncSearchConsole({ days = 7, endDate } = {}) {
         await Daily.updateOne({ date, device }, { $set: { search: { provider: "Google Search Console (Pacific time; top 1000 rows)", totals: metrics(totals[0]), pages: pageRows(pages), queries: queries.map((row) => ({ name: row.keys[0], metrics: metrics(row) })) } } }, { upsert: true, runValidators: true });
         imported++;
       }
-    }
+    };
+    const workers = Array.from({ length: PARALLEL_DAYS }, async () => { while (dates.length) await syncDate(dates.shift()); });
+    await Promise.all(workers);
     return { imported, days: Number(days), startDate: shift(endDate, 1 - Number(days)), endDate, property, timezone: "America/Los_Angeles", breakdownLimit: 1000 };
   } finally { syncing = false; }
 }
