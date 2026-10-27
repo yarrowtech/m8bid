@@ -1,4 +1,4 @@
-﻿import React from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ShieldCheck,
@@ -10,6 +10,22 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cldVideo } from "../utils/cloudinary";
 const demoVideo = cldVideo("building-app/home/how_it_works");
+
+// The 2 MB demo only downloads when its section nears the viewport.
+function LazyVideo({ src, className }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || !("IntersectionObserver" in window)) { setVisible(true); return undefined; }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVisible(true); observer.disconnect(); }
+    }, { rootMargin: "300px 0px" });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return <video ref={ref} src={visible ? src : undefined} preload="none" controls autoPlay muted loop playsInline className={className} />;
+}
 
 function StepCard({ step, icon: Icon, title, desc, isLast = false }) {
   return (
@@ -147,13 +163,8 @@ export default function HowItWorks() {
     <div className="p-4 md:p-5">
       {/* VIDEO */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-sm">
-        <video
+        <LazyVideo
           src={demoVideo}
-          controls
-          autoPlay
-          muted
-          loop
-          playsInline
           className="w-200 h-120 object-cover"
         />
       </div>

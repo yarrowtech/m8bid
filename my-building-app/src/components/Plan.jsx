@@ -88,7 +88,7 @@ export default function Plans() {
           >
             {/* Image - smaller */}
             <div className="relative h-43 w-full overflow-hidden">
-              <img
+              <img loading="lazy" decoding="async"
                 src={plan.image}
                 alt={plan.name}
                 className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -132,7 +132,7 @@ export default function Plans() {
                     plan.iconBg
                   )}
                 >
-                  <img src={planIcon} alt="" className="h-5 w-5 object-contain" />
+                  <img loading="lazy" decoding="async" src={planIcon} alt="" className="h-5 w-5 object-contain" />
                 </div>
 
                 <div className="min-w-0">

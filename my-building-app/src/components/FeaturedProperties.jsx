@@ -63,7 +63,7 @@ export default function FeaturedProperties() {
             key={prop.name}
             className="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden flex flex-col"
           >
-            <img src={prop.image} alt={prop.name} className="h-48 w-full object-cover" />
+            <img loading="lazy" decoding="async" src={prop.image} alt={prop.name} className="h-48 w-full object-cover" />
             <div className="p-4 flex flex-col flex-1">
               <h3 className="font-semibold text-lg mb-1">{prop.name}</h3>
               <p className="text-sm text-gray-600">{prop.location}</p>

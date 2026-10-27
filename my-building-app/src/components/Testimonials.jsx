@@ -2,7 +2,7 @@
 import React from "react";
 import { BadgeCheck, Quote, Star } from "lucide-react";
 import { cldImage } from "../utils/cloudinary";
-const contributor1 = cldImage("building-app/home/investor3", 200);
+const contributor1 = cldImage("building-app/home/investor3", 160);
 const contributor2 = cldImage("building-app/home/investor2", 200);
 const contributor3 = cldImage("building-app/home/investor1", 200);
 
@@ -93,7 +93,7 @@ export default function Testimonials() {
               </div>
 
               {/* image */}
-              <img
+              <img loading="lazy" decoding="async"
                 src={t.image}
                 alt={t.name}
                 className="mx-auto mb-4 h-20 w-20 rounded-full border-4 border-white object-cover shadow-md"

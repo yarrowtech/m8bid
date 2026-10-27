@@ -1,6 +1,7 @@
 import { getAdminDashboard } from "../../api/admin";
 import { Outlet, useLocation } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import PageLoader from "../PageLoader";
 import AdminSidebar from "./AdminSidebar";
 import "./AdminTheme.css";
 
@@ -46,7 +47,9 @@ export default function AdminLayout() {
           className={`h-full min-w-0 w-full overscroll-contain lg:pl-72 ${sidebarOpen ? "overflow-hidden lg:overflow-y-auto" : "overflow-y-auto"}`}
         >
           <div className="p-4 sm:p-6 lg:p-8">
-            <Outlet context={{ setSidebarOpen, setSummary }} />
+            <Suspense fallback={<PageLoader />}>
+              <Outlet context={{ setSidebarOpen, setSummary }} />
+            </Suspense>
           </div>
         </main>
       </div>

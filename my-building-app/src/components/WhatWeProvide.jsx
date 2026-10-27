@@ -40,7 +40,7 @@ export default function WhatWeProvide() {
         <div className="mt-12 space-y-14">
           <article className="grid items-center gap-8 md:grid-cols-2">
             <div className="overflow-hidden rounded-2xl shadow-md">
-              <img
+              <img loading="lazy" decoding="async"
                 src={raisingImage}
                 alt="People supporting a raising campaign"
                 className="h-[320px] w-full object-cover md:h-[360px]"
@@ -120,7 +120,7 @@ export default function WhatWeProvide() {
             </div>
 
             <div className="overflow-hidden rounded-2xl shadow-md">
-              <img
+              <img loading="lazy" decoding="async"
                 src={contributingImage}
                 alt="Contribution growth concept"
                 className="h-[320px] w-full object-cover md:h-[360px]"

@@ -9,13 +9,13 @@ import {
 } from "lucide-react";
 
 import { cldImage } from "../utils/cloudinary";
-const heroBg = cldImage("building-app/home/hero-bg", 1920);
-const img1 = cldImage("building-app/home/img1", 600);
-const img2 = cldImage("building-app/home/img2", 600);
-const img3 = cldImage("building-app/home/img3", 600);
-const img4 = cldImage("building-app/home/img4", 600);
-const img5 = cldImage("building-app/home/img5", 600);
-const img6 = cldImage("building-app/home/img6", 600);
+const heroBg = cldImage("building-app/home/hero-bg", 1600);
+const img1 = cldImage("building-app/home/img1", 360);
+const img2 = cldImage("building-app/home/img2", 360);
+const img3 = cldImage("building-app/home/img3", 360);
+const img4 = cldImage("building-app/home/img4", 360);
+const img5 = cldImage("building-app/home/img5", 360);
+const img6 = cldImage("building-app/home/img6", 360);
 import AccessModeModal from "./AccessModeModal.jsx";
 
 /* ----------------------------- Circular Card ----------------------------- */
@@ -89,6 +89,7 @@ function CircularProgressImage({
         <img
           src={src}
           alt={label || "Campaign"}
+          decoding="async"
           className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
         />
       </div>

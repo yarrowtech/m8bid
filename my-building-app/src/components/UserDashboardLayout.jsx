@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import PageLoader from "./PageLoader";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { LayoutDashboard, HeartHandshake, FolderOpen, UserRound, ShieldCheck, Landmark, ChartNoAxesCombined, Receipt, Wallet, ArrowLeft, Search } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
@@ -33,7 +34,7 @@ export default function UserDashboardLayout() {
     <div className="flex min-w-0 flex-1 flex-col">
       <DashboardHeader user={user} search={search} setSearch={setSearch} />
       <div className="flex min-h-0 flex-1">
-        <main aria-label="Dashboard content" className="user-dashboard-content min-w-0 flex-1 overflow-y-auto"><Outlet context={{ search }} /></main>
+        <main aria-label="Dashboard content" className="user-dashboard-content min-w-0 flex-1 overflow-y-auto"><Suspense fallback={<PageLoader />}><Outlet context={{ search }} /></Suspense></main>
         <DashboardProfilePanel user={user} error={error} onRetry={refreshProfile} />
       </div>
     </div>
